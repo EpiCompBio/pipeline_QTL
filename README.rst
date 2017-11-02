@@ -1,3 +1,5 @@
+.. include:: README_substitution_vars.rst
+
 .. copy across your travis "build..." logo so that it appears in your Github page
 
 .. .. image:: https://travis-ci.org/|github_user|/|project_name|.svg?branch=master
@@ -12,8 +14,6 @@
 .. Zenodo gives a number instead, this needs to be put in manually here:
 .. image:: https://zenodo.org/badge/#######.svg
     :target: https://zenodo.org/badge/latestdoi/#####
-
-.. include:: README_substitution_vars.rst
 
 ################################################
 |project_name|
