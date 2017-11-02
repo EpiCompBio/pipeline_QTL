@@ -8,9 +8,9 @@
 
 .. Fill in the variables:
 
-.. |project_name| replace::
-.. |short_description| replace::
-.. |long_description| replace::
-.. |author_name| replace::
-.. |license| replace::
-.. |author_email| replace::
+.. |project_name| replace:: pipeline_QTL
+.. |short_description| replace:: Python pipeline for quantitative trait locus analysis
+.. |long_description| replace:: Chains thrida party tools, mainly matrixEQTL, to produce a SNP-molecular trait tables and plots
+.. |author_name| replace:: Antonio Berlanga-Taylor
+.. |license| replace:: GPL-3
+.. |author_email| replace:: a.berlanga imperial.ac.uk
