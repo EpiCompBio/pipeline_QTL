@@ -13,6 +13,8 @@
 .. image:: https://zenodo.org/badge/#######.svg
     :target: https://zenodo.org/badge/latestdoi/#####
 
+.. include:: README_substitution_vars.rst
+
 ################################################
 |project_name|
 ################################################
