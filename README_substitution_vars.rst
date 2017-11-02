@@ -10,7 +10,7 @@
 
 .. |project_name| replace:: pipeline_QTL
 .. |short_description| replace:: Python pipeline for quantitative trait locus analysis
-.. |long_description| replace:: Chains thrida party tools, mainly matrixEQTL, to produce a SNP-molecular trait tables and plots
-.. |author_name| replace:: Antonio Berlanga-Taylor
+.. |long_description| replace:: Chains third party tools, mainly matrixEQTL, to produce a SNP-molecular trait tables and plots
+.. |author_name| replace:: Antonio J. Berlanga-Taylor
 .. |license| replace:: GPL-3
 .. |author_email| replace:: a.berlanga imperial.ac.uk
