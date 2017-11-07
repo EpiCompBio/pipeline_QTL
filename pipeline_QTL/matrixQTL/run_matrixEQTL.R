@@ -36,22 +36,23 @@ Usage: run_matrixEQTL.R (--geno <SNPs file>)
        run_matrixEQTL.R [--session <R_SESSION_NAME>] 
 
 Options:
---geno <SNPs file>                    File name with genetic data
---gex <phenotype file>                File name with phenotypes
--O <OUTPUT_FILE>                      Output file name, "_MxEQTL" is added to outputs
---cov <covariates_file>               File name with covariates to adjust for
---condition <tissue or context>       Specify name of condition (if running multiple files/groups/tissues/etc.)
---snpspos <SNP position file>         File name with SNP position information
---genepos <phenotype position file>   File name with molecular phenotype annotation information
---model <MatrixEQTLs model>           One of modelANOVA, modelLINEAR or modelLINEAR_CROSS [default: modelLINEAR].
---pvOutputThreshold <p-value>         trans associations p-value threshold at which pheno-SNP associations are saved [default: 1e-08].
---pvOutputThreshold.cis <cis p-value> cis p-value threshold at which associations are saved if files on positions are given [default: 1e-05].
---cisDist <cis distance definition>   Distance for defining cis vs trans [default: 1e+06].
---session <R_SESSION_NAME>            R session name if to be saved
--h --help                             Show this screen
+  --geno <SNPs file>                    File name with genetic data
+  --gex <phenotype file>                File name with phenotypes
+  -O <OUTPUT_FILE>                      Output file name, "_MxEQTL" is added to outputs
+  --cov <covariates_file>               File name with covariates to adjust for
+  --condition <tissue or context>       Specify name of condition (if running multiple files/groups/tissues/etc.)
+  --snpspos <SNP position file>         File name with SNP position information
+  --genepos <phenotype position file>   File name with molecular phenotype annotation information
+  --model <MatrixEQTLs model>           One of modelANOVA, modelLINEAR or modelLINEAR_CROSS [default: modelLINEAR].
+  --pvOutputThreshold <p-value>         trans associations p-value threshold at which pheno-SNP associations are saved [default: 1e-08].
+  --pvOutputThreshold.cis <cis p-value> cis p-value threshold at which associations are saved if files on positions are given [default: 1e-05].
+  --cisDist <cis distance definition>   Distance for defining cis vs trans [default: 1e+06].
+  --session <R_SESSION_NAME>            R session name if to be saved
+  -h --help                             Show this screen
 
 
-Input:
+Input
+=====
 
 Quality controlled (molecular) phenotype (e.g. gene expression) and genotyping data. 
 
@@ -72,11 +73,15 @@ See:
 
 http://www.bios.unc.edu/research/genomic_software/Matrix_eQTL/
 
-Output:
+
+Output
+======
 
 Namely a qqlot and tables of genotype molecular phenotype associations. These are saved in the working directory.
 
-Requirements:
+
+Requirements
+============
 
 
 Documentation
@@ -86,8 +91,19 @@ For more information see:
 
 |url|
 ' -> doc
+
+##################
+# TO DO: generate covariate PCs from GEx file first, then assoc cov to genotype, then filter these from run_mePipe run.
+# chooseCov or runMe don't have these options (assocCov and filterCov) so run covariates.R, assocCov, filterCov and pass these to
+# chooseCov
+# default FDR threshold for PC exclusion is 0.001
+#(command line does though, check this again to make running straightforward) 
+# PC_seq_to_test  <- seq(args[['--PCs']], by = 5)
+# PC_seq_to_test = seq(0, 50, by = 5)
 ######################
-##########
+
+
+######################
 # Load docopt:
 library(docopt, quietly = TRUE)
 # Retrieve the command-line arguments:
@@ -101,63 +117,6 @@ args <- docopt(doc)
 # Within the script specify options as:
 # args[['--session']]
 # args $ `-I` == TRUE
-##########
-
-##########
-# Set-up file names:
-SNP_file <- as.character(args[['--geno']])
-expression_file <- as.character(args[['--gex']])
-covariates_file <- as.character(args[['--cov']])
-condition <- as.character(args[['--condition']])
-# For testing:
-# SNP_file <- 'SNP.txt'
-# expression_file <- 'GE.txt'
-# covariates_file <- 'Covariates.txt'
-
-# Load annotations for SNP location, probe annotation and probe location:
-snpspos <- as.character(args[['--snpspos']])
-genepos <- as.character(args[['--genepos']])
-# snpspos <- 'snp146Common_MatrixEQTL_snp_pos.txt'
-# genepos <- 'biomart_QCd_probes_genomic_locations_annot_MatrixeQTL.txt'
-
-# Set up MatrixEQTL options:
-useModel <- as.character(args[['--model']])
-useModel
-if (useModel == 'modelLINEAR') {
-  useModel <- modelLINEAR
-} else if (useModel == 'modelANOVA') {
-    useModel = modelANOVA
-    } else if (useModel == 'modelLINEAR_CROSS') {
-      useModel = modelLINEAR_CROSS
-      } else (useModel <- modelLINEAR)
-useModel
-
-# The p-value threshold determines which gene-SNP associations are saved in the output file output_file_name. 
-# Note that for larger datasets the threshold should be lower. 
-# Setting the threshold to a high value for a large dataset may cause excessively large output files.
-pvOutputThreshold  <- as.numeric(args[['--pvOutputThreshold']])
-pvOutputThreshold.cis <- as.numeric(args[['--pvOutputThreshold.cis']])
-cisDist <- as.numeric(args[['--cisDist']])
-
-# Define the covariance matrix for the error term. 
-# Consider an error covariance matrix if necessary (correlated variables or errors)
-# This parameter is rarely used. If the covariance matrix is a multiple of identity, set it to numeric().
-errorCovariance <- numeric()
-
-# Print to screen:
-str(args)
-##########
-##################
-
-
-##################
-# TO DO: generate covariate PCs from GEx file first, then assoc cov to genotype, then filter these from run_mePipe run.
-# chooseCov or runMe don't have these options (assocCov and filterCov) so run covariates.R, assocCov, filterCov and pass these to
-# chooseCov
-# default FDR threshold for PC exclusion is 0.001
-#(command line does though, check this again to make running straightforward) 
-# PC_seq_to_test  <- seq(args[['--PCs']], by = 5)
-# PC_seq_to_test = seq(0, 50, by = 5)
 ######################
 
 ######################
@@ -184,6 +143,47 @@ library(MatrixEQTL)
 
 
 ######################
+##########
+# Set-up file names:
+SNP_file <- as.character(args[['--geno']])
+expression_file <- as.character(args[['--gex']])
+covariates_file <- as.character(args[['--cov']])
+condition <- as.character(args[['--condition']])
+# For testing:
+# SNP_file <- 'SNP.txt'
+# expression_file <- 'GE.txt'
+# covariates_file <- 'Covariates.txt'
+
+# Load annotations for SNP location, probe annotation and probe location:
+snpspos <- as.character(args[['--snpspos']])
+genepos <- as.character(args[['--genepos']])
+# snpspos <- 'snp146Common_MatrixEQTL_snp_pos.txt'
+# genepos <- 'biomart_QCd_probes_genomic_locations_annot_MatrixeQTL.txt'
+
+# Set up MatrixEQTL options:
+useModel <- as.character(args[['--model']])
+if (useModel == 'modelLINEAR') {
+  useModel <- modelLINEAR
+} else if (useModel == 'modelANOVA') {
+    useModel = modelANOVA
+    } else if (useModel == 'modelLINEAR_CROSS') {
+      useModel = modelLINEAR_CROSS
+      } else (useModel <- modelLINEAR)
+
+# The p-value threshold determines which gene-SNP associations are saved in the output file output_file_name. 
+# Note that for larger datasets the threshold should be lower. 
+# Setting the threshold to a high value for a large dataset may cause excessively large output files.
+pvOutputThreshold  <- as.numeric(args[['--pvOutputThreshold']])
+pvOutputThreshold.cis <- as.numeric(args[['--pvOutputThreshold.cis']])
+cisDist <- as.numeric(args[['--cisDist']])
+
+# Define the covariance matrix for the error term. 
+# Consider an error covariance matrix if necessary (correlated variables or errors)
+# This parameter is rarely used. If the covariance matrix is a multiple of identity, set it to numeric().
+errorCovariance <- numeric()
+##########
+
+##########
 # Set output file names:
 if (is.null(args[['-O']])) {
   # Stop if arguments not given:
@@ -195,7 +195,11 @@ if (is.null(args[['-O']])) {
   output_file_name <- sprintf('%s_MxEQTL', output_file_name)
   print(sprintf('Output file names will contain %s', output_file_name))
 }
-######################
+
+# Print all arguments to screen:
+str(args)
+##########
+##################
 
 
 ######################
