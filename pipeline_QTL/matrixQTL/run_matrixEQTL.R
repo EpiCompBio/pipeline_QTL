@@ -18,12 +18,15 @@ This is a wrapper for matrixEQTL
 
 http://www.bios.unc.edu/research/genomic_software/Matrix_eQTL/
 
+The script is intended to run as part of a Ruffus (python based) pipeline. Naming files in the expected way is important (see below).
+
+
 Usage and options
 =================
 
 Usage: run_matrixEQTL.R (--geno <SNPs file>)
        run_matrixEQTL.R (--gex <phenotype file>)
-       run_matrixEQTL.R (-O <output file name>)
+       run_matrixEQTL.R [-O <output file name>]
        run_matrixEQTL.R [--cov <covariates_file>]
        run_matrixEQTL.R [--condition <tissue or context>]
        run_matrixEQTL.R [--snpspos <SNP position file>]
@@ -38,7 +41,7 @@ Usage: run_matrixEQTL.R (--geno <SNPs file>)
 Options:
   --geno <SNPs file>                    File name with genetic data
   --gex <phenotype file>                File name with phenotypes
-  -O <OUTPUT_FILE>                      Output file name, "_MxEQTL" is added to outputs
+  -O <OUTPUT_FILE>                      Output file name, ".MxEQTL" is added to outputs
   --cov <covariates_file>               File name with covariates to adjust for
   --condition <tissue or context>       Specify name of condition (if running multiple files/groups/tissues/etc.)
   --snpspos <SNP position file>         File name with SNP position information
@@ -61,6 +64,7 @@ Optionally covariates and error covariance matrix.
 Annotation files are also needed for cis vs trans analysis (SNPs positions and probe positions and any associated annotations).
 
 Files need to be in the same format as MatrixEQTL requires:
+
 SNPs/genes/covariates in rows, individuals in columns with (dummy) headers and row names (the first column and first row are skipped when read).
 
 Missing values must be set as "NA".
@@ -80,8 +84,47 @@ Output
 Namely a qqlot and tables of genotype molecular phenotype associations. These are saved in the working directory.
 
 
+Naming convention for input files
+=================================
+
+Output files get named based on the input files. The script assumes "cohort" is the same for input files (but only takes it from the genotype file).
+
+Please rename your files in the following way (use soft links to rename for example):
+
+Infile: cohort-platform-other_descriptor.suffix
+
+Outfile: cohort-platform_infile1-descriptor1-platform_infile2-descriptor2.new_suffix
+
+For example:
+
+genotype file: airwave-illumina_exome-all_chrs.geno
+
+phenotype file: airwave-NMR-blood.txt
+
+and depending on the input and arguments you might get:
+
+airwave-illumina_exome-all_chrs-NMR-blood.MxEQTL
+airwave-illumina_exome-all_chrs-NMR-blood.MxEQTL.cis
+airwave-illumina_exome-all_chrs-NMR-blood.MxEQTL.trans
+airwave-illumina_exome-all_chrs-NMR-blood.MxEQTL.qqplot.svg
+airwave-illumina_exome-all_chrs-NMR-blood.MxEQTL.degrees_condition.txt
+airwave-illumina_exome-all_chrs-NMR-blood.MxEQTL.log
+
+File names can get long so use abbreviations or short versions.
+
+You can also override this and simply choose your outfile prefix.
+
+If you do not use an outfile name and your files do not follow the naming above you might get something like:
+
+"SNP.txt-NA-NA-NA-NA.MxEQTL"
+
+
 Requirements
 ============
+
+docopt
+data.table
+ggplot2
 
 
 Documentation
@@ -181,23 +224,32 @@ cisDist <- as.numeric(args[['--cisDist']])
 # Consider an error covariance matrix if necessary (correlated variables or errors)
 # This parameter is rarely used. If the covariance matrix is a multiple of identity, set it to numeric().
 errorCovariance <- numeric()
+
+# Print all arguments to screen:
+str(args)
 ##########
 
 ##########
 # Set output file names:
 if (is.null(args[['-O']])) {
-  # Stop if arguments not given:
-  print('You need to provide an output file name.')
-  stopifnot(args[['-O']])
+  print('Output file name prefix not given. Using:')
+  # Separate names componenets based on convention for input in this script:
+  infile_1 <- strsplit(SNP_file, '-')
+  cohort <- infile_1[[1]][1]
+  platform1 <- infile_1[[1]][2]
+  descriptor_1 <- strsplit(infile_1[[1]][3], '\\.')[[1]][1]
+  # Do the same for the phenotype file, take cohort only from genotype file:
+  infile_2 <- strsplit(expression_file, '-')
+  platform2 <- infile_2[[1]][2]
+  descriptor_2 <- strsplit(infile_2[[1]][3], '\\.')[[1]][1]
+  output_file_name <- sprintf('%s-%s-%s-%s-%s.MxEQTL', cohort, platform1, descriptor_1, platform2, descriptor_2)
+  print(output_file_name)
 } else {
   output_file_name <- as.character(args[['-O']])
   # output_file_name <- 'testing'
-  output_file_name <- sprintf('%s_MxEQTL', output_file_name)
+  output_file_name <- sprintf('%s.MxEQTL', output_file_name)
   print(sprintf('Output file names will contain %s', output_file_name))
 }
-
-# Print all arguments to screen:
-str(args)
 ##########
 ##################
 
@@ -251,8 +303,16 @@ if (is.null(args[['--snpspos']]) | is.null(args[['--genepos']])) {
 
 # Provide a name for the condition being run if none given:
 if (is.null(args[['--condition']])) {
-  print(sprintf('You did not provide a name for the condition file, using %s instead.', expression_file))
-  condition <- sprintf('%s', expression_file)
+  if (is.na(descriptor_2)) {
+    time_run <- as.character(gsub(' ', '_', as.character(Sys.time())))
+    print(sprintf("You did not provide a name for the condition (i.e. tissue) and your input files
+                   don't follow this script's convention, using a timestamp instead: %s.", time_run))
+    condition <- time_run
+  }
+  else {
+  print(sprintf('You did not provide a name for the condition file, using %s instead.', descriptor_2))
+  condition <- sprintf('%s', descriptor_2)
+  }
 }
 # MatrixEQTL reads in the main files.
 ######################
@@ -372,7 +432,7 @@ show(me$trans$eqtls)
 # source('../../code/BEST_D_molecular/utilities/ggtheme.R')
 # library(ggplot2)
 # plot:
-svg(paste('qqplot_', output_file_name, '.svg', sep = ''))
+svg(sprintf('%s.qqplot.svg', output_file_name))
 plot(me, main = '',
      # cex.main = 1.25,
      cex.lab = 1.25,
@@ -381,7 +441,7 @@ dev.off()
 
 
 ## Save degrees of freedom in order to be able to run multi-tissue Matrix EQTL:
-degrees_filename <- sprintf('degrees_condition_%s.txt', output_file_name)
+degrees_filename <- sprintf('%s.degrees_condition.txt', output_file_name)
 cat(file = degrees_filename, condition, "\t", me$param$dfFull, '\n', append = TRUE)
 ######################
 
@@ -396,7 +456,7 @@ cat(file = degrees_filename, condition, "\t", me$param$dfFull, '\n', append = TR
 
 ######################
 # Save a minimal file with p-value cut-offs and parameters called:
-log_file <- sprintf('%s_parameters.log', output_file_name)
+log_file <- sprintf('%s.log', output_file_name)
 sink(log_file, append = TRUE, split = TRUE, type = c("output", "message"))
 print(paste('Minimal log file for parameters called with:',
             'EpiCompBio/pipeline_QTL/pipeline_QTL/matrixQTL/run_matrixEQTL.R'))

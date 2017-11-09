@@ -311,10 +311,24 @@ def loadWordCounts(infile, outfile):
     P.load(infile, outfile, "--add-index=word")
 ################
 
+################
+# Copy to log enviroment from conda:
+# TO DO: add to pipeline.py
+def conda_info():
+    '''
+    Print to screen conda information and packages installed.
+    '''
+
+    statement = '''conda info -a ;
+                   conda list
+                '''
+    P.run()
+
+################
 
 ################
 # Create the "full" pipeline target to run all functions specified
-@follows(loadWordCounts)
+@follows(loadWordCounts, conda_info)
 def full():
     pass
 ################
