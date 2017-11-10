@@ -24,34 +24,25 @@ The script is intended to run as part of a Ruffus (python based) pipeline. Namin
 Usage and options
 =================
 
-Usage: run_matrixEQTL.R (--geno <SNPs file>)
-       run_matrixEQTL.R (--gex <phenotype file>)
-       run_matrixEQTL.R [-O <output file name>]
-       run_matrixEQTL.R [--cov <covariates_file>]
-       run_matrixEQTL.R [--condition <tissue or context>]
-       run_matrixEQTL.R [--snpspos <SNP position file>]
-       run_matrixEQTL.R [--genepos <phenotype position file>]
-       run_matrixEQTL.R [--model <MatrixEQTLs model>]
-       run_matrixEQTL.R [--pvOutputThreshold <p-value>]
-       run_matrixEQTL.R [--pvOutputThreshold.cis <cis p-value>]
-       run_matrixEQTL.R [--cisDist <cis distance definition>]
+Usage: run_matrixEQTL.R (--geno <SNPs_file> --gex <phenotype_file>)
+       run_matrixEQTL.R [options]
        run_matrixEQTL.R [-h | --help]
-       run_matrixEQTL.R [--session <R_SESSION_NAME>] 
 
 Options:
-  --geno <SNPs file>                    File name with genetic data
-  --gex <phenotype file>                File name with phenotypes
-  -O <OUTPUT_FILE>                      Output file name, ".MxEQTL" is added to outputs
-  --cov <covariates_file>               File name with covariates to adjust for
-  --condition <tissue or context>       Specify name of condition (if running multiple files/groups/tissues/etc.)
-  --snpspos <SNP position file>         File name with SNP position information
-  --genepos <phenotype position file>   File name with molecular phenotype annotation information
-  --model <MatrixEQTLs model>           One of modelANOVA, modelLINEAR or modelLINEAR_CROSS [default: modelLINEAR].
-  --pvOutputThreshold <p-value>         trans associations p-value threshold at which pheno-SNP associations are saved [default: 1e-08].
-  --pvOutputThreshold.cis <cis p-value> cis p-value threshold at which associations are saved if files on positions are given [default: 1e-05].
-  --cisDist <cis distance definition>   Distance for defining cis vs trans [default: 1e+06].
-  --session <R_SESSION_NAME>            R session name if to be saved
-  -h --help                             Show this screen
+   --geno SNPs_file                     File name with genetic data
+   --gex phenotype_file                 File name with phenotypes
+   -O OUTPUT_FILE                       Output file name, ".MxEQTL" is added to outputs
+   --cov covariates_file                File name with covariates to adjust for
+   --condition tissue_or_context        Specify name of condition (if running multiple files/groups/tissues/etc.)
+   --snpspos SNP_position_file          File name with SNP position information
+   --genepos phenotype_position_file    File name with molecular phenotype annotation information
+   --model MatrixEQTLs_model            One of modelANOVA, modelLINEAR or modelLINEAR_CROSS [default: modelLINEAR].
+   --pvOutputThreshold p-value          trans associations p-value threshold at which pheno-SNP associations are saved [default: 1e-08].
+   --pvOutputThreshold.cis cis_p-value  cis p-value threshold at which associations are saved if files on positions are given [default: 1e-05].
+   --cisDist cis_distance_definition    Distance for defining cis vs trans [default: 1e+06].
+   -h --help                            Show this screen
+   --session R_SESSION_NAME             R session name if to be saved
+
 
 
 Input
@@ -69,9 +60,10 @@ SNPs/genes/covariates in rows, individuals in columns with (dummy) headers and r
 
 Missing values must be set as "NA".
 
-For SNP position files, these must be separated by a single whitespace. e.g. 
+SNP and probe position files, e.g. 
    - snp146Common_MatrixEQTL_snp_pos.txt
    - biomart_QCd_probes_genomic_locations_annot_MatrixeQTL.txt
+must be tab separated. 
 
 See:
 
@@ -201,7 +193,9 @@ condition <- as.character(args[['--condition']])
 snpspos <- as.character(args[['--snpspos']])
 genepos <- as.character(args[['--genepos']])
 # snpspos <- 'snp146Common_MatrixEQTL_snp_pos.txt'
+# snpspos <- 'snpsloc.txt'
 # genepos <- 'biomart_QCd_probes_genomic_locations_annot_MatrixeQTL.txt'
+# genepos <- 'geneloc.txt'
 
 # Set up MatrixEQTL options:
 useModel <- as.character(args[['--model']])
@@ -212,6 +206,10 @@ if (useModel == 'modelLINEAR') {
     } else if (useModel == 'modelLINEAR_CROSS') {
       useModel = modelLINEAR_CROSS
       } else (useModel <- modelLINEAR)
+# These will appear as:
+# modelLINEAR = 117348L;
+# modelANOVA  = 47074L;
+# modelLINEAR_CROSS = 1113461L;
 
 # The p-value threshold determines which gene-SNP associations are saved in the output file output_file_name. 
 # Note that for larger datasets the threshold should be lower. 
@@ -232,8 +230,9 @@ str(args)
 ##########
 # Set output file names:
 if (is.null(args[['-O']])) {
+  stopifnot(!is.null(args[['--geno']]), !is.null(args[['--gex']]))
   print('Output file name prefix not given. Using:')
-  # Separate names componenets based on convention for input in this script:
+  # Separate name components based on convention for input in this script:
   infile_1 <- strsplit(SNP_file, '-')
   cohort <- infile_1[[1]][1]
   platform1 <- infile_1[[1]][2]
@@ -285,7 +284,7 @@ if (is.null(args[['--cov']])) {
 if (is.null(args[['--snpspos']]) | is.null(args[['--genepos']])) {
   print('SNP and/or probe (gene expression, metabolites, etc.) position files not provided, running analysis without (no cis vs trans).')
 } else {
-  snpPos <- fread(snpspos, sep = ' ', header = TRUE, stringsAsFactors = FALSE)
+  snpPos <- fread(snpspos, sep = '\t', header = TRUE, stringsAsFactors = FALSE)
   head(snpPos)
   dim(snpPos)
   probePos <- fread(genepos, sep = '\t', header = TRUE, stringsAsFactors = FALSE)
@@ -298,22 +297,24 @@ if (is.null(args[['--snpspos']]) | is.null(args[['--genepos']])) {
   class(probePos)
   # Set cis and trans output file names:
   output_file_name.cis <- sprintf('%s.cis', output_file_name)
-  output_file_name <- sprintf('%s.trans', output_file_name)
+  output_file_name.trans <- sprintf('%s.trans', output_file_name)
 }
 
 # Provide a name for the condition being run if none given:
-if (is.null(args[['--condition']])) {
-  if (is.na(descriptor_2)) {
+# If neither --condition or the naming convention appear:
+if (is.null(args[['--condition']]) & !exists('descriptor_2')) {
     time_run <- as.character(gsub(' ', '_', as.character(Sys.time())))
     print(sprintf("You did not provide a name for the condition (i.e. tissue) and your input files
                    don't follow this script's convention, using a timestamp instead: %s.", time_run))
     condition <- time_run
-  }
-  else {
+  } else {
+    # If --condition isn't given but the naming convention is followed so can pick it up:
+    if (!is.null(args[['--condition']]) & exists('descriptor_2')) {
   print(sprintf('You did not provide a name for the condition file, using %s instead.', descriptor_2))
   condition <- sprintf('%s', descriptor_2)
+    }
   }
-}
+# If --condition is given that takes priority (through docopt without specifying more)
 # MatrixEQTL reads in the main files.
 ######################
 
@@ -358,12 +359,12 @@ gene
 # Call the main Matrix eQTL function
 
 # If cis information available run:
-if (is.null(snpspos) & is.null(snpspos)) {
+if (!is.null(snpspos) & !is.null(genepos)) {
   me <- Matrix_eQTL_main(
     snps = snps,
     gene = gene,
     cvrt = cvrt,
-    output_file_name = output_file_name,
+    output_file_name = output_file_name.trans,
     useModel = useModel,
     errorCovariance = errorCovariance,
     verbose = TRUE,
@@ -414,15 +415,6 @@ if (is.null(snpspos) & is.null(snpspos)) {
 # nrow(me$trans$eqtls)
 # head(me$trans$ntests)
 ##########
-
-##########
-# Print some results to screen:
-cat('Analysis done in: ', me$time.in.sec, ' seconds', '\n');
-cat('Detected local eQTLs:', '\n');
-show(me$cis$eqtls)
-cat('Detected distant eQTLs:', '\n');
-show(me$trans$eqtls)
-##########
 ######################
 
 ######################
@@ -433,7 +425,8 @@ show(me$trans$eqtls)
 # library(ggplot2)
 # plot:
 svg(sprintf('%s.qqplot.svg', output_file_name))
-plot(me, main = '',
+plot(me,
+     main = '',
      # cex.main = 1.25,
      cex.lab = 1.25,
      cex.axis = 0.75)
@@ -459,13 +452,31 @@ cat(file = degrees_filename, condition, "\t", me$param$dfFull, '\n', append = TR
 log_file <- sprintf('%s.log', output_file_name)
 sink(log_file, append = TRUE, split = TRUE, type = c("output", "message"))
 print(paste('Minimal log file for parameters called with:',
-            'EpiCompBio/pipeline_QTL/pipeline_QTL/matrixQTL/run_matrixEQTL.R'))
+            'run_matrixEQTL.R'))
 Sys.time()
 print(paste('Working directory :', getwd()))
 print('Arguments called from the command line:')
 str(args)
 print('Arguments saved in matrixEQTL object:')
 me$param
+
+cat('Analysis done in: ', me$time.in.sec, ' seconds', '\n')
+
+cat('Total eQTLs:', '\n')
+me$all$ntests
+cat(sprintf('Significant (total) eQTLs below raw p-value %s:', pvOutputThreshold), '\n')
+me$all$neqtls
+
+cat('Total local (cis) eQTLs:', '\n');
+me$cis$ntests
+cat(sprintf('Significant local (cis) eQTLs below raw p-value %s:', pvOutputThreshold.cis), '\n')
+me$cis$neqtls
+
+cat('Total distant (trans) eQTLs:', '\n');
+me$trans$ntests
+cat(sprintf('Significant distant (trans) eQTLs below raw p-value %s:', pvOutputThreshold), '\n')
+me$trans$neqtls
+
 sink()
 ######################
 

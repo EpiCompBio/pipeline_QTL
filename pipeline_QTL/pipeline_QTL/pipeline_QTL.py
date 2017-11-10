@@ -320,7 +320,9 @@ def conda_info():
     '''
 
     statement = '''conda info -a ;
-                   conda list
+                   conda list -e > conda_packages.txt ;
+                   conda list --show-channel-urls ;
+                   conda env export > environment.yml
                 '''
     P.run()
 

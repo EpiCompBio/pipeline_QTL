@@ -59,9 +59,7 @@ RUN apt-get install -qy \
 # Add conda channels, last to be added take priority
 # Don't use conda-forge with R as any packages will conflict with other
 # channels
-RUN /bin/bash -c 'conda config --add channels r \
-    && conda config --add channels bioconda \
-    && conda config --add channels defaults'
+RUN /bin/bash -c 'conda config --add channels conda-forge
 
 # There are dependency issues, specially rpy2, with clashes between conda-forge
 # and default r (r-base), see here for icu 54 vs 56:
@@ -87,16 +85,16 @@ RUN conda update -y conda
 #RUN /bin/bash -c 'source activate py35 ; \
 
 # Install all packages needed:
-RUN conda install -y git ; \
+RUN conda install -y r ; \
+    conda install -y r-docopt=0.4.5 r-data.table=1.10.4 r-ggplot2=2.2.1 ; \
+    conda install r-matrixeqtl=2.1.1 -c bioconda ; \
+    conda install -y git ; \
     pip install --upgrade pip cython numpy ; \
     pip install pysam ; \
     pip install pandas ; \
     pip install future ruffus ; \
     conda install -y sphinx ; \
     pip install sphinxcontrib-bibtex ; \
-    conda install -y r-base=3.3 r-MatrixEQTL=2.1.1 r-data.table=1.10.4 r-ggplot2=2.2.1 ; \
-    # Run docopt second as some conflict with r versions if installed at the
-    # same time:
     conda install -y r-docopt ; \
     #R --vanilla -e 'source("https://bioconductor.org/biocLite.R") ; install.packages("svglite", repos = "http://cran.us.r-project.org") ; library("svglite")' ; \
     wget --no-check-certificate https://raw.githubusercontent.com/CGATOxford/cgat/master/requires.txt ; \
