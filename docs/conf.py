@@ -189,10 +189,15 @@ extensions = ['sphinx.ext.autodoc',
 ################################################################
 # CGAT conf.py 
 #  XXXX/CGATPipelines/CGATPipelines/configuration/conf.py
-if P.CONFIG.has_section('intersphinx'):
-    intersphinx_mapping = dict(
-        [(x, (os.path.abspath(y), None))
-         for x, y in P.CONFIG.items('intersphinx')])
+try:
+    if P.CONFIG.has_section('intersphinx'):
+        intersphinx_mapping = dict(
+            [(x, (os.path.abspath(y), None))
+                for x, y in P.CONFIG.items('intersphinx')])
+except NameError:
+    print('''P is not defined as CGAT tools were not found, continuing without
+              intersphinx''')
+
 ################################################################
 
 
