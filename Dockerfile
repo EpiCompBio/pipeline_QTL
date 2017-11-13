@@ -89,21 +89,21 @@ RUN conda install -y r ; \
     conda install -y r-docopt=0.4.5 r-data.table=1.10.4 r-ggplot2=2.2.1 ; \
     conda install r-matrixeqtl=2.1.1 -c bioconda ; \
     conda install -y git ; \
-    pip install --upgrade pip cython numpy ; \
+    pip install --upgrade pip numpy ; \
+    pip install cython ; \
     pip install pysam ; \
     pip install pandas ; \
     pip install future ruffus ; \
     conda install -y sphinx ; \
     pip install sphinxcontrib-bibtex ; \
-    conda install -y r-docopt ; \
     #R --vanilla -e 'source("https://bioconductor.org/biocLite.R") ; install.packages("svglite", repos = "http://cran.us.r-project.org") ; library("svglite")' ; \
     wget --no-check-certificate https://raw.githubusercontent.com/CGATOxford/cgat/master/requires.txt ; \
     cat requires.txt | grep -v "#" | xargs -n 1 pip install ; \
     conda install -y alignlib-lite ; \
     conda install -y bedtools ; \
     conda install -y pybedtools ; \
-    conda install -y icu -c conda-forge ; \
-    pip install git+git://github.com/AntonioJBT/CGATPipeline_core.git ; \
+#    conda install -y icu -c conda-forge ; \
+    pip install git+git://github.com/AntonioJBT/CGATPipeline_core.git
 
 
 # This fails with continuumio/miniconda3 in this file and manually:

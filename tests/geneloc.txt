@@ -1,4 +1,4 @@
-geneid	chr	left	right
+geneid	chr	s1	s2
 Gene_01	chr1	721289	731289
 Gene_02	chr1	752565	762565
 Gene_03	chr1	777121	787121

@@ -1,4 +1,4 @@
-snpid	chr	pos
+snp	chr	pos
 Snp_01	chr1	721289
 Snp_02	chr1	752565
 Snp_03	chr1	777121

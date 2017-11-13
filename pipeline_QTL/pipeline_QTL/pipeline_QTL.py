@@ -1,6 +1,6 @@
 '''
-pipeline_name
-=============
+|project_name|
+===================
 
 :Author: |author_name|
 :Release: |version|
@@ -16,8 +16,11 @@ Overview
 Purpose
 =======
 
-.. briefly describe the main purpose and methods of the pipeline
 
+Ruffus pipeline which runs quantitative trait analysis.
+
+Originally thought for human QTls on gene expression but depending on the tool
+can run on other quantitative molecular phenotypes.
 
 
 Usage and options
@@ -32,7 +35,8 @@ These are based on CGATPipelines_ and Ruffus_, not docopt.
 
 For command line help type:
 
-    python pipeline_pq_example.py --help
+    python pipeline_QTL.py --help
+
 
 Configuration
 =============
@@ -50,29 +54,91 @@ re-runs of the pipeline.
 Input files
 ===========
 
-.. Describe the input files needed, urls for reference and preferably place
-example data somewhere.
+At least correctly formatted files with genotype and phenotype data.
+
+Depending on the tool run covariate files, SNP position and probe position
+files can be added.
+
+
+Quality controlled (molecular) phenotype (e.g. gene expression) and genotyping data. 
+
+Optionally covariates and error covariance matrix.
+
+Annotation files are also needed for cis vs trans analysis (SNPs positions and probe positions and any associated annotations).
+
+Files need to be in the same format as MatrixEQTL requires:
+
+SNPs/genes/covariates in rows, individuals in columns with (dummy) headers and row names (the first column and first row are skipped when read).
+
+Missing values must be set as "NA".
+
+SNP and probe position files, e.g.
+   - snp146Common_MatrixEQTL_snp_pos.txt
+   - biomart_QCd_probes_genomic_locations_annot_MatrixeQTL.txt
+must be tab separated.
+
+See:
+
+http://www.bios.unc.edu/research/genomic_software/Matrix_eQTL/
+
+
+Naming convention for input files
+=================================
+
+Output files get named based on the input files. The script assumes "cohort" is the same for input files (but only takes it from the genotype file).
+
+Please rename your files in the following way (use soft links to rename for example):
+
+Infile: cohort-platform-other_descriptor.suffix
+
+Outfile: cohort-platform_infile1-descriptor1-platform_infile2-descriptor2.new_suffix
+
+For example:
+
+genotype file: airwave-illumina_exome-all_chrs.geno
+
+phenotype file: airwave-NMR-blood.txt
+
+and depending on the input and arguments you might get:
+
+airwave-illumina_exome-all_chrs-NMR-blood.MxEQTL
+airwave-illumina_exome-all_chrs-NMR-blood.MxEQTL.cis
+airwave-illumina_exome-all_chrs-NMR-blood.MxEQTL.trans
+airwave-illumina_exome-all_chrs-NMR-blood.MxEQTL.qqplot.svg
+airwave-illumina_exome-all_chrs-NMR-blood.MxEQTL.degrees_condition.txt
+airwave-illumina_exome-all_chrs-NMR-blood.MxEQTL.log
+
+File names can get long so use abbreviations or short versions.
+
+You can also override this and simply choose your outfile prefix.
+
+If you do not use an outfile name and your files do not follow the naming above you might get something like:
+
+"SNP.txt-NA-NA-NA-NA.MxEQTL"
+
 
 
 Pipeline output
 ===============
 
-.. Describe output files and results
+Namely a qqlot and tables of genotype molecular phenotype associations. These are saved in the working directory.
 
 
 Requirements
 ============
 
-CGATPipelines core setup, Ruffus as well as the following
-software to be in the path:
+See requirements.txt and Dockerfile for information
 
-.. Add any additional external requirements such as 3rd party software
-   or R modules below:
+Minimum requirements are:
 
-Requirements:
-
-* R >= 1.1
+* Ruffus
+* CGATCore
+* R >= 3.2
 * Python >= 3.5
+* r-docopt
+* r-data.table
+* r-ggplot2
+
 
 Documentation
 =============
@@ -280,6 +346,24 @@ def connect():
 ################
 # Specific pipeline tasks
 # Tools called need the full path or be directly callable
+
+@mkdir('MatrixEQTL')
+@transform()
+def run_MxQTL():
+    '''
+
+    '''
+
+    statement = '''
+                
+                '''
+    P.run()
+
+def load_MxQTL():
+    '''
+    Load the results of run_MxQTL() into an SQL database.
+    '''
+    P.load(infile, outfile, '--add-index=word')
 
 @transform((INI_file, "conf.py"),
            regex("(.*)\.(.*)"),
