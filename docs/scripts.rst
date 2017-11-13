@@ -1,3 +1,6 @@
+.. include:: ../substitution_vars.rst
+
+
 |project_name| package
 ==========================================
 
