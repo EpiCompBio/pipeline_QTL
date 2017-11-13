@@ -28,14 +28,6 @@ pipeline_QTL
 
 Python based pipeline for quantitative trait loci analysis.
 
-
-To use
-------
-
-.. code-block:: bash 
-
-    pip install git+git://github.com/EpiCompBio/pipeline_QTL.git
-
 Features
 --------
 
@@ -49,6 +41,29 @@ Installation
 .. code-block:: bash
     
     pip install git+git://github.com/EpiCompBio/pipeline_QTL.git
+
+
+To use
+------
+
+.. code-block:: bash 
+
+    pip install git+git://github.com/EpiCompBio/pipeline_QTL.git
+    # Create a folder or a whole data science project, e.g. project_quickstart -n QTL_project
+    cd QTL_project/results
+    mkdir tests ; cd tests
+    # Download test files, e.g.:
+    wget -nH -np -r --cut-dirs=4 -A .txt http://www.bios.unc.edu/research/genomic_software/Matrix_eQTL/Sample_Data/
+    python pipeline_QTL --help
+    python pipeline_QTL config
+    # Edit pipeline_QTL.ini to adjust the parameters you want, this is essential
+    python pipeline_QTL show full
+    python pipeline_QTL printconfig
+    python pipeline_QTL plot full
+    python pipeline_QTL make full --local
+    python pipeline_QTL make make_report --local
+    open pipeline_report/_build/latex/pipeline_QTL.pdf
+
 
 Contribute
 ----------
