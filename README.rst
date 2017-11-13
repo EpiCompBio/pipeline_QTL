@@ -15,6 +15,8 @@
 .. .. image:: https://zenodo.org/badge/#######.svg
       :target: https://zenodo.org/badge/latestdoi/#####
 
+IN PROGRESS
+
 ################################################
 pipeline_QTL
 ################################################
@@ -28,11 +30,31 @@ pipeline_QTL
 
 Python based pipeline for quantitative trait loci analysis.
 
+For the general framework and workflow see project_quickstart_ docs and CGAT_.
+
+.. _project_quickstart: https://github.com/AntonioJBT/project_quickstart
+
+.. _CGAT: https://github.com/CGATOxford/CGATCore
+
 Features
 --------
 
 - Python based pipeline for QTL analysis
 - Currently runs MatrixEQTL on an arbitrary number of inputs and outputs association files, basic plots such as qqplots.
+
+
+Requirements
+------------
+
+See requirements files and Dockerfile for full information. At the least you'll need:
+
+* CGATCore
+* R >= 3.2
+* Python >= 3.5
+* r-matrixeqtl
+* r-docopt
+* r-data.table
+* r-ggplot2
 
 
 Installation
