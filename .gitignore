@@ -4,6 +4,7 @@
 .dir_bash_history
 *.dir_bash_history
 .DS_Store
+tests/.DS_Store
 *.DS_Store
 .ipynb_checkpoints
 
