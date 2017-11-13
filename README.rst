@@ -2,18 +2,18 @@
 
 .. copy across your travis "build..." logo so that it appears in your Github page
 
-.. .. image:: https://travis-ci.org/EpiCompBio/pipeline_QTL.svg?branch=master
+.. image:: https://travis-ci.org/EpiCompBio/pipeline_QTL.svg?branch=master
     :target: https://travis-ci.org/EpiCompBio/pipeline_QTL
 
 .. do the same for ReadtheDocs image:
 
-.. .. image:: https://readthedocs.org/projects/pipeline_QTL/badge/?version=latest
+.. image:: https://readthedocs.org/projects/pipeline_QTL/badge/?version=latest
     :target: http://pipeline_QTL.readthedocs.io/en/latest/?badge=latest
     :alt: Documentation Status
 
-.. Zenodo gives a number instead, this needs to be put in manually here:
-.. image:: https://zenodo.org/badge/#######.svg
-    :target: https://zenodo.org/badge/latestdoi/#####
+.. .. Zenodo gives a number instead, this needs to be put in manually here:
+.. .. image:: https://zenodo.org/badge/#######.svg
+      :target: https://zenodo.org/badge/latestdoi/#####
 
 ################################################
 pipeline_QTL
