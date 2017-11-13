@@ -12,6 +12,7 @@ cython
 pysam
 drmaa>=0.7
 sphinx>=1.0.5
+sphinxcontrib-bibtex
 
 #pep8>=1.4.0
 #nose>=1.3.0
