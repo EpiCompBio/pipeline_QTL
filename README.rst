@@ -15,7 +15,8 @@
 .. .. image:: https://zenodo.org/badge/#######.svg
       :target: https://zenodo.org/badge/latestdoi/#####
 
-IN PROGRESS
+
+**IN PROGRESS**
 
 ################################################
 pipeline_QTL
@@ -61,8 +62,8 @@ Installation
 ------------
 
 .. code-block:: bash
-    
-    pip install git+git://github.com/EpiCompBio/pipeline_QTL.git
+   
+   pip install git+git://github.com/EpiCompBio/pipeline_QTL.git
 
 
 To use
@@ -70,7 +71,6 @@ To use
 
 .. code-block:: bash 
 
-    pip install git+git://github.com/EpiCompBio/pipeline_QTL.git
     # Create a folder or a whole data science project, e.g. project_quickstart -n QTL_project
     cd QTL_project/results
     mkdir tests ; cd tests
@@ -92,8 +92,12 @@ Contribute
 
 - Issue Tracker: github.com/EpiCompBio/pipeline_QTL/issues
 - Source Code: github.com/EpiCompBio/pipeline_QTL
+- Pull requests welcome!
+
 
 Support
 -------
 
-If you are having issues, please let us know.
+If you have any issues, pull requests, etc. please report them in the issue tracker. 
+
+
