@@ -1,6 +1,6 @@
 ##################################################
-# Dockerfile for project_quickstart 
-# https://github.com/AntonioJBT/project_quickstart
+# Dockerfile for
+# https://github.com/EpiCompBio/pipeline_QTL
 ##################################################
 
 
@@ -57,62 +57,59 @@ RUN apt-get install -qy \
 #RUN export PATH="/usr/local/miniconda/bin:$PATH"
 
 # Add conda channels, last to be added take priority
-# Don't use conda-forge with R as any packages will conflict with other
+# Don't mix conda-forge and/or bioconda with defaults channel in R as packages
+# will conflict with other and fail
 # channels
-RUN /bin/bash -c 'conda config --add channels conda-forge
-
-# There are dependency issues, specially rpy2, with clashes between conda-forge
-# and default r (r-base), see here for icu 54 vs 56:
-#https://github.com/conda-forge/conda-forge.github.io/issues/234
-# but updates, new recipes, etc. changed things. 
-# Solution was to update/re-install icu, which switches it to conda-forge icu58:
-#RUN conda install -y icu
+RUN conda config --add channels bioconda ; \
+    conda config --add channels conda-forge ; \
+    conda config --remove channels defaults ; \
+    conda config --remove channels r
 
 # Update conda:
 RUN conda update -y conda
 
-# Create a python 3.5 environment:
-#RUN conda create -y -n py35 python=3.5
+#########################
+# Install dependencies
+#########################
 
-# Environments can't easily be sourced from a Dockerfile
-# Mixing RUN with source errors, use instead this form of RUN:
-# See:
-# https://stackoverflow.com/questions/20635472/using-the-run-instruction-in-a-dockerfile-with-source-does-not-work
-# https://docs.docker.com/engine/reference/builder/#run
-# https://stackoverflow.com/questions/20635472/using-the-run-instruction-in-a-dockerfile-with-source-does-not-work/45087082#45087082
-# Install everything in the virtual environment:
-# Several cgat dependecies fail with pip so run with conda instead:
-#RUN /bin/bash -c 'source activate py35 ; \
+# Install all packages needed
+# Major packages:
+RUN conda install python=3.5 ; \
+    conda install -y r ; \
+    conda install -y git
 
-# Install all packages needed:
-RUN conda install -y r ; \
-    conda install -y r-docopt=0.4.5 r-data.table=1.10.4 r-ggplot2=2.2.1 ; \
-    conda install r-matrixeqtl=2.1.1 -c bioconda ; \
-    conda install -y git ; \
-    pip install --upgrade pip numpy ; \
+# Install python packages:
+RUN pip install --upgrade pip numpy ; \
     pip install cython ; \
     pip install pysam ; \
     pip install pandas ; \
     pip install future ruffus ; \
     conda install -y sphinx ; \
-    pip install sphinxcontrib-bibtex ; \
-    #R --vanilla -e 'source("https://bioconductor.org/biocLite.R") ; install.packages("svglite", repos = "http://cran.us.r-project.org") ; library("svglite")' ; \
-    wget --no-check-certificate https://raw.githubusercontent.com/CGATOxford/cgat/master/requires.txt ; \
+    pip install sphinxcontrib-bibtex
+
+# Install CGAT tools:
+RUN wget --no-check-certificate https://raw.githubusercontent.com/CGATOxford/cgat/master/requires.txt ; \
     cat requires.txt | grep -v "#" | xargs -n 1 pip install ; \
     conda install -y alignlib-lite ; \
     conda install -y bedtools ; \
     conda install -y pybedtools ; \
-#    conda install -y icu -c conda-forge ; \
+    conda install -y ucsc-wigtobigwig ; \
     pip install git+git://github.com/AntonioJBT/CGATPipeline_core.git ; \
     pip install cgat
-    
+ 
+# Install project specific packages:
+RUN conda install -y r-docopt=0.4.5 r-data.table=1.10.4 r-ggplot2=2.2.1 ; \
+    conda install r-matrixeqtl=2.1.1 -c bioconda
+    #R --vanilla -e 'source("https://bioconductor.org/biocLite.R") ; install.packages("svglite", repos = "http://cran.us.r-project.org") ; library("svglite")' ; \
 
+# Install rpy2 with conda as pip version causes conflicts:
+RUN conda install -y rpy2
 
-# This fails with continuumio/miniconda3 in this file and manually:
-#    pip install cgat
-# This also fails:
-#    pip install git+git://github.com/CGATOxford/cgat.git
+##############################
+# Install package of interest
+##############################
 
+RUN pip install git+git://github.com/EpiCompBio/pipeline_QTL.git
 
 ############################
 # Default action to start in
@@ -133,7 +130,6 @@ CMD ["/bin/bash"]
 # If mounting a volume do e.g.:
 # docker run -v /host/directory:/container/directory --rm -ti antoniojbt/pipe_tests
 # docker run -v ~/Documents/github.dir/docker_tests.dir:/home/ --rm -ti antoniojbt/pipe_tests_alpine
-
 
 # Create a shared folder between docker container and host
 #VOLUME ["/shared/data"]
