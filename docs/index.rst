@@ -2,7 +2,7 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-.. include:: report_substitution_vars.rst
+.. include:: ../substitution_vars.rst
 
 Welcome to |project_name|'s documentation!
 ======================================================
