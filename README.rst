@@ -2,13 +2,13 @@
 
 .. copy across your travis "build..." logo so that it appears in your Github page
 
-.. .. image:: https://travis-ci.org/|github_user|/|project_name|.svg?branch=master
-    :target: https://travis-ci.org/|github_user|/|project_name|
+.. .. image:: https://travis-ci.org/EpiCompBio/pipeline_QTL.svg?branch=master
+    :target: https://travis-ci.org/EpiCompBio/pipeline_QTL
 
 .. do the same for ReadtheDocs image:
 
-.. .. image:: https://readthedocs.org/projects/|project_name|/badge/?version=latest
-    :target: http://|project_name|.readthedocs.io/en/latest/?badge=latest
+.. .. image:: https://readthedocs.org/projects/pipeline_QTL/badge/?version=latest
+    :target: http://pipeline_QTL.readthedocs.io/en/latest/?badge=latest
     :alt: Documentation Status
 
 .. Zenodo gives a number instead, this needs to be put in manually here:
@@ -16,7 +16,7 @@
     :target: https://zenodo.org/badge/latestdoi/#####
 
 ################################################
-|project_name|
+pipeline_QTL
 ################################################
 
 
@@ -26,50 +26,37 @@
 .. For a discussion/approach see 
     http://tom.preston-werner.com/2010/08/23/readme-driven-development.html
 
-|short_description|
-
-
-|long_description|
+Python based pipeline for quantitative trait loci analysis.
 
 
 To use
 ------
 
-.. code:: 
+.. code-block:: bash 
 
-    import project
-    # Get your stuff done
-    project.do_stuff()
+    pip install git+git://github.com/EpiCompBio/pipeline_QTL.git
 
 Features
 --------
 
-- Something really useful
-- Makes things faster
+- Python based pipeline for QTL analysis
+- Currently runs MatrixEQTL on an arbitrary number of inputs and outputs association files, basic plots such as qqplots.
+
 
 Installation
 ------------
 
-Install |project_name| by running:
-
-.. code::
+.. code-block:: bash
     
-    install project
+    pip install git+git://github.com/EpiCompBio/pipeline_QTL.git
 
 Contribute
 ----------
 
-- Issue Tracker: github.com/|project_name|/|project_name|/issues
-- Source Code: github.com/|project_name|/|project_name|
+- Issue Tracker: github.com/EpiCompBio/pipeline_QTL/issues
+- Source Code: github.com/EpiCompBio/pipeline_QTL
 
 Support
 -------
 
 If you are having issues, please let us know.
-We have a mailing list located at: |author_email|
-
-License
--------
-
-The project is licensed under the |license|.
-
