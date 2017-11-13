@@ -55,6 +55,15 @@ recursive-include tests *
 # Include addtional files needed, example data, etc.:
 include data_examples *
 
+# Project specific files to include:
+recursive-include pipeline_QTL *.R
+recursive-include pipeline_QTL *.bat
+recursive-include pipeline_QTL *.ini
+recursive-include pipeline_QTL *.py
+recursive-include pipeline_QTL *.rst
+recursive-include pipeline_QTL *.sh
+recursive-include pipeline_QTL Makefile
+
 # Files to exclude:
 exclude .gitignore
 exclude .dir_bash_history
