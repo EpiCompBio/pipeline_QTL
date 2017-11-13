@@ -127,14 +127,12 @@ Namely a qqlot and tables of genotype molecular phenotype associations. These ar
 Requirements
 ============
 
-See requirements.txt and Dockerfile for information
+See requirements files and Dockerfile for full information. At the least you'll need:
 
-Minimum requirements are:
-
-* Ruffus
 * CGATCore
 * R >= 3.2
 * Python >= 3.5
+* r-matrixeqtl
 * r-docopt
 * r-data.table
 * r-ggplot2
@@ -359,11 +357,14 @@ def run_MxQTL():
                 '''
     P.run()
 
+@transform(run_MxQTL, suffix('.'), )
 def load_MxQTL():
     '''
     Load the results of run_MxQTL() into an SQL database.
     '''
+
     P.load(infile, outfile, '--add-index=word')
+
 
 @transform((INI_file, "conf.py"),
            regex("(.*)\.(.*)"),

@@ -103,7 +103,9 @@ RUN conda install -y r ; \
     conda install -y bedtools ; \
     conda install -y pybedtools ; \
 #    conda install -y icu -c conda-forge ; \
-    pip install git+git://github.com/AntonioJBT/CGATPipeline_core.git
+    pip install git+git://github.com/AntonioJBT/CGATPipeline_core.git ; \
+    pip install cgat
+    
 
 
 # This fails with continuumio/miniconda3 in this file and manually:
