@@ -99,6 +99,8 @@ genotype file: airwave-illumina_exome-all_chrs.geno
 
 phenotype file: airwave-NMR-blood.txt
 
+covariates file: airwave-NMR-blood.cov
+
 and depending on the input and arguments you might get:
 
 airwave-illumina_exome-all_chrs-NMR-blood.MxEQTL
@@ -116,7 +118,7 @@ If you do not use an outfile name and your files do not follow the naming above 
 
 "SNP.txt-NA-NA-NA-NA.MxEQTL"
 
-
+If running in a pipeline .geno, .pheno and .cov are required.
 
 Pipeline output
 ===============
@@ -320,6 +322,13 @@ def someFunc():
 
 
 ################
+# Get command line tools to run: 
+QTL_tools = P.asList(PARAMS["QTL_tools"])
+
+################
+
+
+################
 # Utility functions
 def connect():
     '''utility function to connect to database.
@@ -345,25 +354,60 @@ def connect():
 # Specific pipeline tasks
 # Tools called need the full path or be directly callable
 
-@mkdir('MatrixEQTL')
-@transform()
-def run_MxQTL():
-    '''
 
+#@transform()
+#def mapReads(infile, outfile):
+#    # initialize the Tool
+#    m = PipelineMapping.Hisat(
+#         executable=P.substituteParameters(**locals())["hisat_executable"],
+#         strip_sequence=PARAMS["strip_sequence"])
+#    # build the command line statement
+#    statement = m.build((infile,), outfile)
+#    P.run()
+
+@active_if('matrixeqtl' in QTL_tools)
+@mkdir('MatrixEQTL')
+@transform(r'(*).geno', suffix('.geno'), '.tsv', r'\1.pheno', r'\1.cov')
+def run_MxQTL(geno_infile, outfile, pheno_infile, cov_infile):
     '''
+    Run MatrixEQTL wrapper script.
+    '''
+    # Check there is a covariates file, otherwise run without:
+    f_cov = r'\1.cov'
+    for f in os.walk('.'):
+        if f str.endswith('cov'):
+            cov_infile = cov_infile
+        else:
+            cov_infile = None
+
+    tool_options = P.substituteParameters(**locals())["matrixeqtl_options"],
 
     statement = '''
-                
+                Rscript %(project_dir)s/run_matrixEQTL.R \
+                --gex %(pheno_infile)s \
+                --geno %(geno_infile)s \
+                --cov %(cov_infile)s \
+                %(tool_options)s
                 '''
+                #-O %(outfile)s
+                #--model modelANOVA
+                #--pvOutputThreshold 0.05
+                #--snpspos snpsloc.txt
+                #--genepos geneloc.txt
+                #--pvOutputThreshold.cis 0.1
+                #--session mxqtl
+                #--condition cond_test
+
     P.run()
 
-@transform(run_MxQTL, suffix('.'), )
+@follows(run_MxQTL)
+@transform(run_MxQTL, suffix('.tsv'), '.load')
 def load_MxQTL():
     '''
     Load the results of run_MxQTL() into an SQL database.
     '''
 
-    P.load(infile, outfile, '--add-index=word')
+    P.load(infile, outfile)
 
 
 @transform((INI_file, "conf.py"),

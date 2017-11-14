@@ -91,7 +91,9 @@ For example:
 
 genotype file: airwave-illumina_exome-all_chrs.geno
 
-phenotype file: airwave-NMR-blood.txt
+phenotype file: airwave-NMR-blood.pheno
+
+covariates file: airwave-NMR-blood.cov
 
 and depending on the input and arguments you might get:
 
@@ -110,6 +112,7 @@ If you do not use an outfile name and your files do not follow the naming above 
 
 "SNP.txt-NA-NA-NA-NA.MxEQTL"
 
+This script will take files with any suffix. If running in a pipeline .geno, .pheno and .cov are required.
 
 Requirements
 ============
