@@ -5,6 +5,7 @@
     # For function to search path see: 
     # http://stackoverflow.com/questions/4519127/setuptools-package-data-folder-location
 # MANIFEST.in file instructs the project_quickstart/templates folder to be included in installation
+import os
 
 _ROOT = os.path.abspath(os.path.dirname(__file__))
 def getDir(path = _ROOT):
