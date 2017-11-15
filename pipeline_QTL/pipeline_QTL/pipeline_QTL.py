@@ -35,7 +35,7 @@ These are based on CGATPipelines_ and Ruffus_, not docopt.
 
 For command line help type:
 
-    python pipeline_QTL.py --help
+    pipeline_QTL --help
 
 
 Configuration
@@ -60,7 +60,7 @@ Depending on the tool run covariate files, SNP position and probe position
 files can be added.
 
 
-Quality controlled (molecular) phenotype (e.g. gene expression) and genotyping data. 
+Quality controlled (molecular) phenotype (e.g. gene expression) and genotyping data.
 
 Optionally covariates and error covariance matrix.
 
@@ -272,24 +272,8 @@ def getINIpaths():
 
 
 ################
-# Get pipeline.ini file
-# With CGAT tools run as:
-# Load options from the config file
-INI_file = getINI()
-PARAMS = P.getParameters([INI_file])
-
-# Read from the pipeline.ini configuration file
-# where "pipeline" = section (or key)
-# "outfile_pandas" option (value)
-# separated by "_"
-# CGATPipelines.Pipeline takes some of the work away.
-# e.g.:
-################
-
-
-################
 # Get command line tools to run:
-QTL_tools = P.asList(PARAMS["QTL_tools"])
+QTL_tools = P.asList(PARAMS["pipeline_tools"])
 
 ################
 
