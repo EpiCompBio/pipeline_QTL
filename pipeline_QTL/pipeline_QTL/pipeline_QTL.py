@@ -273,32 +273,10 @@ def getINIpaths():
 
 ################
 # Get pipeline.ini file
-# Use this if not based on CGATPipelines:
-# Many more functions need changing though
-
-#def getINI():
-#    path = os.path.splitext(__file__)[0]
-#    paths = [path, os.path.join(os.getcwd(), '..'), os.getcwd()]
-#    f_count = 0
-#    for path in paths:
-#        if os.path.exists(path):
-#            for f in os.listdir(path):
-#                if (f.endswith('.ini') and f.startswith('pipeline')):
-#                    f_count += 1
-#                    INI_file = f
-
-#    if f_count != 1:
-#        raise ValueError('''No pipeline ini file found or more than one in the
-#                            directories:
-#                            {}
-#                        '''.format(paths)
-#                        )
-#    return(INI_file)
-
 # With CGAT tools run as:
 # Load options from the config file
-#INI_file = getINI()
-#PARAMS = P.getParameters([INI_file])
+INI_file = getINI()
+PARAMS = P.getParameters([INI_file])
 
 # Read from the pipeline.ini configuration file
 # where "pipeline" = section (or key)
@@ -306,23 +284,11 @@ def getINIpaths():
 # separated by "_"
 # CGATPipelines.Pipeline takes some of the work away.
 # e.g.:
-'''
-def someFunc():
-    " Comment function "
-    if "pipeline_outfile_pandas" in PARAMS:
-        outfile = PARAMS["pipeline_outfile_pandas"]
-    else:
-        outfile = 'pandas_DF'
-
-    statement = " cd pq_results ; python pq_example.py --createDF -O %(outfile)s "
-    # Use CGATPipelines to handle the job:
-    P.run()
-'''
 ################
 
 
 ################
-# Get command line tools to run: 
+# Get command line tools to run:
 QTL_tools = P.asList(PARAMS["QTL_tools"])
 
 ################
@@ -351,10 +317,12 @@ def connect():
 
 
 ################
+#####
 # Specific pipeline tasks
 # Tools called need the full path or be directly callable
 
-
+# To add options for a cli tool do substitution straight from options or load
+# from a module like:
 #@transform()
 #def mapReads(infile, outfile):
 #    # initialize the Tool
@@ -364,29 +332,41 @@ def connect():
 #    # build the command line statement
 #    statement = m.build((infile,), outfile)
 #    P.run()
+#
+#####
 
+#####
+# Run matrixeqtl:
 @active_if('matrixeqtl' in QTL_tools)
 @mkdir('MatrixEQTL')
-@transform(r'(*).geno', suffix('.geno'), '.tsv', r'\1.pheno', r'\1.cov')
-def run_MxQTL(geno_infile, outfile, pheno_infile, cov_infile):
+@transform('*.geno',
+           regex(r'(.+).geno'),
+           add_inputs([r'\1.pheno',
+                       r'\1.cov',
+                       ]),
+           '.touch')
+def run_MxQTL(infiles, outfiles):
     '''
     Run MatrixEQTL wrapper script.
     '''
-    # Check there is a covariates file, otherwise run without:
-    f_cov = r'\1.cov'
-    for f in os.walk('.'):
-        if f str.endswith('cov'):
-            cov_infile = cov_infile
-        else:
-            cov_infile = None
+    # Set up infiles:
+    geno_file = infiles[0]
+    pheno_file = infiles[1][0]
+    cov_file = infiles[1][1]
+    print(infiles)
+    # Check there is an actual covariates file present, otherwise run without:
+    if cov_file:
+        cov_file = cov_file
+    else:
+        cov_file = None
 
     tool_options = P.substituteParameters(**locals())["matrixeqtl_options"],
 
     statement = '''
                 Rscript %(project_dir)s/run_matrixEQTL.R \
-                --gex %(pheno_infile)s \
-                --geno %(geno_infile)s \
-                --cov %(cov_infile)s \
+                --gex %(pheno_file)s \
+                --geno %(geno_file)s \
+                --cov %(cov_file)s \
                 %(tool_options)s
                 '''
                 #-O %(outfile)s
@@ -400,49 +380,23 @@ def run_MxQTL(geno_infile, outfile, pheno_infile, cov_infile):
 
     P.run()
 
-@follows(run_MxQTL)
-@transform(run_MxQTL, suffix('.tsv'), '.load')
-def load_MxQTL():
+#@follows(run_MxQTL)
+@transform(run_MxQTL, suffix('.tsv'), '.tsv.load')
+def load_MxQTL(infile, outfile):
     '''
     Load the results of run_MxQTL() into an SQL database.
     '''
-
     P.load(infile, outfile)
+#####
 
-
-@transform((INI_file, "conf.py"),
-           regex("(.*)\.(.*)"),
-           r"\1.counts")
-def countWords(infile, outfile):
-    '''count the number of words in the pipeline configuration files.'''
-
-    # the command line statement we want to execute
-    statement = '''awk 'BEGIN { printf("word\\tfreq\\n"); }
-    {for (i = 1; i <= NF; i++) freq[$i]++}
-    END { for (word in freq) printf "%%s\\t%%d\\n", word, freq[word] }'
-    < %(infile)s > %(outfile)s'''
-
-    # execute command in variable statement.
-    #
-    # The command will be sent to the cluster.  The statement will be
-    # interpolated with any options that are defined in in the
-    # configuration files or variable that are declared in the calling
-    # function.  For example, %(infile)s will we substituted with the
-    # contents of the variable "infile".
-    P.run()
-
-
-@transform(countWords,
-           suffix(".counts"),
-           "_counts.load")
-def loadWordCounts(infile, outfile):
-    '''load results of word counting into database.'''
-    P.load(infile, outfile, "--add-index=word")
+#####
+# Run some other tool:
+#####
 ################
 
 ################
 # Copy to log enviroment from conda:
-# TO DO: add to pipeline.py
+# TO DO: add to pipeline.py?
 def conda_info():
     '''
     Print to screen conda information and packages installed.
@@ -459,14 +413,14 @@ def conda_info():
 
 ################
 # Create the "full" pipeline target to run all functions specified
-@follows(loadWordCounts, conda_info)
+@follows(load_MxQTL, conda_info)
 def full():
     pass
 ################
 
-
 ################
-# Specify function to create reports pre-configured with sphinx-quickstart: 
+# Specify function to create reports pre-configured with sphinx-quickstart:
+@follows(full)
 def make_report():
     ''' Generates html and pdf versions of restructuredText files
         using sphinx-quickstart pre-configured files (conf.py and Makefile).

@@ -98,7 +98,7 @@ covariates file: airwave-NMR-blood.cov
 and depending on the input and arguments you might get:
 
 airwave-illumina_exome-all_chrs-NMR-blood.MxEQTL
-airwave-illumina_exome-all_chrs-NMR-blood.MxEQTL.cis
+airwave-illumina_exome-all_chrs-NMR-blood.MxEQTL.cis.tst
 airwave-illumina_exome-all_chrs-NMR-blood.MxEQTL.trans
 airwave-illumina_exome-all_chrs-NMR-blood.MxEQTL.qqplot.svg
 airwave-illumina_exome-all_chrs-NMR-blood.MxEQTL.degrees_condition.txt
@@ -299,24 +299,24 @@ if (is.null(args[['--snpspos']]) | is.null(args[['--genepos']])) {
   probePos <- as.data.frame(probePos)
   class(probePos)
   # Set cis and trans output file names:
-  output_file_name.cis <- sprintf('%s.cis', output_file_name)
-  output_file_name.trans <- sprintf('%s.trans', output_file_name)
+  output_file_name.cis <- sprintf('%s.cis.tsv', output_file_name)
+  output_file_name.trans <- sprintf('%s.trans.tsv', output_file_name)
 }
 
 # Provide a name for the condition being run if none given:
 # If neither --condition or the naming convention appear:
-if (is.null(args[['--condition']]) & !exists('descriptor_2')) {
+if (is.null(args[['--condition']]) & is.na(descriptor_2)) {
     time_run <- as.character(gsub(' ', '_', as.character(Sys.time())))
     print(sprintf("You did not provide a name for the condition (i.e. tissue) and your input files
                    don't follow this script's convention, using a timestamp instead: %s.", time_run))
     condition <- time_run
   } else {
     # If --condition isn't given but the naming convention is followed so can pick it up:
-    if (!is.null(args[['--condition']]) & exists('descriptor_2')) {
+    if (!is.null(args[['--condition']]) & !is.na(descriptor_2)) {
   print(sprintf('You did not provide a name for the condition file, using %s instead.', descriptor_2))
   condition <- sprintf('%s', descriptor_2)
     }
-  }
+    }
 # If --condition is given that takes priority (through docopt without specifying more)
 # MatrixEQTL reads in the main files.
 ######################
@@ -381,11 +381,13 @@ if (!is.null(snpspos) & !is.null(genepos)) {
     genepos = probePos,
     cisDist = cisDist)
 } else {
+  # Make the main results table end in tsv if no cis or trans being run:
+  output_file_name_no_cis <- sprintf('%s.tsv', output_file_name)
   me <- Matrix_eQTL_main(
     snps = snps,
     gene = gene,
     cvrt = cvrt,
-    output_file_name = output_file_name,
+    output_file_name = output_file_name_no_cis,
     useModel = useModel,
     errorCovariance = errorCovariance,
     verbose = TRUE,
@@ -451,7 +453,8 @@ cat(file = degrees_filename, condition, "\t", me$param$dfFull, '\n', append = TR
 
 
 ######################
-# Save a minimal file with p-value cut-offs and parameters called:
+##########
+# Save a minimal file with parameters called and basic counts (counts get saved as a separate dataframe though):
 log_file <- sprintf('%s.log', output_file_name)
 sink(log_file, append = TRUE, split = TRUE, type = c("output", "message"))
 print(paste('Minimal log file for parameters called with:',
@@ -462,25 +465,54 @@ print('Arguments called from the command line:')
 str(args)
 print('Arguments saved in matrixEQTL object:')
 me$param
-
 cat('Analysis done in: ', me$time.in.sec, ' seconds', '\n')
-
-cat('Total eQTLs:', '\n')
+# Total QTLs:
+cat('QTLs tested (cis plus trans):', '\t')
 me$all$ntests
-cat(sprintf('Significant (total) eQTLs below raw p-value %s:', pvOutputThreshold), '\n')
+cat(sprintf('Significant QTLs below raw p-value %s:', pvOutputThreshold), '\t')
 me$all$neqtls
-
-cat('Total local (cis) eQTLs:', '\n');
+# Cis counts:
+cat('Local (cis) QTLs tested:', '\t');
 me$cis$ntests
-cat(sprintf('Significant local (cis) eQTLs below raw p-value %s:', pvOutputThreshold.cis), '\n')
+cat(sprintf('Significant local (cis) QTLs below raw p-value %s:', pvOutputThreshold.cis), '\t')
 me$cis$neqtls
-
-cat('Total distant (trans) eQTLs:', '\n');
+# Trans counts:
+cat('Distant (trans) QTLs tested:', '\t');
 me$trans$ntests
-cat(sprintf('Significant distant (trans) eQTLs below raw p-value %s:', pvOutputThreshold), '\n')
+cat(sprintf('Significant distant (trans) QTLs below raw p-value %s:', pvOutputThreshold), '\t')
 me$trans$neqtls
-
+# Close:
 sink()
+##########
+
+##########
+# Save a minimal counts file with results:
+counts_df <- data.frame(as.character(output_file_name),
+                        me$all$ntests,
+                        me$all$neqtls,
+                        me$cis$ntests,
+                        me$cis$neqtls,
+                        me$trans$ntests,
+                        me$trans$neqtls,
+                        stringsAsFactors = FALSE)
+df_cols <- c('dataset',
+             'total_QTLs_tested',
+             sprintf('QTLs_below_p_%s:', pvOutputThreshold),
+             'local_QTLs_tested',
+             sprintf('local_QTLs_below_p_%s:', pvOutputThreshold.cis),
+             'distant_QTLs_tested',
+             sprintf('distant_QTLs_below_p_%s:', pvOutputThreshold)
+)
+colnames(counts_df) <- df_cols
+counts_file <- sprintf('%s.counts.tsv', output_file_name)
+write.table(file = counts_file,
+            x = counts_df,
+            sep = '\t',
+            na = 'NA',
+            row.names = FALSE,
+            col.names = TRUE,
+            quote = FALSE)
+##########
 ######################
 
 
