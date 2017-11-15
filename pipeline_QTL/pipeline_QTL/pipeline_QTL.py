@@ -434,8 +434,11 @@ def make_report():
     return
 ################
 
+def main():
+    sys.exit(P.main(sys.argv))
 
 ################
 if __name__ == "__main__":
-    sys.exit(P.main(sys.argv))
+    main()
+    #sys.exit(P.main(sys.argv))
 ################
