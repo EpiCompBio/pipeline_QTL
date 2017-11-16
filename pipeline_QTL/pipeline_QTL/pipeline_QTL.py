@@ -175,8 +175,11 @@ except ImportError:
 from builtins import dict
 
 # Import this project's module, uncomment if building something more elaborate: 
-try:
-    import pipeline_QTL as qtl
+#try:
+#    import pipeline_QTL as qtl
+#else:
+
+
 
 #except ImportError: 
 #    print("Could not import this project's module, exiting") 
@@ -272,7 +275,7 @@ def getINIpaths():
 
 ################
 # Get command line tools to run:
-QTL_tools = P.asList(PARAMS["pipeline_tools"])
+tools = P.asList(PARAMS["pipeline_tools"])
 
 ################
 
@@ -301,26 +304,8 @@ def connect():
 
 ################
 #####
-# Specific pipeline tasks
-# Tools called need the full path or be directly callable
-
-# To add options for a cli tool do substitution straight from options or load
-# from a module like:
-#@transform()
-#def mapReads(infile, outfile):
-#    # initialize the Tool
-#    m = PipelineMapping.Hisat(
-#         executable=P.substituteParameters(**locals())["hisat_executable"],
-#         strip_sequence=PARAMS["strip_sequence"])
-#    # build the command line statement
-#    statement = m.build((infile,), outfile)
-#    P.run()
-#
-#####
-
-#####
 # Run matrixeqtl:
-@active_if('matrixeqtl' in QTL_tools)
+@active_if('matrixeqtl' in tools)
 @mkdir('MatrixEQTL')
 @transform('*.geno',
            regex(r'(.+).geno'),
@@ -347,7 +332,7 @@ def run_MxQTL(infiles, outfiles):
 
     statement = '''
                 cd MatrixEQTL ;
-                Rscript %(project_dir)s/run_matrixEQTL.R \
+                Rscript %(pipeline_scripts_dir)s/run_matrixEQTL.R \
                 --gex %(pheno_file)s \
                 --geno %(geno_file)s \
                 --cov %(cov_file)s \
@@ -364,7 +349,7 @@ def run_MxQTL(infiles, outfiles):
 
     P.run()
 
-#@follows(run_MxQTL)
+@follows(run_MxQTL)
 @transform('*.tsv', suffix('.tsv'), '.tsv.load')
 def load_MxQTL(infile, outfile):
     '''
