@@ -97,7 +97,7 @@ For example:
 
 genotype file: airwave-illumina_exome-all_chrs.geno
 
-phenotype file: airwave-NMR-blood.txt
+phenotype file: airwave-NMR-blood.pheno
 
 covariates file: airwave-NMR-blood.cov
 
@@ -175,8 +175,8 @@ except ImportError:
 from builtins import dict
 
 # Import this project's module, uncomment if building something more elaborate: 
-#try: 
-#    import module_template.py 
+try:
+    import pipeline_QTL as qtl
 
 #except ImportError: 
 #    print("Could not import this project's module, exiting") 
@@ -327,7 +327,7 @@ def connect():
            add_inputs([r'\1.pheno',
                        r'\1.cov',
                        ]),
-           '.touch')
+           r'\1.touch')
 def run_MxQTL(infiles, outfiles):
     '''
     Run MatrixEQTL wrapper script.
@@ -346,6 +346,7 @@ def run_MxQTL(infiles, outfiles):
     tool_options = P.substituteParameters(**locals())["matrixeqtl_options"],
 
     statement = '''
+                cd MatrixEQTL ;
                 Rscript %(project_dir)s/run_matrixEQTL.R \
                 --gex %(pheno_file)s \
                 --geno %(geno_file)s \
@@ -364,7 +365,7 @@ def run_MxQTL(infiles, outfiles):
     P.run()
 
 #@follows(run_MxQTL)
-@transform(run_MxQTL, suffix('.tsv'), '.tsv.load')
+@transform('*.tsv', suffix('.tsv'), '.tsv.load')
 def load_MxQTL(infile, outfile):
     '''
     Load the results of run_MxQTL() into an SQL database.
@@ -411,7 +412,7 @@ def make_report():
         Existing reports are overwritten.
     '''
     if os.path.exists('report'):
-        statement = ''' cd report ;
+        statement = ''' cd pipeline_report ;
                         checkpoint ;
                         make html ;
                         ln -s _build/html/index.hmtl . ;
