@@ -16,7 +16,12 @@
       :target: https://zenodo.org/badge/latestdoi/#####
 
 
+-----
+
 **IN PROGRESS**
+
+-----
+
 
 ################################################
 pipeline_QTL
@@ -40,7 +45,6 @@ For the general framework and workflow see project_quickstart_ docs and CGAT_.
 Features
 --------
 
-- Python based pipeline for QTL analysis
 - Currently runs MatrixEQTL on an arbitrary number of inputs and outputs association files, basic plots such as qqplots.
 
 
@@ -76,28 +80,21 @@ To use
     mkdir tests ; cd tests
     # Download test files, e.g.:
     wget -nH -np -r --cut-dirs=4 -A .txt http://www.bios.unc.edu/research/genomic_software/Matrix_eQTL/Sample_Data/
-    python pipeline_QTL --help
-    python pipeline_QTL config
+    pipeline_QTL --help
+    pipeline_QTL config
     # Edit pipeline_QTL.ini to adjust the parameters you want, this is essential
-    python pipeline_QTL show full
-    python pipeline_QTL printconfig
-    python pipeline_QTL plot full
-    python pipeline_QTL make full --local
-    python pipeline_QTL make make_report --local
+    pipeline_QTL show full
+    pipeline_QTL printconfig
+    pipeline_QTL plot full
+    pipeline_QTL make full --local
+    pipeline_QTL make make_report --local
     open pipeline_report/_build/latex/pipeline_QTL.pdf
 
 
-Contribute
-----------
+Bugs and Contributions
+-------------------------
 
-- Issue Tracker: github.com/EpiCompBio/pipeline_QTL/issues
-- Source Code: github.com/EpiCompBio/pipeline_QTL
 - Pull requests welcome!
+- Please report bugs using the `Issue Tracker`_
 
-
-Support
--------
-
-If you have any issues, pull requests, etc. please report them in the issue tracker. 
-
-
+.. _`Issue Tracker`: https://github.com/EpiCompBio/pipeline_QTL/issues
