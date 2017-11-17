@@ -282,7 +282,7 @@ def getINIpaths():
 tools = P.asList(PARAMS["pipeline_tools"])
 
 # Get the location of the pipeline specific scripts:
-project_scripts_dir = getINIpaths()
+project_scripts_dir = str(getINIpaths())
 ################
 
 
@@ -334,7 +334,7 @@ def run_MxQTL(infiles, outfiles):
     else:
         cov_file = None
 
-    tool_options = P.substituteParameters(**locals())["matrixeqtl_options"],
+    tool_options = P.substituteParameters(**locals())["matrixeqtl_options"]
 
     statement = '''
                 cd MatrixEQTL ;
