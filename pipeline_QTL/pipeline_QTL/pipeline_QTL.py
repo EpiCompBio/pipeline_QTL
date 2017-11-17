@@ -283,7 +283,6 @@ tools = P.asList(PARAMS["pipeline_tools"])
 
 # Get the location of the pipeline specific scripts:
 project_scripts_dir = getINIpaths()
-print(project_scripts_dir)
 ################
 
 
@@ -339,7 +338,7 @@ def run_MxQTL(infiles, outfiles):
 
     statement = '''
                 cd MatrixEQTL ;
-                Rscript %(pipeline_scripts_dir)s/run_matrixEQTL.R \
+                Rscript %(project_scripts_dir)s/run_matrixEQTL.R \
                 --gex %(pheno_file)s \
                 --geno %(geno_file)s \
                 --cov %(cov_file)s \
