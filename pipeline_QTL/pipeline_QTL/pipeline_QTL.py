@@ -175,15 +175,11 @@ except ImportError:
 from builtins import dict
 
 # Import this project's module, uncomment if building something more elaborate: 
-#try:
-#    import pipeline_QTL as qtl
-#else:
-
-
-
-#except ImportError: 
-#    print("Could not import this project's module, exiting") 
-#    raise 
+try:
+    import pipeline_QTL as QTL
+except ImportError:
+    print("Could not import this project's module, exiting")
+    raise
 
 # Import additional packages: 
 # Set path if necessary:
@@ -257,11 +253,19 @@ def getINIpaths():
     '''
     try:
         project_scripts_dir = '{}/'.format(PARAMS['project_scripts_dir'])
-        E.info('''
-               Location set for the projects scripts is:
-               {}
-               '''.format(project_scripts_dir)
-               )
+        if project_scripts_dir != str('/'):
+            E.info('''
+                   Location set for the projects scripts is:
+                   {}
+                   '''.format(project_scripts_dir)
+                   )
+        else:
+            project_scripts_dir = QTL.getDir()
+            E.info('''
+                   Location set for the projects scripts is:
+                   {}
+                   '''.format(project_scripts_dir)
+                   )
     except KeyError:
         E.warn('''
                Could not set project scripts location, this needs to be
@@ -277,6 +281,9 @@ def getINIpaths():
 # Get command line tools to run:
 tools = P.asList(PARAMS["pipeline_tools"])
 
+# Get the location of the pipeline specific scripts:
+project_scripts_dir = getINIpaths()
+print(project_scripts_dir)
 ################
 
 
