@@ -282,7 +282,7 @@ def getINIpaths():
 tools = P.asList(PARAMS["pipeline_tools"])
 
 # Get the location of the pipeline specific scripts:
-project_scripts_dir = str(getINIpaths())
+project_scripts_dir = str(getINIpaths() + '/matrixQTL/')
 ################
 
 
