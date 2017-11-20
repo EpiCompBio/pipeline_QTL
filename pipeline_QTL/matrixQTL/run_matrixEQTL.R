@@ -188,6 +188,9 @@ expression_file <- as.character(args[['--gex']])
 covariates_file <- as.character(args[['--cov']])
 condition <- as.character(args[['--condition']])
 # For testing:
+# SNP_file <- 'airwave-NMR-blood.geno'
+# expression_file <- 'airwave-NMR-blood.pheno'
+# covariates_file <- 'airwave-NMR-blood.cov'
 # SNP_file <- 'SNP.txt'
 # expression_file <- 'GE.txt'
 # covariates_file <- 'Covariates.txt'
@@ -364,11 +367,6 @@ gene
 ##########
 # Call the main Matrix eQTL function
 # If cis information available run:
-!is.null(snpspos)
-!is.null(genepos)
-identical(snpspos, character(0))
-identical(genepos, character(0))
-
 if (!is.null(args[['--snpspos']]) | !is.null(args[['--genepos']])) {
   me <- Matrix_eQTL_main(
     snps = snps,
@@ -494,23 +492,28 @@ sink()
 
 ##########
 # Save a minimal counts file with results:
-counts_df <- data.frame(as.character(output_file_name),
+counts_df <- list(as.character(output_file_name),
                         me$all$ntests,
                         me$all$neqtls,
                         me$cis$ntests,
                         me$cis$neqtls,
                         me$trans$ntests,
-                        me$trans$neqtls,
-                        stringsAsFactors = FALSE)
-df_cols <- c('dataset',
+                        me$trans$neqtls)
+# If there are NULL values convert them to strings:
+counts_df <- sapply(counts_df, function(x) ifelse(is.null(x), 'NULL', x))
+counts_df <- as.data.frame(counts_df, stringsAsFactors = FALSE)
+# Variable names:
+df_rows <- c('dataset',
              'total_QTLs_tested',
-             sprintf('QTLs_below_p_%s:', pvOutputThreshold),
+             sprintf('QTLs_below_p_%s', pvOutputThreshold),
              'local_QTLs_tested',
-             sprintf('local_QTLs_below_p_%s:', pvOutputThreshold.cis),
+             sprintf('local_QTLs_below_p_%s', pvOutputThreshold.cis),
              'distant_QTLs_tested',
-             sprintf('distant_QTLs_below_p_%s:', pvOutputThreshold)
-)
-colnames(counts_df) <- df_cols
+             sprintf('distant_QTLs_below_p_%s', pvOutputThreshold)
+             )
+counts_df <- cbind(df_rows, counts_df)
+# This is extra but gets delted when saving to file:
+rownames(counts_df) <- df_rows
 counts_file <- sprintf('%s.counts.tsv', output_file_name)
 write.table(file = counts_file,
             x = counts_df,
