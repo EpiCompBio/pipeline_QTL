@@ -1,31 +1,13 @@
-.. include:: report_substitution_vars.rst
-
 ###########################
-|project_name|
+pipeline_QTL
 ###########################
-
-
-Authored by:
-
-|all_author_names|
-
-Date: |date|
-
-Keywords: |keywords|
-
-version = |version|
-
-Licensed as |license|
-
-Correspondence to: |author_email|
 
 
 Introduction
 ############
 
 
-|short_description|
-
+QTL pipeline report
 
 This file was created using Sphinx_. To modify it you'll need to change the
 following files:
@@ -34,7 +16,6 @@ following files:
 - conf.py
 - index.rst
 - report_pipeline_pq_example.rst
-- report_substitution_vars.rst
 
 See the `Sphinx tutorial`_ to get a better idea of what's happening.
 
@@ -59,33 +40,49 @@ Figures
 Tables
 ============
 
+
 .. csv-table::
    :file: ../airwave-NMR-blood-NMR-blood.MxEQTL.counts.tsv
    :delim: tab
 
+
+
 -----
+
+
 
 .. csv-table:: 
    :file: ../airwave-NMR-blood-NMR-blood.MxEQTL.cis.tsv
    :delim: tab
 
+
+
 -----
+
+
 
 .. csv-table:: 
    :file: ../airwave-NMR-blood-NMR-blood.MxEQTL.trans.tsv
    :delim: tab
 
+
+
 -----
+
+
 
 .. csv-table::
    :file: ../airwave-NMR-blood-NMR-blood.MxEQTL.tsv
    :delim: tab
 
 
+
 References
 ##########
 
-Code used is available at |project_url|
+Code used is available at `pipeline_QTL`_.
+
+.. _`pipeline_QTL`: https://github.com/EpiCompBio/pipeline_QTL
 
 References, e.g. :cite:`RN2398`, are pulled from a bibtex file which must be
 specified at the bottom of the page.
