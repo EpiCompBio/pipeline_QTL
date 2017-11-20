@@ -99,7 +99,7 @@ genotype file: airwave-illumina_exome-all_chrs.geno
 
 phenotype file: airwave-NMR-blood.pheno
 
-covariates file: airwave-NMR-blood.cov
+covariates file: airwave-illumina_exome-all_chrs-NMR-blood.cov
 
 and depending on the input and arguments you might get:
 
@@ -320,6 +320,26 @@ def connect():
 #Naming:
 # Infile: cohort-platform-other_descriptor.suffix
 # Outfile: cohort-platform1-descriptor1-platform2-descriptor2.new_suffix
+
+# TO DO get list of infiles before, then run combination:
+#@transform('*.geno',
+#           #'*.pheno',
+#           #'*.cov'],
+#           formatter('(?P<cohort0>.+)-(?P<platform0>.+)-(?P<descriptor0>.+).geno',
+#           #          '(?P<cohort1>.+)-(?P<platform1>.+)-(?P<descriptor1>.+).pheno',
+#           #          '{cohort0[0]}-{platform0[0]}-{descriptor0[0]}-{platform1[1]}-{descriptor1[1]}.cov',
+#                     ),
+#           add_inputs(['*.pheno',
+#                       ]),
+#           formatter('(?P<cohort0>.+)-(?P<platform0>.+)-(?P<descriptor0>.+).geno',
+#                     '(?P<cohort1>.+)-(?P<platform1>.+)-(?P<descriptor1>.+).pheno',
+#                     ),
+#           add_inputs(['{cohort0[0]}-{platform0[0]}-{descriptor0[0]}-{platform1[1]}-{descriptor1[1]}.cov',
+#                      ]),
+#           #'{cohort0[0]}-{platform0[0]}-{descriptor0[0]}.MxEQTL.touch'
+#           '{cohort0[0]}-{platform0[0]}-{descriptor0[0]}-{platform1[1]}-{descriptor1[1]}.MxEQTL.touch',
+#            )
+
 
 # Run matrixeqtl:
 @active_if('matrixeqtl' in tools)
