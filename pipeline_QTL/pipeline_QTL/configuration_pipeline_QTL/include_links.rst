@@ -2,8 +2,4 @@
 .. See http://stackoverflow.com/questions/10199233/can-sphinx-link-to-documents-that-are-not-located-in-directories-below-the-root
 
 
-.. include:: ../README.rst
-.. include:: ../THANKS.rst
-.. include:: ../TODO.rst
-.. include:: ../KNOWN_BUGS.rst
-.. include:: scripts.rst
+.. include:: report_pipeline_QTL.rst 

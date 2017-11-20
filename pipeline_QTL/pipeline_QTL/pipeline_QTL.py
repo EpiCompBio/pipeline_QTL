@@ -315,14 +315,14 @@ def connect():
 #####
 # Run matrixeqtl:
 @active_if('matrixeqtl' in tools)
-@mkdir('MatrixEQTL')
+#@mkdir('MatrixEQTL')
 @transform('*.geno',
            regex(r'(.+).geno'),
            add_inputs([r'\1.pheno',
                        r'\1.cov',
                        ]),
-           r'\1.touch')
-def run_MxQTL(infiles, outfiles):
+           r'\1.MxEQTL.touch')
+def run_MxEQTL(infiles, outfile):
     '''
     Run MatrixEQTL wrapper script.
     '''
@@ -346,7 +346,7 @@ def run_MxQTL(infiles, outfiles):
                 --cov %(cov_file)s \
                 %(tool_options)s ;
                 checkpoint ;
-                mv *.MxEQTL* MatrixEQTL
+                touch %(outfile)s
                 '''
                 #-O %(outfile)s
                 #--model modelANOVA
@@ -359,11 +359,12 @@ def run_MxQTL(infiles, outfiles):
 
     P.run()
 
-@follows(run_MxQTL)
+@active_if('matrixeqtl' in tools)
+@follows(run_MxEQTL)
 @transform('*.tsv', suffix('.tsv'), '.tsv.load')
-def load_MxQTL(infile, outfile):
+def load_MxEQTL(infile, outfile):
     '''
-    Load the results of run_MxQTL() into an SQL database.
+    Load the results of run_MxEQTL() into an SQL database.
     '''
     P.load(infile, outfile)
 #####
@@ -392,7 +393,8 @@ def conda_info():
 
 ################
 # Create the "full" pipeline target to run all functions specified
-@follows(load_MxQTL, conda_info)
+#@follows(load_MxEQTL, conda_info)
+@follows(run_MxEQTL, conda_info)
 def full():
     pass
 ################
@@ -406,7 +408,7 @@ def make_report():
         Pre-configured files need to be in a pre-existing report directory.
         Existing reports are overwritten.
     '''
-    if os.path.exists('report'):
+    if os.path.exists('pipeline_report'):
         statement = ''' cd pipeline_report ;
                         checkpoint ;
                         make html ;
@@ -419,18 +421,24 @@ def make_report():
         P.run()
 
     else:
-        E.stop(''' The directory "report" does not exist. Did you run the config
+        E.info(''' The directory "pipeline_report" does not exist. Did you run the config
                    option? This should copy across templates for easier
                    reporting of your pipeline.
                    If you changed the dir names, just go in and run "make html" or
                    "make latexpdf" or follow Sphinx docs.
                 ''')
+        sys.exit()
 
     return
 ################
 
 def main():
     sys.exit(P.main(sys.argv))
+
+#def main(argv=None):
+#    if argv is None:
+#        argv = sys.argv
+#    P.main(argv)
 
 ################
 if __name__ == "__main__":

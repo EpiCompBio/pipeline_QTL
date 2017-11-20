@@ -4,8 +4,14 @@
 
 .. include:: report_substitution_vars.rst
 
-Welcome to |project_name|'s documentation!
-======================================================
+Welcome to |project_name|'s documentation
+================================================================================
+
+.. |date_real| date::
+.. |time| date:: %H:%M
+
+This document was generated on |date_real| at |time|
+
 
 .. toctree::
    :maxdepth: 2

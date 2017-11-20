@@ -17,8 +17,15 @@ BUILDDIR      = _build
 help:
 	@$(SPHINXBUILD) -M help "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
 
-.PHONY: help Makefile
+.PHONY: help Makefile clean
 ########
+
+########
+# Create a clean target to delete old builds and images:
+clean:
+	-rm -rf $(BUILDDIR)/*
+########
+
 
 ########
 # Catch-all target: route all unknown targets to Sphinx using the new

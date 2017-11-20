@@ -65,7 +65,7 @@ CONFIG = configparser.ConfigParser(allow_no_value = True)
 # Load options from the config file:
 # Pipeline configuration 
 cwd = os.getcwd()
-print(cwd)
+#print(cwd)
 
 def getINIdir(path = cwd):
     ''' Search for an INI file given a path. The path default is the current
@@ -84,10 +84,9 @@ def getINIdir(path = cwd):
             INI_file = os.path.abspath(path)
             print('You have no project configuration (".ini") file or more than one',
                   'in the directory:', '\n', path)
-            sys.exit(''' Exiting.
+            sys.exit(''' No ini file found. Exiting.
                          You will have to manually edit the Sphinx conf.py file.
-                     ''')
-
+                 ''')
     return(INI_file)
 
 modulename = 'P'
@@ -105,18 +104,23 @@ if modulename in sys.modules:
 else:
     # Get location to this file:
     here = os.path.abspath(os.path.dirname(__file__))
-    print(here, '\n')
+    print('This directory is:', '\n', here, '\n')
 
     #ini_file = getINIdir(os.path.join(here, '..'))
     ini_file = getINIdir(os.path.abspath(here))
-    CONFIG.read(ini_file)
 
     # Print keys (sections):
     print('Values found in INI file:', '\n')
     print(ini_file, '\n')
-    for key in CONFIG:
-        for value in CONFIG[key]:
-            print(key, value, CONFIG[key][value])
+
+    if not os.path.exists(ini_file):
+        print('''Something isn't right with the paths...''')
+        sys.exit()
+    else:
+        CONFIG.read(ini_file)
+        for key in CONFIG:
+            for value in CONFIG[key]:
+                print(key, value, CONFIG[key][value])
 #################
 
 #################
@@ -189,10 +193,13 @@ extensions = ['sphinx.ext.autodoc',
 ################################################################
 # CGAT conf.py 
 #  XXXX/CGATPipelines/CGATPipelines/configuration/conf.py
-if P.CONFIG.has_section('intersphinx'):
-    intersphinx_mapping = dict(
-        [(x, (os.path.abspath(y), None))
-         for x, y in P.CONFIG.items('intersphinx')])
+try:
+    if P.CONFIG.has_section('intersphinx'):
+        intersphinx_mapping = dict([(x, (os.path.abspath(y), None)) for x, y in P.CONFIG.items('intersphinx')])
+except NameError:
+    print('''P is not defined as CGAT tools were not found, continuing without
+            intersphinx''')
+
 ################################################################
 
 
@@ -292,6 +299,17 @@ htmlhelp_basename = str(project_name + '.doc')
 # See this to avoid duplicating calls to packages, conflicting commands from
 # "latex_elements" setting below, etc.
 
+# Grouping the document tree into LaTeX files. List of tuples
+# (source start file, target name, title,
+#  author, documentclass [howto, manual, or own class]).
+latex_documents = [(master_doc,
+                    str(project_name + '.tex'),
+                    str(project_name + ' documentation'),
+                    author,
+                    'howto', #'article', #'manual' 'howto'
+                    ),
+                    ]
+
 # For SVG figures see \usepackage{svg}
 # https://tex.stackexchange.com/questions/122871/include-svg-images-with-the-svg-package
 
@@ -313,24 +331,25 @@ latex_elements = { # The paper size ('letterpaper' or 'a4paper').
                        \usepackage[T1]{fontenc}
                        \usepackage{textcomp}
                        \usepackage[strings]{underscore}
+                       %\usepackage{float}
+                       %Remove the 'Figure n' caption:
+                       %\usepackage[labelformat=empty]{caption}
+                       %Remove the date, blank maketitle below takes care of
+                       %removing title, author, date though:
+                       %\date{}
+                       %https://tex.stackexchange.com/questions/101165/sphinx-overriding-the-document-class
+                       %\renewcommand{\tableofcontents}{}
                        % See eg:
-                       %                       https://github.com/lmweber/latex-templates/blob/master/template_PhD_committee_report.texi
+                       % https://github.com/lmweber/latex-templates/blob/master/template_PhD_committee_report.texi
                        %\usepackage{svg}
                        ''',
                    #'printindex': r'\footnotesize\raggedright\printindex',
                    #'releasename': r'version',
+                   #%Manually remove 'how to' release, title, index:
+                   #%'releasename': "",
+                   #%'maketitle': '',
+                   #%'printindex': '',
                    }
-
-# Grouping the document tree into LaTeX files. List of tuples
-# (source start file, target name, title,
-#  author, documentclass [howto, manual, or own class]).
-latex_documents = [(master_doc,
-                    str(project_name + '.tex'),
-                    str(project_name + ' documentation'),
-                    author,
-                    'howto', #'article', #'manual' 'howto'
-                    ),
-                    ]
 
 # If true, add page references after internal references. This is very useful
 # or printed copies of the manual. Default is False.
