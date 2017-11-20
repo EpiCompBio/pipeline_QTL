@@ -299,17 +299,6 @@ htmlhelp_basename = str(project_name + '.doc')
 # See this to avoid duplicating calls to packages, conflicting commands from
 # "latex_elements" setting below, etc.
 
-# Grouping the document tree into LaTeX files. List of tuples
-# (source start file, target name, title,
-#  author, documentclass [howto, manual, or own class]).
-latex_documents = [(master_doc,
-                    str(project_name + '.tex'),
-                    str(project_name + ' documentation'),
-                    author,
-                    'howto', #'article', #'manual' 'howto'
-                    ),
-                    ]
-
 # For SVG figures see \usepackage{svg}
 # https://tex.stackexchange.com/questions/122871/include-svg-images-with-the-svg-package
 
@@ -361,6 +350,17 @@ latex_elements = { # The paper size ('letterpaper' or 'a4paper').
 
 # Control whether to display URL addresses. This is very useful for printed copies of the manual.
 latex_show_urls = 'footnote'
+
+# Grouping the document tree into LaTeX files. List of tuples
+# (source start file, target name, title,
+#  author, documentclass [howto, manual, or own class]).
+latex_documents = [(master_doc,
+                    str(project_name + '.tex'),
+                    str(project_name + ' documentation'),
+                    author,
+                    'howto', #'article', #'manual' 'howto'
+                    ),
+                    ]
 #################
 
 

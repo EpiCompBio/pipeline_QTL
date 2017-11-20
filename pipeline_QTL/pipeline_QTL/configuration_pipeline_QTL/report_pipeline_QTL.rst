@@ -17,10 +17,6 @@ version = |version|
 
 Licensed as |license|
 
-Check the project at:
-
-|project_url|
-
 Correspondence to: |author_email|
 
 
@@ -67,18 +63,24 @@ Tables
    :file: ../airwave-NMR-blood-NMR-blood.MxEQTL.counts.tsv
    :delim: tab
 
+-----
 
 .. csv-table:: 
    :file: ../airwave-NMR-blood-NMR-blood.MxEQTL.cis.tsv
    :delim: tab
 
+-----
+
 .. csv-table:: 
    :file: ../airwave-NMR-blood-NMR-blood.MxEQTL.trans.tsv
    :delim: tab
 
+-----
+
 .. csv-table::
    :file: ../airwave-NMR-blood-NMR-blood.MxEQTL.tsv
    :delim: tab
+
 
 References
 ##########
@@ -86,10 +88,7 @@ References
 Code used is available at |project_url|
 
 References, e.g. :cite:`RN2398`, are pulled from a bibtex file which must be
-specified at the bottom of the page as::
-
-  .. bibliography:: scipy_references.bib
-
+specified at the bottom of the page.
 
 See the sphinxcontrib-bibtex_ extension for details.
 

@@ -367,6 +367,24 @@ def load_MxEQTL(infile, outfile):
     Load the results of run_MxEQTL() into an SQL database.
     '''
     P.load(infile, outfile)
+
+
+@active_if('matrixeqtl' in tools)
+@follows(run_MxEQTL)
+@transform('*.svg', suffix('.svg'), '.pdf')
+def svgToPDF(infile, outfile):
+    '''
+    Simple conversion of svg to pdf files with inkscape
+    '''
+    statement = '''
+                inkscape --without-gui \
+                         --export-area-drawing \
+                         --export-margin=2 \
+                         --file=%(infile)s \
+                         --export-pdf=%(outfile)s
+                '''
+    P.run()
+
 #####
 
 #####
@@ -412,12 +430,18 @@ def make_report():
         statement = ''' cd pipeline_report ;
                         checkpoint ;
                         make html ;
-                        ln -s _build/html/index.hmtl . ;
                         checkpoint ;
-                        make latexpdf ;
-                        ln -s _build/latex/pq_example.pdf .
+                        make latexpdf
                     '''
         E.info("Building pdf and html versions of your rst files.")
+
+        statement = '''
+                    ln -s pipeline_report/_build/html/index.hmtl pipeline_QTL.html ;
+                    ln -s pipeline_report/_build/latex/pipeline_QTL.pdf .
+                    '''
+
+        E.info('''Done, pdf and html versions of your rst files are in the main
+               folder.''')
         P.run()
 
     else:

@@ -17,19 +17,11 @@
 
 .. |date| replace::
 
-.. |project_url| replace:: https://github.com/AntonioJBT/project_quickstart
+.. |project_url| replace:: https://github.com/EpiCompBio/pipeline_QTL
 
 .. |download_url| replace::
 
 .. |author_email| replace::
-
-.. |license| replace::
-
-.. |license_year| replace::
-
-.. |version| replace:: 0.1.0
-
-.. |keywords| replace:: reproducibility, Python, Ruffus, pipelines
 
 .. |short_description| replace:: QTL pipeline report
 
