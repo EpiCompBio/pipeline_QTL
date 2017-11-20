@@ -285,7 +285,11 @@ def getINIpaths():
 tools = P.asList(PARAMS["pipeline_tools"])
 
 # Get the location of the pipeline specific scripts:
-project_scripts_dir = str(getINIpaths() + '/matrixQTL/')
+project_scripts_dir = str(getINIpaths())
+
+# Set the name of this pipeline (for report softlinks):
+project_name = PARAMS['metadata_project_name'])
+#'pipeline_QTL'
 ################
 
 
@@ -435,15 +439,6 @@ def make_report():
                     '''
         E.info("Building pdf and html versions of your rst files.")
 
-        statement = '''
-                    ln -s pipeline_report/_build/html/index.hmtl pipeline_QTL.html ;
-                    ln -s pipeline_report/_build/latex/pipeline_QTL.pdf .
-                    '''
-
-        E.info('''Done, pdf and html versions of your rst files are in the main
-               folder.''')
-        P.run()
-
     else:
         E.info(''' The directory "pipeline_report" does not exist. Did you run the config
                    option? This should copy across templates for easier
@@ -451,6 +446,25 @@ def make_report():
                    If you changed the dir names, just go in and run "make html" or
                    "make latexpdf" or follow Sphinx docs.
                 ''')
+        sys.exit()
+
+    if os.path.exists('pipeline_report/_build/html/index.hmtl') and
+       os.path.exists(os.path.join('pipeline_report/_build/latex/',
+           project_name, '.pdf')):
+        statement = '''
+                    ln -s pipeline_report/_build/html/index.hmtl %(project_name)s.html ;
+                    ln -s pipeline_report/_build/latex/%(project_name)s.pdf .
+                    '''
+        E.info('''Done, linkts to the pdf and html versions of your rst files are in the main
+               folder.''')
+        P.run()
+
+    else:
+        E.info('''
+               The html and/or latex/pdf files did not build correctly. See the
+               logs and go into pipeline_report to find out. You can also try
+               building the report manually with make html and make latexpdf.
+               ''')
         sys.exit()
 
     return
