@@ -346,7 +346,7 @@ def run_MxQTL(infiles, outfiles):
                 --cov %(cov_file)s \
                 %(tool_options)s ;
                 checkpoint ;
-                mv *.MxQTL* MatrixEQTL
+                mv *.MxEQTL* MatrixEQTL
                 '''
                 #-O %(outfile)s
                 #--model modelANOVA
