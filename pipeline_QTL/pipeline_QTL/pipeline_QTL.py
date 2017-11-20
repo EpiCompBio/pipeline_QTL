@@ -253,14 +253,17 @@ def getINIpaths():
     '''
     try:
         project_scripts_dir = '{}/'.format(PARAMS['project_scripts_dir'])
-        if project_scripts_dir != str('/'):
+        if project_scripts_dir == str('/'):
+            # dir not set in ini file so use installation directory:
+            project_scripts_dir = QTL.getDir()
             E.info('''
                    Location set for the projects scripts is:
                    {}
                    '''.format(project_scripts_dir)
                    )
         else:
-            project_scripts_dir = QTL.getDir()
+            # Use the ini location if variable is set manually:
+            project_scripts_dir = '{}/'.format(PARAMS['project_scripts_dir'])
             E.info('''
                    Location set for the projects scripts is:
                    {}
@@ -327,7 +330,6 @@ def run_MxQTL(infiles, outfiles):
     geno_file = infiles[0]
     pheno_file = infiles[1][0]
     cov_file = infiles[1][1]
-    print(infiles)
     # Check there is an actual covariates file present, otherwise run without:
     if cov_file:
         cov_file = cov_file
@@ -335,14 +337,16 @@ def run_MxQTL(infiles, outfiles):
         cov_file = None
 
     tool_options = P.substituteParameters(**locals())["matrixeqtl_options"]
+    project_scripts_dir = str(getINIpaths() + '/matrixQTL/')
 
     statement = '''
-                cd MatrixEQTL ;
                 Rscript %(project_scripts_dir)s/run_matrixEQTL.R \
                 --gex %(pheno_file)s \
                 --geno %(geno_file)s \
                 --cov %(cov_file)s \
-                %(tool_options)s
+                %(tool_options)s ;
+                checkpoint ;
+                mv *.MxQTL* MatrixEQTL
                 '''
                 #-O %(outfile)s
                 #--model modelANOVA

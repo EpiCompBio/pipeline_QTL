@@ -305,16 +305,19 @@ if (is.null(args[['--snpspos']]) | is.null(args[['--genepos']])) {
 
 # Provide a name for the condition being run if none given:
 # If neither --condition or the naming convention appear:
+time_run <- as.character(gsub(' ', '_', as.character(Sys.time())))
 if (is.null(args[['--condition']]) & is.na(descriptor_2)) {
-    time_run <- as.character(gsub(' ', '_', as.character(Sys.time())))
     print(sprintf("You did not provide a name for the condition (i.e. tissue) and your input files
                    don't follow this script's convention, using a timestamp instead: %s.", time_run))
     condition <- time_run
   } else {
     # If --condition isn't given but the naming convention is followed so can pick it up:
-    if (!is.null(args[['--condition']]) & !is.na(descriptor_2)) {
-  print(sprintf('You did not provide a name for the condition file, using %s instead.', descriptor_2))
+    if (is.null(args[['--condition']]) & !is.na(descriptor_2)) {
+  print(sprintf('You did not provide a name for the condition file, using a descriptor from the file names instead: %s', descriptor_2))
   condition <- sprintf('%s', descriptor_2)
+    } else {
+      print('Could not find a name for the condition variable, using a timestamp instead')
+      condition <- time_run
     }
     }
 # If --condition is given that takes priority (through docopt without specifying more)
@@ -360,9 +363,13 @@ gene
 
 ##########
 # Call the main Matrix eQTL function
-
 # If cis information available run:
-if (!is.null(snpspos) & !is.null(genepos)) {
+!is.null(snpspos)
+!is.null(genepos)
+identical(snpspos, character(0))
+identical(genepos, character(0))
+
+if (!is.null(args[['--snpspos']]) | !is.null(args[['--genepos']])) {
   me <- Matrix_eQTL_main(
     snps = snps,
     gene = gene,
