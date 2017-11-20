@@ -118,7 +118,7 @@ If you do not use an outfile name and your files do not follow the naming above 
 
 "SNP.txt-NA-NA-NA-NA.MxEQTL"
 
-If running in a pipeline .geno, .pheno and .cov are required.
+If running in a pipeline .geno, .pheno and .cov suffixes are required.
 
 Pipeline output
 ===============
@@ -288,7 +288,7 @@ tools = P.asList(PARAMS["pipeline_tools"])
 project_scripts_dir = str(getINIpaths())
 
 # Set the name of this pipeline (for report softlinks):
-project_name = PARAMS['metadata_project_name'])
+project_name = PARAMS['metadata_project_name']
 #'pipeline_QTL'
 ################
 
@@ -317,15 +317,18 @@ def connect():
 
 ################
 #####
+#Naming:
+# Infile: cohort-platform-other_descriptor.suffix
+# Outfile: cohort-platform1-descriptor1-platform2-descriptor2.new_suffix
+
 # Run matrixeqtl:
 @active_if('matrixeqtl' in tools)
 #@mkdir('MatrixEQTL')
-@transform('*.geno',
-           regex(r'(.+).geno'),
-           add_inputs([r'\1.pheno',
-                       r'\1.cov',
-                       ]),
-           r'\1.MxEQTL.touch')
+@transform(['*.geno', '*.pheno',],
+           formatter('(?P<cohort>.+)-(?P<platform>.+)-(?P<descriptor>.+).geno',
+                     '(?P<cohort>.+)-(?P<platform>.+)-(?P<descriptor>.+).pheno',),
+           add_inputs(['{cohort[0]}-{platform[0]}-{descriptor[0]}-{platform[1]}-{descriptor[1]}.cov',]),
+           '{cohort[0]}-{platform[0]}-{descriptor[0]}-{platform[1]}-{descriptor[2]}.MxEQTL.touch')
 def run_MxEQTL(infiles, outfile):
     '''
     Run MatrixEQTL wrapper script.
@@ -448,9 +451,10 @@ def make_report():
                 ''')
         sys.exit()
 
-    if os.path.exists('pipeline_report/_build/html/index.hmtl') and
+    if (os.path.exists('pipeline_report/_build/html/index.hmtl') and
        os.path.exists(os.path.join('pipeline_report/_build/latex/',
-           project_name, '.pdf')):
+           project_name, '.pdf'))
+       ):
         statement = '''
                     ln -s pipeline_report/_build/html/index.hmtl %(project_name)s.html ;
                     ln -s pipeline_report/_build/latex/%(project_name)s.pdf .
