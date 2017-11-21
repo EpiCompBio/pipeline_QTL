@@ -60,15 +60,18 @@ Depending on the tool run covariate files, SNP position and probe position
 files can be added.
 
 
-Quality controlled (molecular) phenotype (e.g. gene expression) and genotyping data.
+Quality controlled (molecular) phenotype (e.g. gene expression) and genotyping
+data.
 
 Optionally covariates and error covariance matrix.
 
-Annotation files are also needed for cis vs trans analysis (SNPs positions and probe positions and any associated annotations).
+Annotation files are also needed for cis vs trans analysis (SNPs positions and
+probe positions and any associated annotations).
 
 Files need to be in the same format as MatrixEQTL requires:
 
-SNPs/genes/covariates in rows, individuals in columns with (dummy) headers and row names (the first column and first row are skipped when read).
+SNPs/genes/covariates in rows, individuals in columns with (dummy) headers and
+row names (the first column and first row are skipped when read).
 
 Missing values must be set as "NA".
 
@@ -85,9 +88,11 @@ http://www.bios.unc.edu/research/genomic_software/Matrix_eQTL/
 Naming convention for input files
 =================================
 
-Output files get named based on the input files. The script assumes "cohort" is the same for input files (but only takes it from the genotype file).
+Output files get named based on the input files. The script assumes "cohort" is
+the same for input files (but only takes it from the genotype file).
 
-Please rename your files in the following way (use soft links to rename for example):
+Please rename your files in the following way (use soft links to rename for
+example):
 
 Infile: cohort-platform-other_descriptor.suffix
 
@@ -114,7 +119,8 @@ File names can get long so use abbreviations or short versions.
 
 You can also override this and simply choose your outfile prefix.
 
-If you do not use an outfile name and your files do not follow the naming above you might get something like:
+If you do not use an outfile name and your files do not follow the naming above
+you might get something like:
 
 "SNP.txt-NA-NA-NA-NA.MxEQTL"
 
@@ -123,13 +129,15 @@ If running in a pipeline .geno, .pheno and .cov suffixes are required.
 Pipeline output
 ===============
 
-Namely a qqlot and tables of genotype molecular phenotype associations. These are saved in the working directory.
+Namely a qqlot and tables of genotype molecular phenotype associations.
+These are saved in the working directory.
 
 
 Requirements
 ============
 
-See requirements files and Dockerfile for full information. At the least you'll need:
+See requirements files and Dockerfile for full information. At the least
+you'll need:
 
 * CGATCore
 * R >= 3.2
@@ -154,6 +162,7 @@ import sys
 import os
 import re
 import subprocess
+import pandas as pd
 
 # Pipeline:
 from ruffus import *
@@ -161,29 +170,30 @@ from ruffus import *
 # Database:
 import sqlite3
 
-# Try getting CGAT: 
+# Try getting CGAT:
 try:
-    import CGAT.IOTools as IOTools
+    # import CGAT.IOTools as IOTools
     import CGATPipelines.Pipeline as P
     import CGAT.Experiment as E
 
 except ImportError:
-    print('\n', "Warning: Couldn't import CGAT modules, these are required. Exiting...")
+    print('\n', '''Warning: Couldn't import CGAT modules,
+                   these are required. Exiting...''')
     raise
 
 # required to make iteritems python2 and python3 compatible
-from builtins import dict
+# from builtins import dict
 
-# Import this project's module, uncomment if building something more elaborate: 
+# Import this project's module, uncomment if building something more elaborate:
 try:
     import pipeline_QTL as QTL
 except ImportError:
     print("Could not import this project's module, exiting")
     raise
 
-# Import additional packages: 
+# Import additional packages:
 # Set path if necessary:
-#os.system('''export PATH="~/xxxx/xxxx:$PATH"''')
+# os.system('''export PATH="~/xxxx/xxxx:$PATH"''')
 ################
 
 ################
@@ -193,6 +203,7 @@ ini_paths = [os.path.abspath(os.path.dirname(sys.argv[0])),
              "../",
              os.getcwd(),
              ]
+
 
 def getParamsFiles(paths = ini_paths):
     '''
@@ -206,22 +217,25 @@ def getParamsFiles(paths = ini_paths):
         for f in os.listdir(os.path.abspath(path)):
             ini_file = re.search(r'pipelin(.*).ini', f)
             if ini_file:
-                ini_file = os.path.join(os.path.abspath(path), ini_file.group())
+                ini_file = os.path.join(os.path.abspath(path),
+                                        ini_file.group())
                 p_params_files.append(ini_file)
     return(p_params_files)
+
 
 P.getParameters(getParamsFiles())
 
 PARAMS = P.PARAMS
 # Print the options loaded from ini files and possibly a .cgat file:
-#pprint.pprint(PARAMS)
+# pprint.pprint(PARAMS)
 # From the command line:
-#python ../code/pq_example/pipeline_pq_example/pipeline_pq_example.py printconfig
+# python ../code/pq_example/pipeline_pq_example/pipeline_pq_example.py printconfig
 
 
 # Set global parameters here, obtained from the ini file
 # e.g. get the cmd tools to run if specified:
-#cmd_tools = P.asList(PARAMS["cmd_tools_to_run"])
+# cmd_tools = P.asList(PARAMS["cmd_tools_to_run"])
+
 
 def get_py_exec():
     '''
@@ -244,6 +258,7 @@ def get_py_exec():
         else:
             py_exec = 'python'
     return(py_exec)
+
 
 def getINIpaths():
     '''
@@ -289,7 +304,7 @@ project_scripts_dir = str(getINIpaths())
 
 # Set the name of this pipeline (for report softlinks):
 project_name = PARAMS['metadata_project_name']
-#'pipeline_QTL'
+# 'pipeline_QTL'
 ################
 
 
@@ -317,51 +332,39 @@ def connect():
 
 ################
 #####
-#Naming:
+# Naming:
 # Infile: cohort-platform-other_descriptor.suffix
 # Outfile: cohort-platform1-descriptor1-platform2-descriptor2.new_suffix
-
-# TO DO get list of infiles before, then run combination:
-#@transform('*.geno',
-#           #'*.pheno',
-#           #'*.cov'],
-#           formatter('(?P<cohort0>.+)-(?P<platform0>.+)-(?P<descriptor0>.+).geno',
-#           #          '(?P<cohort1>.+)-(?P<platform1>.+)-(?P<descriptor1>.+).pheno',
-#           #          '{cohort0[0]}-{platform0[0]}-{descriptor0[0]}-{platform1[1]}-{descriptor1[1]}.cov',
-#                     ),
-#           add_inputs(['*.pheno',
-#                       ]),
-#           formatter('(?P<cohort0>.+)-(?P<platform0>.+)-(?P<descriptor0>.+).geno',
-#                     '(?P<cohort1>.+)-(?P<platform1>.+)-(?P<descriptor1>.+).pheno',
-#                     ),
-#           add_inputs(['{cohort0[0]}-{platform0[0]}-{descriptor0[0]}-{platform1[1]}-{descriptor1[1]}.cov',
-#                      ]),
-#           #'{cohort0[0]}-{platform0[0]}-{descriptor0[0]}.MxEQTL.touch'
-#           '{cohort0[0]}-{platform0[0]}-{descriptor0[0]}-{platform1[1]}-{descriptor1[1]}.MxEQTL.touch',
-#            )
-
-
 # Run matrixeqtl:
 @active_if('matrixeqtl' in tools)
-#@mkdir('MatrixEQTL')
-@transform(['*.geno', '*.pheno',],
+@transform(['*.geno',
+            '*.pheno',
+            '*.cov',],
            formatter('(?P<cohort>.+)-(?P<platform>.+)-(?P<descriptor>.+).geno',
-                     '(?P<cohort>.+)-(?P<platform>.+)-(?P<descriptor>.+).pheno',),
-           add_inputs(['{cohort[0]}-{platform[0]}-{descriptor[0]}-{platform[1]}-{descriptor[1]}.cov',]),
-           '{cohort[0]}-{platform[0]}-{descriptor[0]}-{platform[1]}-{descriptor[2]}.MxEQTL.touch')
-def run_MxEQTL(infiles, outfile):
+                     '(?P<cohort>.+)-(?P<platform>.+)-(?P<descriptor>.+).pheno',
+                     '(?P<cohort>.+)-(?P<platform>.+)-(?P<descriptor>.+)-(?P<platform>.+)-(?P<descriptor>.+).cov',
+                     ),
+           ['{cohort[2]}-{platform[2]}-{descriptor[2]}-{platform[2]}-{descriptor[2]}.MxEQTL.touch',
+           None,
+           None,
+           ]
+           )
+def run_MxEQTL(infiles, outfiles):
     '''
     Run MatrixEQTL wrapper script.
     '''
     # Set up infiles:
+#    infiles = pd.read_csv(infile_list, sep = "\t", header = None)
     geno_file = infiles[0]
-    pheno_file = infiles[1][0]
-    cov_file = infiles[1][1]
+    pheno_file = infiles[1]
+    cov_file = infiles[2]
     # Check there is an actual covariates file present, otherwise run without:
     if cov_file:
         cov_file = cov_file
     else:
         cov_file = None
+
+    outfile = outfiles[0]
 
     tool_options = P.substituteParameters(**locals())["matrixeqtl_options"]
     project_scripts_dir = str(getINIpaths() + '/matrixQTL/')
@@ -376,7 +379,7 @@ def run_MxEQTL(infiles, outfile):
                 touch %(outfile)s
                 '''
                 #-O %(outfile)s
-                #--model modelANOVA
+                # -model modelANOVA
                 #--pvOutputThreshold 0.05
                 #--snpspos snpsloc.txt
                 #--genepos geneloc.txt
@@ -385,6 +388,7 @@ def run_MxEQTL(infiles, outfile):
                 #--condition cond_test
 
     P.run()
+
 
 @active_if('matrixeqtl' in tools)
 @follows(run_MxEQTL)
@@ -473,8 +477,7 @@ def make_report():
 
     if (os.path.exists('pipeline_report/_build/html/index.hmtl') and
        os.path.exists(os.path.join('pipeline_report/_build/latex/',
-           project_name, '.pdf'))
-       ):
+                                   project_name, '.pdf'))):
         statement = '''
                     ln -s pipeline_report/_build/html/index.hmtl %(project_name)s.html ;
                     ln -s pipeline_report/_build/latex/%(project_name)s.pdf .
@@ -494,6 +497,11 @@ def make_report():
     return
 ################
 
+################
+# TO DO:
+# Check if docopt and argparse can play to show my_pipeline options and P.py
+# options
+
 def main():
     sys.exit(P.main(sys.argv))
 
@@ -501,6 +509,7 @@ def main():
 #    if argv is None:
 #        argv = sys.argv
 #    P.main(argv)
+################
 
 ################
 if __name__ == "__main__":
