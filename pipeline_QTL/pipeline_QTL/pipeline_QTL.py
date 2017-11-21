@@ -166,6 +166,8 @@ import pandas as pd
 
 # Pipeline:
 from ruffus import *
+# Ruffus combinatorics doesn't get imported:
+from ruffus.combinatorics import *
 
 # Database:
 import sqlite3
@@ -337,24 +339,19 @@ def connect():
 # Outfile: cohort-platform1-descriptor1-platform2-descriptor2.new_suffix
 # Run matrixeqtl:
 @active_if('matrixeqtl' in tools)
-@transform(['*.geno',
-            '*.pheno',
-            '*.cov',],
-           formatter('(?P<cohort>.+)-(?P<platform>.+)-(?P<descriptor>.+).geno',
-                     '(?P<cohort>.+)-(?P<platform>.+)-(?P<descriptor>.+).pheno',
-                     '(?P<cohort>.+)-(?P<platform>.+)-(?P<descriptor>.+)-(?P<platform>.+)-(?P<descriptor>.+).cov',
-                     ),
-           ['{cohort[2]}-{platform[2]}-{descriptor[2]}-{platform[2]}-{descriptor[2]}.MxEQTL.touch',
-           None,
-           None,
-           ]
-           )
-def run_MxEQTL(infiles, outfiles):
+@product('*.geno',
+         formatter('(?P<path>.+)/(?P<cohort>.+)-(?P<platform>.+)-(?P<descriptor>.+).geno'),
+         '*.pheno',
+         formatter('(?P<path>.+)/(?P<cohort>.+)-(?P<platform>.+)-(?P<descriptor>.+).pheno'),
+         '*.cov',
+         formatter('(?P<path>.+)/(?P<cohort>.+)-(?P<platform1>.+)-(?P<descriptor1>.+)-(?P<platform2>.+)-(?P<descriptor2>.+).cov'),
+         '{cohort[0][0]}-{platform[0][0]}-{descriptor[0][0]}-{platform[1][0]}-{descriptor[1][0]}.MxEQTL.touch'
+        )
+def run_MxEQTL(infiles, outfile):
     '''
     Run MatrixEQTL wrapper script.
     '''
     # Set up infiles:
-#    infiles = pd.read_csv(infile_list, sep = "\t", header = None)
     geno_file = infiles[0]
     pheno_file = infiles[1]
     cov_file = infiles[2]
@@ -363,8 +360,6 @@ def run_MxEQTL(infiles, outfiles):
         cov_file = cov_file
     else:
         cov_file = None
-
-    outfile = outfiles[0]
 
     tool_options = P.substituteParameters(**locals())["matrixeqtl_options"]
     project_scripts_dir = str(getINIpaths() + '/matrixQTL/')
