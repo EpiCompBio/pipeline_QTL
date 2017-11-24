@@ -337,16 +337,68 @@ def connect():
 # Naming:
 # Infile: cohort-platform-other_descriptor.suffix
 # Outfile: cohort-platform1-descriptor1-platform2-descriptor2.new_suffix
-# Run matrixeqtl:
+# Run matrixeqtl
+
+# Get all the files needed here. Pass as a list on the fly which can be run in
+# parallel:
+# Variables can't be passed here, errors downstream if given.
+# So no parameters or extra decorators like @transform for this function.
+# See:
+# http://www.ruffus.org.uk/decorators/files_ex.html#decorators-files-on-the-fly
+#@active_if('matrixeqtl' in tools)
+def getInfileSet():
+    '''
+    Get set of input files if more than one combination exists.
+
+    Input
+    -----
+    Tab separated file with the names of files to be run for QTL analysis.
+    The file must be tab separated and without headers.
+    It requires names of files in each column where column one must be geno,
+    column two pheno and column three cov.
+    These are passed to the QTL scripts as input files. Additional options are
+    specified in the pipeline ini file (e.g. p-value cutoffs).
+
+    Example
+    -------
+    my_geno.geno    my_pheno.pheno  my_cov.cov
+    my_geno2.geno    my_pheno2.pheno  my_cov2.cov
+    my_geno3.geno    my_pheno3.pheno  my_cov3.cov
+
+    Returns
+    -------
+    A list with the contents of each row as its elements. Each row (now list)
+    is the input for the QTL script (e.g. run_MxEQTL()).
+
+    '''
+    infile = 'QTL_infiles.txt'
+    if os.path.exists(infile):
+        infile = pd.read_csv(infile, sep = '\t', header = None)
+        print(infile)
+        for row in infile.itertuples(index = False):
+            QTL_infiles = [row[0], row[1], row[2]]
+            print(QTL_infiles)
+            yield QTL_infiles
+    else:
+        print('''
+              You need to provide a file called QTL_infiles.txt to get the
+              pipeline started. Tab separated, no header, with a .geno,
+              .pheno and .cov filenames. One set for each row.
+              ''')
+        sys.exit()
+
 @active_if('matrixeqtl' in tools)
-@product('*.geno',
-         formatter('(?P<path>.+)/(?P<cohort>.+)-(?P<platform>.+)-(?P<descriptor>.+).geno'),
-         '*.pheno',
-         formatter('(?P<path>.+)/(?P<cohort>.+)-(?P<platform>.+)-(?P<descriptor>.+).pheno'),
-         '*.cov',
-         formatter('(?P<path>.+)/(?P<cohort>.+)-(?P<platform1>.+)-(?P<descriptor1>.+)-(?P<platform2>.+)-(?P<descriptor2>.+).cov'),
-         '{cohort[0][0]}-{platform[0][0]}-{descriptor[0][0]}-{platform[1][0]}-{descriptor[1][0]}.MxEQTL.touch'
-        )
+# This works but gives an all vs all which isn't needed here as each set of
+# geno, pheno requires a specific cov.
+#@product('*.geno',
+#         formatter('(?P<path>.+)/(?P<cohort>.+)-(?P<platform>.+)-(?P<descriptor>.+).geno'),
+#         '*.pheno',
+#         formatter('(?P<path>.+)/(?P<cohort>.+)-(?P<platform>.+)-(?P<descriptor>.+).pheno'),
+#         '*.cov',
+#         formatter('(?P<path>.+)/(?P<cohort>.+)-(?P<platform1>.+)-(?P<descriptor1>.+)-(?P<platform2>.+)-(?P<descriptor2>.+).cov'),
+#         '{cohort[0][0]}-{platform[0][0]}-{descriptor[0][0]}-{platform[1][0]}-{descriptor[1][0]}.MxEQTL.touch'
+#        )
+@files(getInfileSet)
 def run_MxEQTL(infiles, outfile):
     '''
     Run MatrixEQTL wrapper script.
@@ -355,11 +407,23 @@ def run_MxEQTL(infiles, outfile):
     geno_file = infiles[0]
     pheno_file = infiles[1]
     cov_file = infiles[2]
+
     # Check there is an actual covariates file present, otherwise run without:
     if cov_file:
         cov_file = cov_file
+        # With @files() and without formatter() outfile has no name:
+        outfile = cov_file
     else:
         cov_file = None
+        outfile = str(geno_file + '.MxEQTL.touch')
+
+    # Was going to add flexibility so that -O from run_MxEQTL.R can be given
+    # for each set. For the pipeline just touch a file for
+    # timestamping and let the script provide the outfile name separately.
+    #if outfile_name:
+    #    outfile = outfile_name
+    #else:
+    #    outfile_name = None
 
     tool_options = P.substituteParameters(**locals())["matrixeqtl_options"]
     project_scripts_dir = str(getINIpaths() + '/matrixQTL/')
@@ -385,7 +449,7 @@ def run_MxEQTL(infiles, outfile):
     P.run()
 
 
-@active_if('matrixeqtl' in tools)
+#@active_if('matrixeqtl' in tools)
 @follows(run_MxEQTL)
 @transform('*.tsv', suffix('.tsv'), '.tsv.load')
 def load_MxEQTL(infile, outfile):
@@ -393,28 +457,12 @@ def load_MxEQTL(infile, outfile):
     Load the results of run_MxEQTL() into an SQL database.
     '''
     P.load(infile, outfile)
-
-
-@active_if('matrixeqtl' in tools)
-@follows(run_MxEQTL)
-@transform('*.svg', suffix('.svg'), '.pdf')
-def svgToPDF(infile, outfile):
-    '''
-    Simple conversion of svg to pdf files with inkscape
-    '''
-    statement = '''
-                inkscape --without-gui \
-                         --export-area-drawing \
-                         --export-margin=2 \
-                         --file=%(infile)s \
-                         --export-pdf=%(outfile)s
-                '''
-    P.run()
-
 #####
 
 #####
 # Run some other tool:
+
+
 #####
 ################
 
@@ -436,16 +484,26 @@ def conda_info():
 ################
 
 ################
-# Create the "full" pipeline target to run all functions specified
-#@follows(load_MxEQTL, conda_info)
-@follows(run_MxEQTL, conda_info)
-def full():
-    pass
-################
-
-################
 # Specify function to create reports pre-configured with sphinx-quickstart:
-@follows(full)
+
+# Convert any svg files to PDF if needed:
+@transform('*.svg', suffix('.svg'), '.pdf')
+def svgToPDF(infile, outfile):
+    '''
+    Simple conversion of svg to pdf files with inkscape
+    '''
+    statement = '''
+                inkscape --without-gui \
+                         --export-area-drawing \
+                         --export-margin=2 \
+                         --file=%(infile)s \
+                         --export-pdf=%(outfile)s
+                '''
+    P.run()
+
+
+# Build the report:
+@follows(conda_info, svgToPDF)
 def make_report():
     ''' Generates html and pdf versions of restructuredText files
         using sphinx-quickstart pre-configured files (conf.py and Makefile).
@@ -490,6 +548,14 @@ def make_report():
         sys.exit()
 
     return
+################
+
+################
+# Create the "full" pipeline target to run all functions specified
+#@follows(load_MxEQTL, conda_info, make_report)
+@follows(run_MxEQTL, conda_info)
+def full():
+    pass
 ################
 
 ################
