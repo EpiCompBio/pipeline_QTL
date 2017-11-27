@@ -307,6 +307,9 @@ project_scripts_dir = str(getINIpaths())
 # Set the name of this pipeline (for report softlinks):
 project_name = PARAMS['metadata_project_name']
 # 'pipeline_QTL'
+
+# Set if running many input files:
+many_infiles = P.asList(PARAMS["pipeline_many_infiles"])
 ################
 
 
@@ -345,7 +348,8 @@ def connect():
 # So no parameters or extra decorators like @transform for this function.
 # See:
 # http://www.ruffus.org.uk/decorators/files_ex.html#decorators-files-on-the-fly
-#@active_if('matrixeqtl' in tools)
+@active_if('True' in many_infiles)
+@active_if('matrixeqtl' in tools)
 def getInfileSet():
     '''
     Get set of input files if more than one combination exists.
@@ -374,10 +378,8 @@ def getInfileSet():
     infile = 'QTL_infiles.txt'
     if os.path.exists(infile):
         infile = pd.read_csv(infile, sep = '\t', header = None)
-        print(infile)
         for row in infile.itertuples(index = False):
             QTL_infiles = [row[0], row[1], row[2]]
-            print(QTL_infiles)
             yield QTL_infiles
     else:
         print('''
@@ -387,6 +389,7 @@ def getInfileSet():
               ''')
         sys.exit()
 
+@active_if('True' in many_infiles)
 @active_if('matrixeqtl' in tools)
 # This works but gives an all vs all which isn't needed here as each set of
 # geno, pheno requires a specific cov.
@@ -398,21 +401,23 @@ def getInfileSet():
 #         formatter('(?P<path>.+)/(?P<cohort>.+)-(?P<platform1>.+)-(?P<descriptor1>.+)-(?P<platform2>.+)-(?P<descriptor2>.+).cov'),
 #         '{cohort[0][0]}-{platform[0][0]}-{descriptor[0][0]}-{platform[1][0]}-{descriptor[1][0]}.MxEQTL.touch'
 #        )
+@follows(getInfileSet)
 @files(getInfileSet)
-def run_MxEQTL(infiles, outfile):
+def run_MxEQTL(geno_file, pheno_file, cov_file, outfile):
+#def run_MxEQTL(infiles, outfile):
     '''
     Run MatrixEQTL wrapper script.
     '''
     # Set up infiles:
-    geno_file = infiles[0]
-    pheno_file = infiles[1]
-    cov_file = infiles[2]
+    #geno_file = infiles[0]
+    #pheno_file = infiles[1]
+    #cov_file = infiles[2]
 
     # Check there is an actual covariates file present, otherwise run without:
     if cov_file:
-        cov_file = cov_file
+        #cov_file = cov_file
         # With @files() and without formatter() outfile has no name:
-        outfile = cov_file
+        outfile = str(cov_file + '.MxEQTL.touch')
     else:
         cov_file = None
         outfile = str(geno_file + '.MxEQTL.touch')
@@ -427,6 +432,11 @@ def run_MxEQTL(infiles, outfile):
 
     tool_options = P.substituteParameters(**locals())["matrixeqtl_options"]
     project_scripts_dir = str(getINIpaths() + '/matrixQTL/')
+
+    print(geno_file)
+    print(pheno_file)
+    print(cov_file)
+    print(outfile)
 
     statement = '''
                 Rscript %(project_scripts_dir)s/run_matrixEQTL.R \
@@ -446,6 +456,45 @@ def run_MxEQTL(infiles, outfile):
                 #--session mxqtl
                 #--condition cond_test
 
+    P.run()
+
+
+
+@active_if('False' in many_infiles)
+@active_if('matrixeqtl' in tools)
+@transform('*.geno',
+           formatter('(?P<path>.+)/(?P<cohort>.+)-(?P<platform>.+)-(?P<descriptor>.+).geno'),
+           add_inputs(['*.pheno',
+                       '*.cov',
+                       ]),
+           '{cohort[0]}-{platform[0]}.MxEQTL.touch')
+def run_MxEQTL_single(infiles, outfile):
+    '''
+    Run MatrixEQTL wrapper script for a single set of files.
+    '''
+    # Set up infiles:
+    geno_file = infiles[0]
+    pheno_file = infiles[1][0]
+    cov_file = infiles[1][1]
+
+    # Check there is an actual covariates file present, otherwise run without:
+    if cov_file:
+        pass
+    else:
+        cov_file = None
+
+    tool_options = P.substituteParameters(**locals())["matrixeqtl_options"]
+    project_scripts_dir = str(getINIpaths() + '/matrixQTL/')
+
+    statement = '''
+                Rscript %(project_scripts_dir)s/run_matrixEQTL.R \
+                --gex %(pheno_file)s \
+                --geno %(geno_file)s \
+                --cov %(cov_file)s \
+                %(tool_options)s ;
+                checkpoint ;
+                touch %(outfile)s
+                '''
     P.run()
 
 
@@ -553,7 +602,7 @@ def make_report():
 ################
 # Create the "full" pipeline target to run all functions specified
 #@follows(load_MxEQTL, conda_info, make_report)
-@follows(run_MxEQTL, conda_info)
+@follows(run_MxEQTL, run_MxEQTL_single, conda_info)
 def full():
     pass
 ################
