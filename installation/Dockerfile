@@ -99,7 +99,8 @@ RUN wget --no-check-certificate https://raw.githubusercontent.com/CGATOxford/cga
  
 # Install project specific packages:
 RUN conda install -y r-docopt=0.4.5 r-data.table=1.10.4 r-ggplot2=2.2.1 ; \
-    conda install r-matrixeqtl=2.1.1 -c bioconda
+    conda install -y r-matrixeqtl=2.1.1 -c bioconda \
+    conda install -y plink
     #R --vanilla -e 'source("https://bioconductor.org/biocLite.R") ; install.packages("svglite", repos = "http://cran.us.r-project.org") ; library("svglite")' ; \
 
 # Install rpy2 with conda as pip version causes conflicts:
