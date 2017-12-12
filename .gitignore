@@ -8,6 +8,9 @@ tests/.DS_Store
 *.DS_Store
 .ipynb_checkpoints
 
+# R projects:
+*.Rproj
+.Rhistory
 
 # Vim:
 *~
@@ -38,3 +41,4 @@ lib64
 docs/_build
 docs/_static
 docs/_templates
+.Rproj.user
