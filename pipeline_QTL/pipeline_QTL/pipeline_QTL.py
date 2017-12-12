@@ -343,78 +343,13 @@ def connect():
 # Run matrixeqtl
 
 @active_if('matrixeqtl' in tools)
-# This works but gives an all vs all which isn't needed here as each set of
-# geno, pheno requires a specific cov.
-#@product('*.geno',
-#         formatter('(?P<path>.+)/(?P<cohort>.+)-(?P<platform>.+)-(?P<descriptor>.+).geno'),
-#         '*.pheno',
-#         formatter('(?P<path>.+)/(?P<cohort>.+)-(?P<platform>.+)-(?P<descriptor>.+).pheno'),
-#         '*.cov',
-#         formatter('(?P<path>.+)/(?P<cohort>.+)-(?P<platform1>.+)-(?P<descriptor1>.+)-(?P<platform2>.+)-(?P<descriptor2>.+).cov'),
-#         '{cohort[0][0]}-{platform[0][0]}-{descriptor[0][0]}-{platform[1][0]}-{descriptor[1][0]}.MxEQTL.touch'
-#        )
-@transform(['*.geno', '*.pheno',],
-           formatter('(?P<cohort>.+)-(?P<platform>.+)-(?P<descriptor>.+).geno',
-                     '(?P<cohort>.+)-(?P<platform>.+)-(?P<descriptor>.+).pheno',),
-           add_inputs(['{cohort[0]}-{platform[0]}-{descriptor[0]}-{platform[1]}-{descriptor[1]}.cov',]),
-           '{cohort[0]}-{platform[0]}-{descriptor[0]}-{platform[1]}-{descriptor[2]}.MxEQTL.touch')
-def run_MxEQTL(infiles, outfile):
-    '''
-    Run MatrixEQTL wrapper script.
-    '''
-    # Set up infiles:
-    geno_file = infiles[0]
-    pheno_file = infiles[1]
-    cov_file = infiles[2]
-
-    # Check there is an actual covariates file present, otherwise run without:
-    if cov_file:
-        #cov_file = cov_file
-        # With @files() and without formatter() outfile has no name:
-        #outfile = str(cov_file + '.MxEQTL.touch')
-        pass
-    else:
-        cov_file = None
-        #outfile = str(geno_file + '.MxEQTL.touch')
-
-    tool_options = P.substituteParameters(**locals())["matrixeqtl_options"]
-    project_scripts_dir = str(getINIpaths() + '/matrixQTL/')
-
-    print(geno_file)
-    print(pheno_file)
-    print(cov_file)
-    print(outfile)
-
-    statement = '''
-                Rscript %(project_scripts_dir)s/run_matrixEQTL.R \
-                --gex %(pheno_file)s \
-                --geno %(geno_file)s \
-                --cov %(cov_file)s \
-                %(tool_options)s ;
-                checkpoint ;
-                touch %(outfile)s
-                '''
-                #-O %(outfile)s
-                # -model modelANOVA
-                #--pvOutputThreshold 0.05
-                #--snpspos snpsloc.txt
-                #--genepos geneloc.txt
-                #--pvOutputThreshold.cis 0.1
-                #--session mxqtl
-                #--condition cond_test
-
-    P.run()
-
-
-
-@active_if('matrixeqtl' in tools)
 @transform('*.geno',
            formatter('(?P<path>.+)/(?P<cohort>.+)-(?P<platform>.+)-(?P<descriptor>.+).geno'),
            add_inputs(['*.pheno',
                        '*.cov',
                        ]),
            '{cohort[0]}-{platform[0]}.MxEQTL.touch')
-def run_MxEQTL_single(infiles, outfile):
+def run_MxEQTL(infiles, outfile):
     '''
     Run MatrixEQTL wrapper script for a single set of files.
     '''
