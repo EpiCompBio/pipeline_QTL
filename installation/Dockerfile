@@ -72,6 +72,7 @@ RUN conda update -y conda
 # Install dependencies
 #########################
 
+##########
 # Install all packages needed
 # Major packages:
 RUN conda install python=3.5 ; \
@@ -99,12 +100,61 @@ RUN wget --no-check-certificate https://raw.githubusercontent.com/CGATOxford/cga
  
 # Install project specific packages:
 RUN conda install -y r-docopt=0.4.5 r-data.table=1.10.4 r-ggplot2=2.2.1 ; \
-    conda install -y r-matrixeqtl=2.1.1 -c bioconda \
-    conda install -y plink
-    #R --vanilla -e 'source("https://bioconductor.org/biocLite.R") ; install.packages("svglite", repos = "http://cran.us.r-project.org") ; library("svglite")' ; \
+    conda install -y r-matrixeqtl=2.1.1 -c bioconda ; \
+    conda install -y plink ; \
+    R --vanilla -e 'source("https://bioconductor.org/biocLite.R") ; install.packages("bigpca", repos = "http://cran.us.r-project.org") ; library("bigpca")' ; \
 
 # Install rpy2 with conda as pip version causes conflicts:
 RUN conda install -y rpy2
+##########
+
+##########
+# Install packages that aren't on pip or conda:
+
+# FlashPCA2 and dependencies:
+
+# Eigen: http://eigen.tuxfamily.org/index.php?title=Main_Page
+# Eigen has a conda recipe though: conda install -c menpo eigen
+RUN cd ; \
+    mkdir flashpca2 ; \
+    wget http://bitbucket.org/eigen/eigen/get/3.3.4.tar.gz ; \
+    tar xvfz 3.3.4.tar.gz \
+    mv eigen-eigen-5a0156e40feb eigen ; \
+    cd eigen ;
+
+# TO DO: Get full paths to specify for flashpca
+
+# Spectra: https://github.com/yixuan/spectra/
+RUN cd ; \
+    cd flashpca2 ; \
+    wget https://github.com/yixuan/spectra/archive/v0.5.0.tar.gz ; \
+    tar xvfz v0.5.0.tar.gz ; \
+    mv spectra-0.5.0 spectra ; \
+    cd spectra ;
+
+# Boost has a conda recipe:
+RUN conda install -y boost
+
+# FlashPCA2: https://github.com/gabraham/flashpca/releases
+RUN cd ; \
+    cd flashpca2 ; \
+    wget https://github.com/gabraham/flashpca/releases/download/v2.0/flashpca_2.0.tar.gz ; \
+    tar xvfz flashpca_2.0.tar.gz ; \
+    cd flashpca_2.0/ ; \
+    make all EIGEN_INC=/XXXX/flashpca2/eigen \
+    BOOST_INC=/XXXX/flashpca2/boost-1.59.0/include \
+    BOOST_LIB=/XXXX/flashpca2/boost-1.59.0/lib \
+    SPECTRA_INC=/XXXX/flashpca2/spectra
+
+# In a Mac e.g.: make all EIGEN_INC=/XXXX/flashpca2/eigen-eigen-5a0156e40feb \
+#                         BOOST_INC=/XXXX/anaconda/envs/r_test/include/boost \
+#                         BOOST_LIB=/XXXX/anaconda/envs/r_test/lib \
+#                         SPECTRA_INC=/XXXX/flashpca2/spectra-0.5.0/include
+
+
+
+##########
+
 
 ##############################
 # Install package of interest

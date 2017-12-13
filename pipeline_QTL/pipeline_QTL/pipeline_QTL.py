@@ -340,9 +340,55 @@ def connect():
 # Naming:
 # Infile: cohort-platform-other_descriptor.suffix
 # Outfile: cohort-platform1-descriptor1-platform2-descriptor2.new_suffix
+
+@transform('*.geno',
+           suffix('.geno'),
+           '.geno.PC.touch')
+def PC_geno(infile, outfile):
+    '''
+    Run Flashpca2 on genotype data.
+    '''
+    # Add any options passed to the ini file for flashpca:
+    tool_options = P.substituteParameters(**locals())["flashpca_options"]
+
+    statement = '''
+                flashpca \
+                -bfile %(infile)s \
+                -v \
+                %(tool_options)s ;
+                checkpoint ;
+                touch %(outfile)s
+                '''
+    P.run()
+
+
+@transform('*.pheno',
+           suffix('.pheno'),
+           '.pheno.PC.touch')
+def PC_pheno(infile, outfile):
+    '''
+    Run PCA on molecular phenotype data.
+    '''
+    # Add any options passed to the ini file for :
+    #tool_options = P.substituteParameters(**locals())["_options"]
+
+    project_scripts_dir = str(getINIpaths() + '/utilities/')
+
+    statement = '''
+                Rscript %(project_scripts_dir)s/run_bigPCA.R \
+                -bfile %(pheno_file)s \
+                -v \
+                --suffix %(outfile)s \
+                %(tool_options)s ;
+                checkpoint ;
+                touch %(outfile)s
+                '''
+    P.run()
+
 # Run matrixeqtl
 
 @active_if('matrixeqtl' in tools)
+@follows(PC_geno, PC_pheno)
 @transform('*.geno',
            formatter('(?P<path>.+)/(?P<cohort>.+)-(?P<platform>.+)-(?P<descriptor>.+).geno'),
            add_inputs(['*.pheno',

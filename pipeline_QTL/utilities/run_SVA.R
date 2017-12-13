@@ -3,7 +3,7 @@
 ######################
 # R script to run with docopt for command line options:
 '
-script_name
+run_SVA.R
 ===============
 
 Author: |author_names| 
@@ -16,7 +16,7 @@ Purpose
 
 |description|
 
-Run surrogate variable analysis (SVA) on input data.
+Run surrogate variable analysis (SVA) using the SmartSVA R package.
 
 
 From example in manual:
@@ -138,7 +138,7 @@ library(SmartSVA)
 if (is.null(args[['-I']]) == FALSE) {
   input_name <- as.character(args[['-I']])
   # For tests:
-  # setwd('~/Desktop/Downloads_to_delete/miscellaneous_tests/pipe_QTL_tests/results/tests2')
+  # setwd('~/Desktop/Downloads_to_delete/miscellaneous_tests/pipe_QTL_tests/results/tests3')
   # input_name <- 'airwave-NMR-blood.pheno'
   input_data <- fread(input_name, sep = '\t', header = TRUE, stringsAsFactors = FALSE)
 } else {
@@ -202,14 +202,16 @@ head(input_data) # Columns must be individuals and rows phenotypes
 
 # TO DO: From the manual:
 # Y <- matrix(rnorm(100*2700), 2700, 100)
+# input_data2 <- matrix(rnorm(100*50), 100, 50)
 # df <- data.frame(pred=gl(2, ncol(input_data) / 2))
 # Determine the number of SVs
 # Y.r <- t(resid(lm(t(Y) ~ pred, data=df)))
 # mod <- model.matrix( ~ pred, df)
 # For testing:
-dim(input_data)
+# dim(input_data)
 # df_cov <- data.frame(pred = gl(2, ncol(input_data) / 2))
 # df_cov
+# mod  <- model.matrix(~1 + pred, data = df_cov)
 mod  <- model.matrix(~1, data = data.frame(input_data))
 mod
 # What I want is like PC loop where PCs are obtained per sample for each sample present.
