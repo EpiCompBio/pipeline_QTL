@@ -3,8 +3,8 @@
 ######################
 # R script to run with docopt for command line options:
 '
-run_PCA.R
-===============
+plot_flashpca.R
+==================
 
 Author: |author_names| 
 Release: |version|
@@ -16,38 +16,43 @@ Purpose
 
 |description|
 
-Run principal component analysis (PCA) on input data using prcomp in R.
+Plots the results of flashpca output.
 
-If this is too slow look at the bigPCA package:
-# https://github.com/nicholasjcooper/bigpca
+
+See flashpca:
+# https://github.com/gabraham/flashpca#R
+
 
 Usage and options
 =================
 
 To run, type:
-Rscript run_PCA.R -I <INPUT_FILE> [options]
+Rscript plot_flashpca.R (--pcs <FILE>) (--pve <FILE>) [options]
 
-Usage: run_PCA.R (-I <INPUT_FILE>)
-       run_PCA.R [options]
+Usage: plot_flashpca.R (--pcs <FILE>) (--pve <FILE>)
+       plot_flashpca.R [options]
 
 Options:
-  -I <INPUT_FILE>                 Input file name, columns are samples, rows are features
+  --pcs <FILE>                     Input file name for pcs
+  --pve <FILE>                     Input file name for pve
   -O <OUTPUT_FILE>                Output file name
   --session <R_SESSION_NAME>      R session name if to be saved
   -h --help                       Show this screen
   --num_PCs	<PCs_to_plot>         Number of PCs to plot, max 10 [default: 10]
 
+
 Input:
 
-A tab separated file. This is read with data.table and stringsAsFactors = FALSE
-Rows must be features (phenotypes) and columns must be samples (individuals)
-The first row and first column must be the ID labels.
-PCA is run using prcomp, data is scaled and centred.
+pcs and pve files as output by flashpca.
+Files must be named as:
+pcs.*.flashpca.tsv
+pve.*.flashpca.tsv
+
+* meaning any character.
 
 Output:
 
-A tab separated file with the principal components and a plot of the top 10 PCs and variance explained.
-Save the session if you want all the details from prcomp.
+A multi-plot figure of the top PCs and cumulative variance explained.
 
 Requirements:
 
@@ -55,7 +60,6 @@ library(docopt)
 library(data.table)
 library(ggplot2)
 library(cowplot)
-library(mice)
 
 Documentation
 =============
@@ -68,6 +72,15 @@ For more information see:
 library(docopt, quietly = TRUE)
 # Retrieve the command-line arguments:
 args <- docopt(doc)
+# See:
+# https://cran.r-project.org/web/packages/docopt/docopt.pdf
+# docopt(doc, args = commandArgs(TRUE), name = NULL, help = TRUE,
+# version = NULL, strict = FALSE, strip_names = !strict,
+# quoted_args = !strict)
+
+# Within the script specify options as:
+# args[['--session']]
+# args $ `-I` == TRUE
 
 # Save arguments needed:
 num_PCs <- as.integer(args[['--num_PCs']])
@@ -97,7 +110,6 @@ library(data.table)
 # library(bigpca)
 library(ggplot2)
 library(cowplot)
-# library(mice)
 # TO DO: sort paths out so they are read from utilities folder after installation:
 source('~/Documents/github.dir/EpiCompBio/pipeline_QTL/pipeline_QTL/utilities/moveme.R')
 source('~/Documents/github.dir/EpiCompBio/pipeline_QTL/pipeline_QTL/utilities/ggtheme.R')
@@ -107,162 +119,113 @@ source('~/Documents/github.dir/EpiCompBio/pipeline_QTL/pipeline_QTL/utilities/gg
 ######################
 ##########
 # Read files, this is with data.table:
-if (is.null(args[['-I']]) == FALSE) {
-  input_name <- as.character(args[['-I']])
+# pcs have FID and IID as first two columns
+if (is.null(args[['--pcs']]) == FALSE) {
+  input_name <- as.character(args[['--pcs']])
   # For tests:
-  # setwd('~/Documents/quickstart_projects/chronic_inflammation_Airwave.p_q/results/QTL_core_illumina')
-  # input_name <- 'AIRWAVE_1DNMR_BatchCorrected_log_Data_Var_Sample.transposed.tsv'
-  input_data <- fread(input_name, sep = '\t', header = TRUE, stringsAsFactors = FALSE,
-                      na.strings = c('', ' ', 'NA', 'NaN'))
+  # setwd('~/Documents/quickstart_projects/chronic_inflammation_Airwave.p_q/results/QTL_core_illumina/')
+  # input_name <- 'pcs.all.clean-base.pruned.flashpca.tsv'
+  input_data_pcs <- fread(input_name, sep = '\t', header = TRUE, stringsAsFactors = FALSE)
 } else {
   # Stop if arguments not given:
   print('You need to provide an input file. This has to be tab separated with headers.')
-  stopifnot(!is.null(args[['-I']]) == TRUE)
+  stopifnot(!is.null(args[['--pcs']]) == TRUE)
 }
-print('File being used: ')
+print('PC file being used: ')
 print(input_name)
 ##########
 
 ##########
-# Set output file names:
+# pve is a single column with cumulative proportion explained
+# the proportion of total variance explained by each of the top k eigenvectors
+# To get the cumulative variance explained, simply do the cumulative sum of the variances (cumsum in R)
+if (is.null(args[['--pve']]) == FALSE) {
+  input_name <- as.character(args[['--pve']])
+  # For tests:
+  # input_name <- 'pve.all.clean-base.pruned.flashpca.tsv'
+  input_data_pve <- fread(input_name, sep = '\t', header = FALSE, stringsAsFactors = FALSE)
+} else {
+  # Stop if arguments not given:
+  print('You need to provide an input file. This has to be tab separated with headers.')
+  stopifnot(!is.null(args[['--pve']]) == TRUE)
+}
+print('pve file being used: ')
+print(input_name)
+##########
+
+##########
+# Set output file name prefix:
+# TO DO: sort out as two input_name from pcs and pve
 if (is.null(args[['-O']])) {
-  stopifnot(!is.null(args[['-I']]))
+  stopifnot(!is.null(args[['--pcs']]), !is.null(args[['--pve']]))
   print('Output file name prefix not given. Using:')
   # Split infile name at the last '.':
   input_name <- strsplit(input_name, "[.]\\s*(?=[^.]+$)", perl = TRUE)[[1]][1]
-  output_file_name <- sprintf('%s.pca', input_name)
+  output_file_name <- sprintf('%s', input_name)
   print('Name being used to save output files: ')
   print(output_file_name)
 } else {
   output_file_name <- as.character(args[['-O']])
   # output_file_name <- 'testing'
-  output_file_name <- sprintf('%s.pca', output_file_name)
+  output_file_name <- sprintf('%s', output_file_name)
   print(sprintf('Output file names will contain %s', output_file_name))
 }
 ##########
 ######################
 
 ######################
-# Run PCA on input data
-
 ##########
-# Explore input data:
-class(input_data)
-dim(input_data) # nrow(), ncol()
-# str(input_data)
-# input_data # equivalent to head() and tail()
-# setkey(input_data) # memory efficient and fast
-# key(input_data)
-# tables()
-# colnames(input_data)
+# Explore input data for pcs:
+class(input_data_pcs)
+dim(input_data_pcs) # nrow(), ncol()
+str(input_data_pcs)
+input_data_pcs # equivalent to head() and tail()
+setkey(input_data_pcs) # memory efficient and fast
+key(input_data_pcs)
+tables()
+colnames(input_data_pcs)
 # First column with feature labels:
-# input_data[, 1, with = FALSE] # by column position, preferable by column name to avoid silent bugs
+input_data_pcs[, 1, with = FALSE] # by column position, preferable by column name to avoid silent bugs
+input_data_pcs <- as.data.frame(input_data_pcs)
 
-# Convert to a matrix, exclude the first column (which is expected to have the feature names) 
-# and save feature names as rownames:
-input_data <- as.data.frame(input_data)
-rownames(input_data) <- input_data[, 1]
-# rownames(input_data)
-# input_data
-input_data[1:5, 1:5]
-input_data <- data.matrix(input_data[1:nrow(input_data), 2:ncol(input_data)])
-class(input_data)
-# str(input_data)
-dim(input_data)
-# head(input_data)
-# str(input_data)
-class(input_data)
-# head(input_data) # Columns must be individuals and rows phenotypes
-input_data[1:5, 1:5]
-dim(input_data)
+# Explore input data for proportions:
+class(input_data_pve)
+dim(input_data_pve) # nrow(), ncol()
+str(input_data_pve)
+input_data_pve # equivalent to head() and tail()
+colnames(input_data_pve)
+# First column with feature labels:
+input_data_pve[, 1, with = FALSE] # by column position, preferable by column name to avoid silent bugs
 ##########
 
 ##########
-# Compute the PCs
-# Check whether there are missing values:
-NAs <- which(complete.cases(input_data) == FALSE)
-# input_data[c(NAs), ]
-length(NAs)
-# # TO DO: run imputation
-# if(length(NAs) == 0) {
-#   input_data_prcomp <- prcomp(input_data, center = TRUE, scale = TRUE)
-# } else {
-#   # Impute
-#   # TO DO: Check this is a sane approach
-#   # Run imputation
-#   # Roughly one imputation per percent of incomplete data (White et al.,2011),
-#   # but the more the better, 100 can easily be run on small datasets on a laptop
-#   # Roughly 20-30 iterations should be enough, use plot() to check convergence:
-#   # http://stats.stackexchange.com/questions/219013/how-do-the-number-of-imputations-the-maximum-iterations-affect-accuracy-in-mul
-#   input_data <- mice(input_data,
-#                        m = 5, # Number of imputed datasets, 5 is default
-#                        maxit = 10, 
-#                        # meth = 'pmm', # predictive mean matching, leave empty for 
-#                        # auto selection depending on variable type
-#                        diagnostics = T,
-#                        seed = 500)
-#   summary(input_data)
-#   input_data_prcomp <- prcomp(input_data, center = TRUE, scale = TRUE)
-#   }
-
-# TO DO: Exclude missing rows for now:
-input_data <- na.omit(input_data)
-dim(input_data)
-
-input_data_prcomp <- prcomp(input_data, center = TRUE, scale = TRUE)
-
-# Obtain values for all PCs output:
-pc <- data.frame(round(input_data_prcomp$x, 4))
-pc$sample_id <- rownames(pc)
-pc <- pc[, moveme(names(pc), 'sample_id first')]
-names(pc)[1:num_PCs]
-class(pc)
-pc[1:5, 1:5]
-# Save file:
-fwrite(pc,
-       sprintf('%s.tsv', output_file_name),
-       sep = '\t', na = 'NA',
-       col.names = TRUE, row.names = FALSE,
-       quote = FALSE)
+# Get proportion explained:
+input_data_pve <- as.data.frame(input_data_pve)
+input_data_pve$percent_var <- round(100 * (input_data_pve$V1), 3)
+input_data_pve$PC <- factor(row.names(input_data_pve), levels = row.names(input_data_pve),
+                        labels = row.names(input_data_pve))
+head(sum_pca_df)
+tail(sum_pca_df)
+names(sum_pca_df)
+str(sum_pca_df)
 ##########
 
 ##########
-# Explore dimensions and plot first 10 or so components:
-dim(pc) # Extra column for sampleID
-dim(input_data)
-# str(input_data_prcomp)
-# head(pc)
-
-# Get cumulative proportion:
-sum_pca <- summary(input_data_prcomp)
-sum_pca$importance[, 1:num_PCs]
-# sum_pca
-sum_pca_df <- as.data.frame(sum_pca$importance)
-sum_pca_df <- t(sum_pca_df)
-sum_pca_df <- as.data.frame(sum_pca_df)
-# View(sum_pca_df)
-sum_pca_df$percent_var <- round(100 * (sum_pca_df$`Proportion of Variance`), 3)
-sum_pca_df$PC <- factor(row.names(sum_pca_df), levels = row.names(sum_pca_df),
-                        labels = row.names(sum_pca_df))
-# head(sum_pca_df)
-# tail(sum_pca_df)
-# sum_pca_df[1:num_PCs, ]
-# names(sum_pca_df)
-# str(sum_pca_df)
-
 # Plot proportion of variance of first x PCs:
-plot_prop_vars <- ggplot(sum_pca_df[1:num_PCs, ], aes(y = percent_var, x = PC)) + 
+plot_prop_vars <- ggplot(input_data_pve[c(1:num_PCs), ], aes(y = percent_var, x = PC)) +
   geom_bar(stat = 'identity') +
   scale_y_continuous(expand = c(0, 0)) +
   labs(x = 'Principal component', y = 'Proportion of variance (%)') +
   theme_Publication() +
   theme(axis.text.x = element_blank(), axis.ticks.x = element_blank()) +
-  theme(panel.grid = element_blank(), panel.border = element_blank())
+  theme(panel.grid = element_blank(), panel.border = element_blank()) +
+  theme(plot.margin = unit(c(1,1,1,1), "mm")
 # plot_name <- sprintf('prop_var_%s.svg', output_file_name)
 # ggsave(plot_name, plot_prop_vars)
 
 # Plot top PCs:
-# head(pc)
+pc <- input_data_pcs[, -c(1)]
+head(pc)
 # Function for plotting any PC pair:
 plot_PCs <- function(data = pc, PCa, PCb){
   xlab <- sprintf('%s', PCa)
@@ -272,6 +235,7 @@ plot_PCs <- function(data = pc, PCa, PCb){
     xlab(label = xlab) +
     ylab(label = ylab)
 }
+plot_PCs(pc, 'PC1', 'PC2')
 
 for (i in 1:num_PCs){
   PCa <- sprintf('PC%s', i)
@@ -282,6 +246,7 @@ for (i in 1:num_PCs){
   assign(plot_name, plot_PCs(pc, as.character(PCa), as.character(PCb)))
 }
 
+# TO DO: num_PCs has to be 10 for now, will fail otherwise.
 # Put all plots together in one figure:
 cow_grid <- plot_grid(plot_prop_vars,
                       plot_PC1_PC2,
@@ -298,7 +263,7 @@ cow_grid <- plot_grid(plot_prop_vars,
                       # labels = c("A", "B"),
                       ncol=2)
 # Save figure to disk as svg:
-plot_name <- sprintf('top_%s_PCs_%s.svg', num_PCs, output_file_name)
+plot_name <- sprintf('top_10_PCs_%s.svg', output_file_name)
 # A4 paper measures 210 × 297 millimeters or 8.27 × 11.69 inches
 svg(plot_name, width = 12, height = 12)
 cow_grid

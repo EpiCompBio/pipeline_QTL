@@ -102,7 +102,10 @@ RUN wget --no-check-certificate https://raw.githubusercontent.com/CGATOxford/cga
 RUN conda install -y r-docopt=0.4.5 r-data.table=1.10.4 r-ggplot2=2.2.1 ; \
     conda install -y r-matrixeqtl=2.1.1 -c bioconda ; \
     conda install -y plink ; \
-    R --vanilla -e 'source("https://bioconductor.org/biocLite.R") ; install.packages("bigpca", repos = "http://cran.us.r-project.org") ; library("bigpca")' ; \
+    R --vanilla -e 'source("https://bioconductor.org/biocLite.R") ; install.packages("cowplot", repos = "http://cran.us.r-project.org") ; library("cowplot")' ; \
+    R --vanilla -e 'source("https://bioconductor.org/biocLite.R") ; install.packages("ggthemes", repos = "http://cran.us.r-project.org") ; library("ggthemes")' ; \
+    R --vanilla -e 'source("https://bioconductor.org/biocLite.R") ; install.packages("gdata", repos = "http://cran.us.r-project.org") ; library("gdata")' ; \
+#R --vanilla -e 'source("https://bioconductor.org/biocLite.R") ; install.packages("bigpca", repos = "http://cran.us.r-project.org") ; library("bigpca")' ; \
 
 # Install rpy2 with conda as pip version causes conflicts:
 RUN conda install -y rpy2
