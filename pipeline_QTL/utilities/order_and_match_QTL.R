@@ -16,22 +16,22 @@ Purpose
 
 |description|
 
-Order and match columns between a genotype and a phenotype file.
-Output is meant to be passed to MatrixeQTL.
+Order and match columns between two files, usually a genotype and a phenotype file.
+The output is meant to be passed to MatrixeQTL.
 
 
 Usage and options
 =================
 
 To run, type:
-Rscript order_and_match_QTL.R --geno <FILE> --pheno <FILE> [options]
+Rscript order_and_match_QTL.R --file1 <FILE> --file2 <FILE> [options]
 
-Usage: order_and_match_QTL.R (--geno <FILE>) (--pheno <FILE>)
+Usage: order_and_match_QTL.R (--file1 <FILE>) (--file2 <FILE>)
        order_and_match_QTL.R [options]
 
 Options:
---geno <FILE>                 Genotype input file name, columns are samples, rows are features
---pheno <FILE>                Phenotype input file name, columns are samples, rows are features
+--file1 <FILE>                Usually a genotype input file name, columns are samples, rows are features
+--file2 <FILE>                usually a phenotype input file name, columns are samples, rows are features
 -O <OUTPUT_FILE>              Output file name
 --session <R_SESSION_NAME>    R session name if to be saved
 -h --help                     Show this screen
@@ -89,57 +89,53 @@ str(args)
 # source('http://bioconductor.org/biocLite.R')
 # biocLite
 library(data.table)
-
 # TO DO: sort paths out so they are read from utilities folder after installation:
 source('~/Documents/github.dir/EpiCompBio/pipeline_QTL/pipeline_QTL/utilities/moveme.R')
+# source('~/Documents/github.dir/EpiCompBio/pipeline_QTL/pipeline_QTL/utilities/functions_for_MatrixeQTL.R')
 ######################
 
 ######################
 ##########
 # Read files, this is with data.table:
-if (is.null(args[['--geno']]) == FALSE) {
-  input_name <- as.character(args[['--geno']])
+if (is.null(args[['--file1']]) == FALSE) {
+  input_name_1 <- as.character(args[['--file1']])
   # For tests:
   # setwd('~/Documents/quickstart_projects/chronic_inflammation_Airwave.p_q/results/QTL_core_illumina/')
-  # input_name <- 'all.clean-base.bed'
-  input_data_geno <- fread(input_name, sep = '\t', header = TRUE, stringsAsFactors = FALSE)
+  # input_name_1 <- 'all.clean-base.A-transpose.matrixQTL.geno'
+  input_data_1 <- fread(input_name_1, sep = '\t', header = TRUE, stringsAsFactors = FALSE)
 } else {
   # Stop if arguments not given:
   print('You need to provide an input file. This has to be tab separated with headers.')
-  stopifnot(!is.null(args[['--pcs']]) == TRUE)
+  stopifnot(!is.null(args[['--file1']]) == TRUE)
 }
-print('PC file being used: ')
-print(input_name)
+print('First file being used (expecting genotypes here): ')
+print(input_name_1)
 ##########
 
 ##########
-# pve is a single column with cumulative proportion explained
-# the proportion of total variance explained by each of the top k eigenvectors
-# To get the cumulative variance explained, simply do the cumulative sum of the variances (cumsum in R)
-if (is.null(args[['--pve']]) == FALSE) {
-  input_name <- as.character(args[['--pve']])
+# Read file2:
+if (is.null(args[['--file2']]) == FALSE) {
+  input_name_2 <- as.character(args[['--file2']])
   # For tests:
-  # input_name <- 'pve.all.clean-base.pruned.flashpca.tsv'
-  input_data_pve <- fread(input_name, sep = '\t', header = FALSE, stringsAsFactors = FALSE)
+  # input_name_2 <- 'AIRWAVE_1DNMR_BatchCorrected_log_Data_Var_Sample.transposed.tsv'
+  input_data_2 <- fread(input_name_2, sep = '\t', header = TRUE, stringsAsFactors = FALSE)
 } else {
   # Stop if arguments not given:
   print('You need to provide an input file. This has to be tab separated with headers.')
-  stopifnot(!is.null(args[['--pve']]) == TRUE)
+  stopifnot(!is.null(args[['--file2']]) == TRUE)
 }
-print('pve file being used: ')
-print(input_name)
+print('Second file file being used (expecting molecular variables): ')
+print(input_name_2)
 ##########
 
 ##########
 # Set output file name prefix:
-# TO DO: sort out as two input_name from pcs and pve
+# TO DO: sort out as two input_name s
 if (is.null(args[['-O']])) {
-  stopifnot(!is.null(args[['--pcs']]), !is.null(args[['--pve']]))
+  stopifnot(!is.null(args[['--file1']]), !is.null(args[['--file2']]))
   print('Output file name prefix not given. Using:')
-  # Split infile name at the last '.':
-  input_name <- strsplit(input_name, "[.]\\s*(?=[^.]+$)", perl = TRUE)[[1]][1]
-  output_file_name <- sprintf('%s', input_name)
-  print('Name being used to save output files: ')
+  output_file_name <- 'matched'
+  print('Output file names will contain: ')
   print(output_file_name)
 } else {
   output_file_name <- as.character(args[['-O']])
@@ -150,222 +146,179 @@ if (is.null(args[['-O']])) {
 ##########
 ######################
 
-
-########################
-library(data.table)
-source('moveme.R')
-source('functions_for_MatrixeQTL.R')
-########################
-
-
-########################
-# # TO DO for other files: Master file ordered:
-# phenotype_file <- 'BEST-D_phenotype_file_final.tsv'
-# phenotype_data <- fread(phenotype_file, sep = '\t', header = TRUE, stringsAsFactors = FALSE)
-# phenotype_data[1:5, 1:5, with = F]
-# master_IDs <- phenotype_data[, c('pt_id', 'kit_id_randomisation', 'kit_id_finalVisit'), with = F]
-# master_IDs <- master_IDs[order(kit_id_randomisation)] # Watch the lack of comma as DT not DF
-# # master_IDs <- transpose(master_IDs) # Looses headers
-# # master_IDs <- as.list(master_IDs)
-# master_IDs <- as.data.frame(master_IDs)
-# master_IDs <- as.data.frame(t(master_IDs))
-# class(master_IDs)
-# head(master_IDs)
-# row.names(master_IDs)[2] <- 'FID'
-# row.names(master_IDs)
-
-#########################
-
-
-#############################################
-# Run with command line arguments:
-options(echo=TRUE) # to see commands in output file. TO DO: check how it works with sink() above.
-args <- commandArgs(trailingOnly = TRUE)
-
-# TO DO: pass to configuration file
-
-# geno_file <- 'genotype_data_all_treated_baseline.tsv'
-# expr_file <- 'GEx_baseline_4000_and_2000.tsv'
-# covar_PCs_file <- 'principal_components_normalised_filtered_PC20.tsv'
-
-geno_file <- as.character(args[1])
-#geno_file <- 'genotype_data_all_treated_baseline.tsv'
-#geno_file <- 'genotype_data_all_treated_final.tsv'
-# geno_file <- 'chr22_Airwave_CPMG_Plasma_clean_SNPs_autosome.A-transpose.matrixQTL.geno'
-
-expr_file <- as.character(args[2])
-#expr_file <- 'GEx_baseline_4000_and_2000.tsv'
-#expr_file <- 'GEx_treated_4000_and_2000.tsv'
-# expr_file <- 'Airwave_CPMG_Plasma.txt'
-
-# covar_PCs_file <- as.character(args[3])
-#covar_PCs_file <- 'principal_components_normalised_filtered_PC20.tsv'
-
-print(args)
-########################
-
-########################
-# Read geno baseline and order:
-geno_data <- fread(geno_file, sep = '\t', header = TRUE, stringsAsFactors = FALSE)#, drop = 1) # Column doesn't need to be dropped, may have been from double IDs before
-# setkey(geno_data, )
-geno_data[1:5, 1:5, with = F]
+######################
+##########
+# Check file1 and order
+# setkey(input_data_1, )
+input_data_1[1:5, 1:5, with = F]
 # TO DO for data.table ordering if large files:
-# col_order <- order(colnames(geno_data))
+# col_order <- order(colnames(input_data_1))
 # col_order
-# setcolorder(geno_data, c("SNP", master_IDs_read))
-geno_data <- as.data.frame(geno_data[, order(colnames(geno_data)), with = F])
-class(geno_data)
-colnames(geno_data)[ncol(geno_data)] <- 'FID'
-names(geno_data)
-geno_data <- geno_data[, moveme(names(geno_data), 'FID first')]
-head(geno_data)
-dim(geno_data)
-geno_data[1:5, 1:5]
-########################
+# setcolorder(input_data_1, c("SNP", master_IDs_read))
+input_data_1 <- as.data.frame(input_data_1[, order(colnames(input_data_1)), with = F])
+class(input_data_1)
+colnames(input_data_1)[ncol(input_data_1)] <- 'FID'
+# names(input_data_1)
+input_data_1 <- input_data_1[, moveme(names(input_data_1), 'FID first')]
+dim(input_data_1)
+input_data_1[1:5, 1:5]
+##########
 
-########################
-# Read expr baseline and order:
-expr_data <- fread(expr_file, sep = '\t', header = TRUE, stringsAsFactors = FALSE)
-expr_data[1:5, 1:5, with = F]
-# expr_data <- as.data.frame(expr_data[, order(colnames(expr_data)), with = F])
-# class(expr_data)
-# colnames(expr_data)[ncol(expr_data)] <- 'FID'
-# names(expr_data)
-# expr_data <- expr_data[, moveme(names(expr_data), 'FID first')]
-# head(expr_data)
-# dim(expr_data)
-# expr_data[1:5, 1:5]
-
-# CPMG needs transposing:
-expr_data_t <- transpose_file(expr_data, 1)
-class(expr_data_t)
-expr_data_t[1:5, 1:5, with = F]
-expr_data_t[1:5, (ncol(expr_data_t)-5):ncol(expr_data_t), with = F]
-expr_data <- expr_data_t
-# Rename datapoints column and re-order:
-expr_data <- as.data.frame(expr_data[, order(colnames(expr_data)), with = F])
-class(expr_data)
-colnames(expr_data)[ncol(expr_data)] <- 'FID'
-names(expr_data)
-expr_data <- expr_data[, moveme(names(expr_data), 'FID first')]
-head(expr_data)
-dim(expr_data)
-expr_data[1:5, 1:5]
-########################
-
-########################
+##########
+# TO DO: this is specific to set of files:
 # Names don't match between genotypes and metabolomics data (geno data has plink double IDs):
-geno_data[1:5, 1:5]
-sample_IDs <- colnames(geno_data)[-1]
+input_data_1[1:5, 1:5]
+sample_IDs <- colnames(input_data_1)[-1]
 head(sample_IDs)
+# # TO DO: check QC:
+# # Some have IDs which get split as "11421" "rep"   "11421" "rep":
+# grep_rep <- grep('rep', sample_IDs)
+# grep_rep
+# sample_IDs[c(grep_rep[1])] <- "11421_11421"
+# sample_IDs[c(grep_rep[2])] <- "46750_46750"
 # Split plink double IDs:
 sample_IDs_split <- strsplit(sample_IDs, split = '[_]')
 # Create data frame:
 sample_IDs_split_df <- data.frame(matrix(unlist(sample_IDs_split), 
                                          nrow = length(sample_IDs_split), 
                                          byrow = T),
-                                  stringsAsFactors=FALSE)
+                                  stringsAsFactors = FALSE)
 # Add 'FID' back in:
 sample_IDs_split_df <- rbind(c('FID', 'FID'), sample_IDs_split_df)
-head(sample_IDs_split_df)
+# head(sample_IDs_split_df)
 dim(sample_IDs_split_df)
-str(sample_IDs_split_df)
+# str(sample_IDs_split_df)
 
-# Insert single IDs into geno data:
-head(colnames(geno_data))
+# Insert single IDs into file1 data:
+head(colnames(input_data_1))
 head(sample_IDs_split_df$X1)
-colnames(geno_data) <- sample_IDs_split_df$X1
-head(colnames(geno_data))
-########################
+# input_data_1_temp <- input_data_1
+colnames(input_data_1) <- sample_IDs_split_df$X1
+head(colnames(input_data_1))
+input_data_1[1:5, 1:5]
+##########
 
-# ########################
-# # Read PCs from expression data:
-# covar_PCs <- fread(covar_PCs_file, sep = '\t', header = TRUE, stringsAsFactors = FALSE)
-# covar_PCs <- data.table::transpose(covar_PCs) # Tranpose looses headers but these were in order already
-# # TO DO: transpose() gives odd error (not in namespace...), runs OK outside of Rscript but don't know where the error is.
-# # See:
-# # http://stackoverflow.com/questions/23252231/r-data-table-breaks-in-exported-functions
-# # http://stackoverflow.com/questions/29549690/function-on-data-table-environment-errors
-# # http://stackoverflow.com/questions/15223367/wrapping-data-table-using-an-evaluated-call-in-a-package
-# 
-# covar_PCs <- as.data.frame(covar_PCs)
-# names(covar_PCs) <- covar_PCs[1,]
-# covar_PCs <- covar_PCs[-1,]
-# covar_PCs[1:5, 1:5]
-# class(covar_PCs)
-# covar_PCs <- covar_PCs[, order(colnames(covar_PCs))]
-# covar_PCs[1:5, 1:5]
-# dim(covar_PCs)
-# ########################
+##########
+# Check file2 and order
+input_data_2[1:5, 1:5, with = F]
+input_data_2 <- as.data.frame(input_data_2[, order(colnames(input_data_2)), with = F])
+class(input_data_2)
+colnames(input_data_2)[ncol(input_data_2)] <- 'FID'
+# names(input_data_2)
+input_data_2 <- input_data_2[, moveme(names(input_data_2), 'FID first')]
+dim(input_data_2)
+input_data_2[1:5, 1:5]
+##########
+######################
 
-########################
+######################
 # Match each
-# Geno and expr:
-length(which((colnames(expr_data) %in% colnames(geno_data))))
-expr_data <- expr_data[, which(colnames(expr_data) %in% colnames(geno_data))]
-geno_data <- geno_data[, which(colnames(geno_data) %in% colnames(expr_data))]
-identical(colnames(expr_data), colnames(geno_data))
-expr_data[1:5, 1:5]
-geno_data[1:5, 1:5]
+# file1 and file2:
+length(which((colnames(input_data_2) %in% colnames(input_data_1))))
+# input_data_2_temp <- input_data_2
+input_data_2 <- input_data_2[, which(colnames(input_data_2) %in% colnames(input_data_1))]
+input_data_1 <- input_data_1[, which(colnames(input_data_1) %in% colnames(input_data_2))]
+# # Delete 'rep' samples:
+# to_del <- grep('46750.1', colnames(input_data_1))
+# input_data_1 <- input_data_1[, -to_del]
+stopifnot(identical(as.character(colnames(input_data_2)),
+          as.character(colnames(input_data_1))))
+input_data_2[1:5, 1:5]
+input_data_1[1:5, 1:5]
+##########
 
-# Covar PCs to expr:
-length(which((colnames(covar_PCs) %in% colnames(expr_data)[-1])))
-covar_PCs <- covar_PCs[, which(colnames(covar_PCs) %in% colnames(expr_data)[-1])]
+##########
+# TO DO: separate or move this file to project specific
+# Covar PCs to file2:
+covar_PCs_1_name <- 'pcs.all.clean-base.pruned.flashpca.transposed.tsv'
+covar_PCs_1 <- fread(covar_PCs_1, sep = '\t', header = TRUE, stringsAsFactors = FALSE)
+# This file after using transposing script has double IDs in rows:
+covar_PCs_1 <- covar_PCs_1[-1, ]
+# Change 'V1' to 'FID':
+setnames(x = covar_PCs_1, old = 'V1', new = 'FID')
+covar_PCs_1 <- as.data.frame(covar_PCs_1[, order(colnames(covar_PCs_1)), with = F])
+covar_PCs_1 <- covar_PCs_1[, moveme(names(covar_PCs_1), 'FID first')]
+covar_PCs_1[1:5, 1:5]
 
-# TO DO: stop if not 'TRUE':
-identical(colnames(covar_PCs), colnames(expr_data)[-1])
-expr_data[1:5, 1:5]
-covar_PCs[1:5, 1:5]
-########################
 
-########################
-# # TO DO:
-# # Match gene expression probes measured to location file:
-# snp_pos_data <- fread(snp_pos_file, sep = ' ', header = TRUE, stringsAsFactors = FALSE)
-# head(snp_pos_data)
-# dim(snp_pos_data)
-# probe_pos_data <- fread(probe_pos_file, sep = '\t', header = TRUE, stringsAsFactors = FALSE)
-# head(probe_pos_data)
-# dim(probe_pos_data)
-# 
-# # Switch classes as these are read by data.table and cause problems later:
-# snp_pos_data <- as.data.frame(snp_pos_data)
-# probePos <- as.data.frame(probe_pos_data)
-# 
-# length(which(as.character(probe_pos_data[, 1]) %in% as.character(expr_data[, 1])))
-# probe_pos_data <- probe_pos_data[which(as.character(probe_pos_data[, 1]) %in% as.character(expr_data[, 1])), ]
-# dim(probe_pos_data)
-# head(probe_pos_data)
-# 
-# length(which(as.character(snp_pos_data[, 1]) %in% as.character(geno_data[, 1])))
-# snp_pos_data <- snp_pos_data[which(as.character(snp_pos_data[, 1]) %in% as.character(geno_data[, 1])), ]
-# dim(snp_pos_data)
-# head(snp_pos_data)
-########################
+covar_PCs_2_name <- 'AIRWAVE_1DNMR_BatchCorrected_log_Data_Var_Sample.pca.transposed.tsv'
+covar_PCs_2 <- fread(covar_PCs_2, sep = '\t', header = TRUE, stringsAsFactors = FALSE)
+# Change 'V1' to 'FID':
+setnames(x = covar_PCs_2, old = 'V1', new = 'FID')
+covar_PCs_2 <- as.data.frame(covar_PCs_2[, order(colnames(covar_PCs_2)), with = F])
+covar_PCs_2 <- covar_PCs_2[, moveme(names(covar_PCs_2), 'FID first')]
+covar_PCs_2[1:5, 1:5]
+dim(covar_PCs_2)
 
-########################
+# Match PCs: 
+# length(which(as.character(unlist(covar_PCs_1[, 'FID'])) %in% as.character(colnames(input_data_1))))
+length(which(colnames(covar_PCs_1) %in% colnames(input_data_1)))
+covar_PCs_1 <- covar_PCs_1[, which(colnames(covar_PCs_1) %in% colnames(input_data_1))]
+covar_PCs_1[1:5, 1:5]
+dim(covar_PCs_1)
+
+length(which(colnames(covar_PCs_2) %in% colnames(input_data_2)))
+covar_PCs_2 <- covar_PCs_2[, which(colnames(covar_PCs_2) %in% colnames(input_data_2))]
+covar_PCs_2[1:5, 1:5]
+dim(covar_PCs_2)
+
+# Stop if not 'TRUE':
+stopifnot(identical(colnames(covar_PCs_1), colnames(covar_PCs_2)))
+stopifnot(identical(colnames(covar_PCs_1), colnames(input_data_2)))
+stopifnot(identical(colnames(covar_PCs_2), colnames(input_data_1)))
+
+# TO DO: this is analysis specific, clean up:
+covar_PCs_1[1:5, 1:5]
+covar_PCs_2[30:35, 1:5]
+# Add a string to have unique names:
+covar_PCs_2$string <- '_pheno'
+covar_PCs_2$ID <- with(covar_PCs_2, paste0(FID, string))
+covar_PCs_2 <- covar_PCs_2[, moveme(names(covar_PCs_2), 'ID first')]
+covar_PCs_2[, 'FID'] <- NULL
+covar_PCs_2[, 'string'] <- NULL
+colnames(covar_PCs_2)[1] <- 'FID'
+covar_PCs_2[1:5, 1:5]
+
+# Merge into one file, choice of PCs is arbitrary:
+all_covar_PCs <- rbind(covar_PCs_1, covar_PCs_2[1:35, ])
+fwrite(all_covar_PCs,
+       sprintf('%s_all_covar_PCs.tsv', output_file_name),
+       sep = '\t', na = 'NA',
+       col.names = TRUE, row.names = FALSE,
+       quote = FALSE)
+##########
+######################
+
+
+######################
 # Write to file each, this saves with an empty first header and row names as first column, cut when read next:
 # col.names = NA makes headers match but can't be used with row.names = F
-write.table(expr_data, paste(expr_file, '_matched.tsv', sep = ''), sep='\t', quote = FALSE, col.names = NA)
-write.table(geno_data, paste(geno_file, '_matched.tsv', sep = ''), sep='\t', quote = FALSE, col.names = NA)
+# Save file:
+# TO DO: sort out naming of files:
+fwrite(input_data_1,
+       sprintf('%s_%s', output_file_name, input_name_1),
+       sep = '\t', na = 'NA',
+       col.names = TRUE, row.names = FALSE,
+       quote = FALSE)
 
-covar_PCs_file_substr <- substring(as.character(covar_PCs_file), 1, 21)
-expr_file_substr <- substring(as.character(expr_file), 1, 12)
-write.table(covar_PCs, paste(covar_PCs_file_substr, expr_file_substr, '_matched.tsv', sep = ''), 
-            sep='\t', quote = FALSE, col.names = NA)
+fwrite(input_data_2,
+       sprintf('%s_%s', output_file_name, input_name_2),
+       sep = '\t', na = 'NA',
+       col.names = TRUE, row.names = FALSE,
+       quote = FALSE)
 
-# Cut first column (row numbers):
-expr_written <- paste(expr_file, '_matched.tsv', sep = '')
-cmd_cut <- sprintf('cat %s | cut -f2- > cut_%s', expr_written, expr_written)
-system(as.character(cmd_cut))
-geno_written <- paste(geno_file, '_matched.tsv', sep = '')
-cmd_cut <- sprintf('cat %s | cut -f2- > cut_%s', geno_written, geno_written)
-system(as.character(cmd_cut))
-covar_written <- paste(covar_PCs_file_substr, expr_file_substr, '_matched.tsv', sep = '')
-cmd_cut <- sprintf('cat %s | cut -f2- > cut_%s', covar_written, covar_written)
-system(as.character(cmd_cut))
-########################
+fwrite(covar_PCs_1,
+       sprintf('%s_%s', output_file_name, covar_PCs_1_name),
+       sep = '\t', na = 'NA',
+       col.names = TRUE, row.names = FALSE,
+       quote = FALSE)
 
+fwrite(covar_PCs_2,
+       sprintf('%s_%s', output_file_name, covar_PCs_2_name),
+       sep = '\t', na = 'NA',
+       col.names = TRUE, row.names = FALSE,
+       quote = FALSE)
+######################
 
 
 ######################
@@ -375,6 +328,7 @@ system(as.character(cmd_cut))
 # Interpretation
 # cat(file <- output_file, some_var, '\t', another_var, '\n', append = TRUE)
 ######################
+
 
 ######################
 # The end:

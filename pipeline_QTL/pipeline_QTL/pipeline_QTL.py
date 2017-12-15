@@ -409,9 +409,15 @@ def PC_geno(infile, outfile):
                 checkpoint ;
                 touch %(outfile)s
                 '''
+    # Remove intermediate files: 
+    statement = '''
+                rm -f %(infile)s.pruned* ;
+                rm -rf plink*
+                '''
     P.run()
 
 
+# Rscript ~/Documents/github.dir/EpiCompBio/pipeline_QTL/pipeline_QTL/utilities/run_PCA.R -I AIRWAVE_1DNMR_BatchCorrected_log_Data_Var_Sample.tsv
 @transform('*.pheno',
            suffix('.pheno'),
            '.pheno.PC.touch')
@@ -437,8 +443,9 @@ def PC_pheno(infile, outfile):
 
 
 # Pre-process geno and pheno files for MatrixEQTL:
-#nohup bash ~/Documents/github.dir/EpiCompBio/pipeline_QTL/pipeline_QTL/utilities/plink_to_geno.sh all.clean-base all.clean-base.matrixQTL all.clean-base.A-transpose all.clean-base.A-transpose.matrixQTL.geno &
+#nohup bash /XXXX/utilities/plink_to_geno.sh all.clean-base all.clean-base.matrixQTL all.clean-base.A-transpose all.clean-base.A-transpose.matrixQTL.geno &
 
+# nohup Rscript /XXXX/utilities/transpose_metabolomics.R -I AIRWAVE_1DNMR_BatchCorrected_log_Data_Var_Sample.tsv &
 # Run matrixeqtl
 
 @active_if('matrixeqtl' in tools)

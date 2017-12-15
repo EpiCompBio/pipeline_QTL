@@ -63,5 +63,8 @@ plink --bfile $plink_bfile --recode A-transpose --out $traw_file
 # So keep columns 2, 7 and onwards (which will give SNP and all samples):
 cat $traw_file.traw | cut -f2,7- > $out_geno_file
 
-echo 'Done'
+# Remove intermediate files:
+rm -f *ped *hh *nosex *traw *map
+
+echo 'Done converting plink binary to MatrixEQTL format'
 ##########

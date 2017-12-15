@@ -111,7 +111,7 @@ if (is.null(args[['-I']]) == FALSE) {
   input_name <- as.character(args[['-I']])
   # For tests:
   # setwd('~/Documents/quickstart_projects/chronic_inflammation_Airwave.p_q/results/QTL_core_illumina')
-  # input_name <- 'AIRWAVE_1DNMR_BatchCorrected_log_Data_Var_Sample.transposed.tsv'
+  # input_name <- 'AIRWAVE_1DNMR_BatchCorrected_log_Data_Var_Sample.tsv'
   input_data <- fread(input_name, sep = '\t', header = TRUE, stringsAsFactors = FALSE,
                       na.strings = c('', ' ', 'NA', 'NaN'))
 } else {
@@ -157,7 +157,42 @@ dim(input_data) # nrow(), ncol()
 # colnames(input_data)
 # First column with feature labels:
 # input_data[, 1, with = FALSE] # by column position, preferable by column name to avoid silent bugs
+##########
 
+##########
+# Check whether there are missing values:
+NAs <- which(complete.cases(input_data) == FALSE)
+# input_data[c(NAs), ]
+length(NAs)
+
+if(length(NAs) == 0) {
+  print('Dataset set is complete, no imputation done.')
+} else {
+  # Impute
+  # TO DO: Check this is a sane approach
+  # Run imputation
+  # Roughly one imputation per percent of incomplete data (White et al.,2011),
+  # but the more the better, 100 can easily be run on small datasets on a laptop
+  # Roughly 20-30 iterations should be enough, use plot() to check convergence:
+  # http://stats.stackexchange.com/questions/219013/how-do-the-number-of-imputations-the-maximum-iterations-affect-accuracy-in-mul
+  # Fill in with median for now:
+  impute.median <- function(x) replace(x, is.na(x), median(x, na.rm = TRUE))
+  input_data <- apply(input_data, 2, impute.median)
+  print(sprintf('Imputed %s missing values', length(NAs)))
+  # # TO DO: run proper imputation
+  # input_data <- mice(input_data,
+  #                      m = 2, # Number of imputed datasets, 5 is default
+  #                      maxit = 3,
+  #                      meth = 'pmm', # predictive mean matching, leave empty for
+  #                      # auto selection depending on variable type
+  #                      diagnostics = T,
+  #                      seed = 500)
+  # input_data <- complete(input_data, 1)
+  # summary(input_data)
+}
+##########
+
+##########
 # Convert to a matrix, exclude the first column (which is expected to have the feature names) 
 # and save feature names as rownames:
 input_data <- as.data.frame(input_data)
@@ -179,36 +214,6 @@ dim(input_data)
 
 ##########
 # Compute the PCs
-# Check whether there are missing values:
-NAs <- which(complete.cases(input_data) == FALSE)
-# input_data[c(NAs), ]
-length(NAs)
-# # TO DO: run imputation
-# if(length(NAs) == 0) {
-#   input_data_prcomp <- prcomp(input_data, center = TRUE, scale = TRUE)
-# } else {
-#   # Impute
-#   # TO DO: Check this is a sane approach
-#   # Run imputation
-#   # Roughly one imputation per percent of incomplete data (White et al.,2011),
-#   # but the more the better, 100 can easily be run on small datasets on a laptop
-#   # Roughly 20-30 iterations should be enough, use plot() to check convergence:
-#   # http://stats.stackexchange.com/questions/219013/how-do-the-number-of-imputations-the-maximum-iterations-affect-accuracy-in-mul
-#   input_data <- mice(input_data,
-#                        m = 5, # Number of imputed datasets, 5 is default
-#                        maxit = 10, 
-#                        # meth = 'pmm', # predictive mean matching, leave empty for 
-#                        # auto selection depending on variable type
-#                        diagnostics = T,
-#                        seed = 500)
-#   summary(input_data)
-#   input_data_prcomp <- prcomp(input_data, center = TRUE, scale = TRUE)
-#   }
-
-# TO DO: Exclude missing rows for now:
-input_data <- na.omit(input_data)
-dim(input_data)
-
 input_data_prcomp <- prcomp(input_data, center = TRUE, scale = TRUE)
 
 # Obtain values for all PCs output:
