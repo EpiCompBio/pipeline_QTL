@@ -78,20 +78,23 @@ To use
     # Create a folder or a whole data science project, e.g. project_quickstart -n QTL_project
     cd QTL_project/results
     mkdir tests ; cd tests
-    # Download test files, e.g.:
-    wget -nH -np -r --cut-dirs=4 -A .txt http://www.bios.unc.edu/research/genomic_software/Matrix_eQTL/Sample_Data/
-    wget https://ftp.ncbi.nlm.nih.gov/hapmap/genotypes/2009-01_phaseIII/plink_format/hapmap3_r2_b36_fwd.consensus.qc.poly.map.bz2
-    # See https://github.com/gabraham/flashpca/tree/master/HapMap3 :
-    wget https://ftp.ncbi.nlm.nih.gov/hapmap/genotypes/2009-01_phaseIII/plink_format/hapmap3_r2_b36_fwd.consensus.qc.poly.ped.bz2
-    plink --bfile hapmap3_r2_b36_fwd.consensus.qc.poly --maf 0.01 --geno 0.01 --mind 0.01 --hwe 5e-6 --filter-founders --autosome
+    # Copy or generate test files if needed. See scripts in this repository:
+    # https://github.com/EpiCompBio/pipeline_QTL/tree/master/tests
+    # You can also download test files from e.g.:
+    # wget -nH -np -r --cut-dirs=4 -A .txt http://www.bios.unc.edu/research/genomic_software/Matrix_eQTL/Sample_Data/
+    # wget https://ftp.ncbi.nlm.nih.gov/hapmap/genotypes/2009-01_phaseIII/plink_format/hapmap3_r2_b36_fwd.consensus.qc.poly.map.bz2
+    # https://github.com/gabraham/flashpca/tree/master/HapMap3 :
+    # wget https://ftp.ncbi.nlm.nih.gov/hapmap/genotypes/2009-01_phaseIII/plink_format/hapmap3_r2_b36_fwd.consensus.qc.poly.ped.bz2
+    
+    # Once you have QC'd binary files in plink format and a molecular phenotype file with samples in columns and variables in rows, run: 
     pipeline_QTL --help
     pipeline_QTL config
     # Edit pipeline_QTL.ini to adjust the parameters you want, this is essential
-    pipeline_QTL show full
+    pipeline_QTL show full -v 5
     pipeline_QTL printconfig
-    pipeline_QTL plot full
-    pipeline_QTL make full --local
-    pipeline_QTL make make_report --local
+    pipeline_QTL plot full -v 5
+    pipeline_QTL make full --local -v 5
+    pipeline_QTL make make_report --local -v 5
     open pipeline_report/_build/latex/pipeline_QTL.pdf
 
 
