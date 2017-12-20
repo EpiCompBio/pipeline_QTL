@@ -15,6 +15,7 @@ Purpose
 
 Generate a random set of quantitative variables of arbitrary rows and columns.
 These are then intended to be used for QTL analysis testing for example.
+Rows are features (variables) and columns are individuals (samples).
 
 
 Usage and options
@@ -87,7 +88,8 @@ import random
 #####
 # Create a pandas dataframe and save to disk:
 
-def id_generator(size = 6,
+def id_generator(text = 'ID_',
+                 size = 6,
                  chars = string.ascii_uppercase + string.digits,
                  sample_size = 1000):
     ''' Generates a random sequence of letters and numbers and outputs a pandas
@@ -102,6 +104,7 @@ def id_generator(size = 6,
                                   # excluded
     for i in range(1, sample_size):
         i = ''.join(random.choice(chars) for i in range(size))
+        i = str(text + i)
         ID_list.append(i)
 
     ID_list = pandas.Series(ID_list)
@@ -152,20 +155,31 @@ def createDF(var_size = 10000,
     '''
 
     # Generate an empty dataframe:
-    var_df = pandas.DataFrame({'sample_ID': id_generator(size = 6,
-                                                         chars = string.ascii_uppercase + string.digits,
-                                                         sample_size = sample_size),
-                               },
-                                )
+#    var_df = pandas.DataFrame({'sample_ID': id_generator(text = 'sample_',
+#                                                         size = 6,
+#                                                         chars = string.ascii_uppercase + string.digits,
+#                                                         sample_size = sample_size),
+#                               },
+#                                )
+    var_df = pandas.DataFrame()
+    values = []
+    for i in range(sample_size):
+        value = str('per' + str(i))
+        values.append(value)
+
+    # Add to dataframe:
+    var_df['sample_ID'] = values
 
     # Add and arbitrary number of rows and columns:
     for i in range(var_size):
         # Generate one variable name:
-        var_ID = id_generator(size = 6,
-                              chars = string.ascii_uppercase + string.digits,
-                              sample_size = 1)
+        var_ID = str('var' + str(i))
+#        id_generator(text = 'var_',
+#                              size = 6,
+#                              chars = string.ascii_uppercase + string.digits,
+#                              sample_size = 1)
         # id_generator returns a pandas series, convert to string:
-        var_ID = var_ID.to_string(index = False)
+ #       var_ID = var_ID.to_string(index = False)
 
         # Generate values for the variable:
         var_value = number_generator(lower_bound = lower_bound,
@@ -175,6 +189,9 @@ def createDF(var_size = 10000,
                                      sample_size = sample_size)
 
         var_df[str(var_ID)] = var_value
+
+    # Transpose file so that columns are features
+    var_df = var_df.set_index('sample_ID').transpose()
 
     print('\n',
           'The first rows of your data frame are:',
@@ -197,7 +214,7 @@ def createDF(var_size = 10000,
                   sep = '\t',
                   na_rep = 'NA',
                   header = True,
-                  index = False,
+                  index = True,
                   )
     return(var_df)
 #####
