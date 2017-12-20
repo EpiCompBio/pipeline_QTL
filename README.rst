@@ -80,6 +80,10 @@ To use
     mkdir tests ; cd tests
     # Download test files, e.g.:
     wget -nH -np -r --cut-dirs=4 -A .txt http://www.bios.unc.edu/research/genomic_software/Matrix_eQTL/Sample_Data/
+    wget https://ftp.ncbi.nlm.nih.gov/hapmap/genotypes/2009-01_phaseIII/plink_format/hapmap3_r2_b36_fwd.consensus.qc.poly.map.bz2
+    # See https://github.com/gabraham/flashpca/tree/master/HapMap3 :
+    wget https://ftp.ncbi.nlm.nih.gov/hapmap/genotypes/2009-01_phaseIII/plink_format/hapmap3_r2_b36_fwd.consensus.qc.poly.ped.bz2
+    plink --bfile hapmap3_r2_b36_fwd.consensus.qc.poly --maf 0.01 --geno 0.01 --mind 0.01 --hwe 5e-6 --filter-founders --autosome
     pipeline_QTL --help
     pipeline_QTL config
     # Edit pipeline_QTL.ini to adjust the parameters you want, this is essential
