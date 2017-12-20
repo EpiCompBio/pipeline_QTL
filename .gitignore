@@ -10,6 +10,7 @@ tests/.DS_Store
 
 # Other files:
 hapmap*
+dummy*
 
 # R projects:
 *.Rproj

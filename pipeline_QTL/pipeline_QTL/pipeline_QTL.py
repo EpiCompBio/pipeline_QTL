@@ -26,13 +26,6 @@ can run on other quantitative molecular phenotypes.
 Usage and options
 =================
 
-These are based on CGATPipelines_ and Ruffus_, not docopt.
-
-.. _CGATPipelines: https://github.com/CGATOxford/CGATPipelines
-
-.. _Ruffus: http://www.ruffus.org.uk/
-
-
 For command line help type:
 
     pipeline_QTL --help
@@ -54,18 +47,22 @@ re-runs of the pipeline.
 Input files
 ===========
 
-At least correctly formatted files with genotype and phenotype data.
+Plink formatted binary files (bed, bim, fam) and a molecular phenotype file
+(continuous variables) with samples (individuals) as columns and variables
+(features, phenotypes) as rows.
 
-Depending on the tool run covariate files, SNP position and probe position
-files can be added.
+Both files have to be named as explained below.
 
+Phenotype and genotype data must have been quality controlled already.
 
-Quality controlled (molecular) phenotype (e.g. gene expression) and genotyping
-data.
+Optional files:
 
-Optionally covariates and error covariance matrix.
+- covariates
+- error covariance matrix
+- SNP position file
+- probe position file
 
-Annotation files are also needed for cis vs trans analysis (SNPs positions and
+Annotation files are needed for cis vs trans analysis (SNPs positions and
 probe positions and any associated annotations).
 
 Files need to be in the same format as MatrixEQTL requires:
@@ -76,8 +73,10 @@ row names (the first column and first row are skipped when read).
 Missing values must be set as "NA".
 
 SNP and probe position files, e.g.
+
    - snp146Common_MatrixEQTL_snp_pos.txt
    - biomart_QCd_probes_genomic_locations_annot_MatrixeQTL.txt
+
 must be tab separated.
 
 See:
@@ -87,9 +86,6 @@ http://www.bios.unc.edu/research/genomic_software/Matrix_eQTL/
 
 Naming convention for input files
 =================================
-
-Output files get named based on the input files. The script assumes "cohort" is
-the same for input files (but only takes it from the genotype file).
 
 Please rename your files in the following way (use soft links to rename for
 example):
@@ -106,7 +102,11 @@ phenotype file: airwave-NMR-blood.pheno
 
 covariates file: airwave-illumina_exome-all_chrs-NMR-blood.cov
 
-and depending on the input and arguments you might get:
+
+Output files get named based on the input files. The script assumes "cohort" is
+the same for input files (but only takes it from the genotype file).
+
+Depending on the input and arguments you might get as output:
 
 airwave-illumina_exome-all_chrs-NMR-blood.MxEQTL
 airwave-illumina_exome-all_chrs-NMR-blood.MxEQTL.cis
@@ -117,35 +117,28 @@ airwave-illumina_exome-all_chrs-NMR-blood.MxEQTL.log
 
 File names can get long so use abbreviations or short versions.
 
-You can also override this and simply choose your outfile prefix.
+In the pipeline_XXXX.ini file you can try to override output file names and
+pass these as options for some of the scripts called.
 
 If you do not use an outfile name and your files do not follow the naming above
-you might get something like:
+you might errors in the pipeline or something like:
 
 "SNP.txt-NA-NA-NA-NA.MxEQTL"
 
-If running in a pipeline .geno, .pheno and .cov suffixes are required.
 
 Pipeline output
 ===============
 
-Namely a qqlot and tables of genotype molecular phenotype associations.
-These are saved in the working directory.
+Various plots (qqplots, boxplots, pca plots, etc.) and the results from the QTL
+association analyses.
+
+All files are saved in the working directory.
 
 
 Requirements
 ============
 
-See requirements files and Dockerfile for full information. At the least
-you'll need:
-
-* CGATCore
-* R >= 3.2
-* Python >= 3.5
-* r-matrixeqtl
-* r-docopt
-* r-data.table
-* r-ggplot2
+See requirements files and Dockerfile for full information on the requirements.
 
 
 Documentation
@@ -336,15 +329,21 @@ def connect():
 
 
 ################
-#####
+##########
 # Naming:
 # Infile: cohort-platform-other_descriptor.suffix
 # Outfile: cohort-platform1-descriptor1-platform2-descriptor2.new_suffix
 
-# TO DO: hardwired, pass options from ini
+# TO DO: some R scripts and bash scripts have the paths hardcoded, correct
+# these.
+
+# Process phenotype and genotype files
+# Run PCA on each type of file
+
+#@posttask(touch_file("prune_SNPs.touch"))
 @transform('*.bim',
            suffix('.bim'),
-           '.bim.prune.touch', 'exclusion*.txt')
+           '.pruned.touch', 'SNP_exclusion_regions.txt')
 def prune_SNPs(infile, outfile, exclude):
     '''
     Prune genotype data using plink.
@@ -354,15 +353,16 @@ def prune_SNPs(infile, outfile, exclude):
     # Add any options passed to the ini file for flashpca:
     tool_options = P.substituteParameters(**locals())["plink_exclude_options"]
 
-# TO DO: check this follows the naming convention of this script:
-    infile = infile.split('.')[0]
+    # Split at the last suffix separated by '.':
+    infile = infile.rsplit('.', 1)[0]
     statement = '''
                 plink \
                 --bfile %(infile)s \
-                --exclude range %(exclude)s ; \
+                --exclude range %(exclude)s \
                 %(tool_options)s ;
                 checkpoint
                 '''
+    P.run()
 
     tool_options = P.substituteParameters(**locals())["plink_prune_options"]
     statement = '''
@@ -370,18 +370,18 @@ def prune_SNPs(infile, outfile, exclude):
                 --bfile %(infile)s \
                 --extract plink.prune.in \
                 --make-bed \
-                --out %(infile)s.pruned \
+                --out %(infile)s \
                 %(tool_options)s ;
                 checkpoint ;
                 touch %(outfile)s
                 '''
     P.run()
 
-
+#@posttask(touch_file("PC_geno.touch"))
 @follows(prune_SNPs)
-@transform('*.pruned.bim',
-           suffix('.pruned.bim'),
-           '.pruned.bim.PC.touch')
+@transform('*.bim',
+           suffix('.bim'),
+           '.PC.touch')
 def PC_geno(infile, outfile):
     '''
     Run Flashpca2 on genotype data.
@@ -392,8 +392,7 @@ def PC_geno(infile, outfile):
     # Add any options passed to the ini file for flashpca:
     tool_options = P.substituteParameters(**locals())["flashpca_options"]
 
-# Check naming:
-    infile = infile.split('.')
+    infile = infile.rsplit('.', 1)[0]
     prefix1 = '.flashpca'
     prefix2 = '.tsv'
     statement = '''
@@ -409,18 +408,74 @@ def PC_geno(infile, outfile):
                 checkpoint ;
                 touch %(outfile)s
                 '''
-    # Remove intermediate files: 
+    P.run()
+
+    # Remove intermediate files:
+    #statement = '''
+    #            rm -f %(infile)s.pruned.* ;
+    #            rm -rf plink*
+    #            '''
+    #P.run()
+# TO DO: touch and posttask don't work on PC_geno and prune_SNPs....
+
+@follows(PC_geno)
+@transform('*.pcs.tsv',
+           regex('(.+).(.+).(.+).tsv'),
+           add_inputs('*.pve.tsv'),
+           r'\1.svg.touch')
+def plot_PC_geno(infile, outfile):
+    '''
+    Plot the results from flashpca2 on genotype data.
+    '''
+
+    # Plot flashpca results:
+    tool_options = P.substituteParameters(**locals())["flashpca_plot_options"]
+    project_scripts_dir = str(getINIpaths() + '/utilities/')
+
+    pcs = infile[0]
+    pve = infile[1]
+
     statement = '''
-                rm -f %(infile)s.pruned* ;
-                rm -rf plink*
+                Rscript %(project_scripts_dir)s/plot_flashpca.R \
+                --pcs %(pcs)s \
+                --pve %(pve)s \
+                %(tool_options)s ;
+                checkpoint
                 '''
     P.run()
 
 
-# Rscript ~/Documents/github.dir/EpiCompBio/pipeline_QTL/pipeline_QTL/utilities/run_PCA.R -I AIRWAVE_1DNMR_BatchCorrected_log_Data_Var_Sample.tsv
+@follows(plot_PC_geno)
+@transform('*.bim',
+           suffix('.bim'),
+           '.A-transpose.matrixQTL.geno')
+def plink_to_geno(infile, outfile):
+    '''
+    Process the plink genotype files to use as input for MatrixEQTL.
+    '''
+    # Add any options passed to the ini file for :
+    #tool_options = P.substituteParameters(**locals())["_options"]
+
+    project_scripts_dir = str(getINIpaths() + '/utilities/')
+
+    # Split at the last suffix separated by '.':
+    infile = infile.rsplit('.', 1)[0]
+
+    statement = '''
+                bash %(project_scripts_dir)s/plink_to_geno.sh \
+                        %(infile)s \
+                        %(infile)s.matrixQTL \
+                        %(infile)s.A-transpose \
+                        %(outfile)s ;
+                checkpoint
+                '''
+    P.run()
+
+    # TO DO: delete intermediary files
+
 @transform('*.pheno',
            suffix('.pheno'),
-           '.pheno.PC.touch')
+           '.pheno.pca.touch')
 def PC_pheno(infile, outfile):
     '''
     Run PCA on molecular phenotype data.
@@ -429,27 +484,62 @@ def PC_pheno(infile, outfile):
     #tool_options = P.substituteParameters(**locals())["_options"]
 
     project_scripts_dir = str(getINIpaths() + '/utilities/')
-
+    tool_options = P.substituteParameters(**locals())["run_PCA_options"]
     statement = '''
                 Rscript %(project_scripts_dir)s/run_PCA.R \
-                -bfile %(pheno_file)s \
-                -v \
-                --suffix %(outfile)s \
+                -I %(infile)s \
+                -O %(outfile)s \
                 %(tool_options)s ;
-                checkpoint ;
-                touch %(outfile)s
+                checkpoint
                 '''
     P.run()
+##########
 
 
-# Pre-process geno and pheno files for MatrixEQTL:
-#nohup bash /XXXX/utilities/plink_to_geno.sh all.clean-base all.clean-base.matrixQTL all.clean-base.A-transpose all.clean-base.A-transpose.matrixQTL.geno &
+##########
+#####
+# TO DO: continue here
+# Confounder loop with components
+# Make optional, so that cov is passed directly or runs with loop.
 
-# nohup Rscript /XXXX/utilities/transpose_metabolomics.R -I AIRWAVE_1DNMR_BatchCorrected_log_Data_Var_Sample.tsv &
+# first geno, then geno plus pheno cov
+# Subset geno and pheno for loop? CCs on full set but loop on subset?
+# Run full set each time unless it takes days
+# Run a pragmatic approach:
+# Submit in batches, not loop, with step of 10 for 0, 10, 20, 30, 40, 50, 60
+# Then compare results, pick highest, loop with e.g. step of 2 within
+#####
+
+#####
+# Call mxeqtl geno PCs, pick most significant
+
+#####
+
+#####
+# Join geno PCs to pheno PCs
+
+# Run mxeqtl in batches of step e.g. 10
+
+
+# pick most significant
+
+# Run within for step of 2, pick most significant
+
+
+# Delete intermediary files
+#####
+
+#####
+# Run order and match of geno, pheno, covs
+
+#####
+##########
+
+
+##########
 # Run matrixeqtl
-
 @active_if('matrixeqtl' in tools)
-@follows(PC_geno, PC_pheno)
+@follows(PC_pheno, plink_to_geno)
 @transform('*.geno',
            formatter('(?P<path>.+)/(?P<cohort>.+)-(?P<platform>.+)-(?P<descriptor>.+).geno'),
            add_inputs(['*.pheno',
@@ -493,13 +583,14 @@ def load_MxEQTL(infile, outfile):
     Load the results of run_MxEQTL() into an SQL database.
     '''
     P.load(infile, outfile)
-#####
+##########
 
-#####
+
+##########
 # Run some other tool:
 
 
-#####
+##########
 ################
 
 ################

@@ -124,7 +124,9 @@ if (is.null(args[['--pcs']]) == FALSE) {
   input_name <- as.character(args[['--pcs']])
   # For tests:
   # setwd('~/Documents/quickstart_projects/chronic_inflammation_Airwave.p_q/results/QTL_core_illumina/')
+  # setwd('~/Desktop/Downloads_to_delete/miscellaneous_tests/pipe_QTL_tests/results/tests_full_pipe/')
   # input_name <- 'pcs.all.clean-base.pruned.flashpca.tsv'
+  # input_name <- 'simulated-dummy_binary-QC.flashpca.pcs.tsv'
   input_data_pcs <- fread(input_name, sep = '\t', header = TRUE, stringsAsFactors = FALSE)
 } else {
   # Stop if arguments not given:
@@ -143,6 +145,7 @@ if (is.null(args[['--pve']]) == FALSE) {
   input_name <- as.character(args[['--pve']])
   # For tests:
   # input_name <- 'pve.all.clean-base.pruned.flashpca.tsv'
+  # input_name <- 'simulated-dummy_binary-QC.flashpca.pve.tsv'
   input_data_pve <- fread(input_name, sep = '\t', header = FALSE, stringsAsFactors = FALSE)
 } else {
   # Stop if arguments not given:
@@ -160,6 +163,7 @@ if (is.null(args[['-O']])) {
   stopifnot(!is.null(args[['--pcs']]), !is.null(args[['--pve']]))
   print('Output file name prefix not given. Using:')
   # Split infile name at the last '.':
+  input_name <- strsplit(input_name, "[.]\\s*(?=[^.]+$)", perl = TRUE)[[1]][1]
   input_name <- strsplit(input_name, "[.]\\s*(?=[^.]+$)", perl = TRUE)[[1]][1]
   output_file_name <- sprintf('%s', input_name)
   print('Name being used to save output files: ')
@@ -204,10 +208,10 @@ input_data_pve <- as.data.frame(input_data_pve)
 input_data_pve$percent_var <- round(100 * (input_data_pve$V1), 3)
 input_data_pve$PC <- factor(row.names(input_data_pve), levels = row.names(input_data_pve),
                         labels = row.names(input_data_pve))
-head(sum_pca_df)
-tail(sum_pca_df)
-names(sum_pca_df)
-str(sum_pca_df)
+head(input_data_pve)
+tail(input_data_pve)
+names(input_data_pve)
+str(input_data_pve)
 ##########
 
 ##########
@@ -219,7 +223,7 @@ plot_prop_vars <- ggplot(input_data_pve[c(1:num_PCs), ], aes(y = percent_var, x 
   theme_Publication() +
   theme(axis.text.x = element_blank(), axis.ticks.x = element_blank()) +
   theme(panel.grid = element_blank(), panel.border = element_blank()) +
-  theme(plot.margin = unit(c(1,1,1,1), "mm")
+  theme(plot.margin = unit(c(1,1,1,1), "mm"))
 # plot_name <- sprintf('prop_var_%s.svg', output_file_name)
 # ggsave(plot_name, plot_prop_vars)
 
@@ -235,7 +239,7 @@ plot_PCs <- function(data = pc, PCa, PCb){
     xlab(label = xlab) +
     ylab(label = ylab)
 }
-plot_PCs(pc, 'PC1', 'PC2')
+# plot_PCs(pc, 'PC1', 'PC2')
 
 for (i in 1:num_PCs){
   PCa <- sprintf('PC%s', i)
@@ -264,7 +268,7 @@ cow_grid <- plot_grid(plot_prop_vars,
                       ncol=2)
 # Save figure to disk as svg:
 plot_name <- sprintf('top_10_PCs_%s.svg', output_file_name)
-# A4 paper measures 210 × 297 millimeters or 8.27 × 11.69 inches
+# A4 paper measures 210 ?? 297 millimeters or 8.27 ?? 11.69 inches
 svg(plot_name, width = 12, height = 12)
 cow_grid
 dev.off()

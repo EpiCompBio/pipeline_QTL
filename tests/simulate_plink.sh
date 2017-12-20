@@ -26,7 +26,8 @@ set -o nounset
 
 
 # Variables:
-plink_file=dummy_binary # dummy_scalar
+plink_file=$1
+#dummy_binary # dummy_scalar
 
 # Generate only one set of unrelated cases:
 plink --dummy 1000 10000 0 0 12 --out ${plink_file}
