@@ -1,0 +1,3 @@
+SNP.txt	GE.txt	Covariates.txt
+airwave-illumina_exome-all_chrs.geno	airwave-NMR-blood.pheno	airwave-illumina_exome-all_chrs-NMR-blood.cov
+other-illumina_exome-all_chrs.geno	other-NMR-blood.pheno	other-illumina_exome-all_chrs-NMR-blood.cov
