@@ -25,13 +25,17 @@ tar xvfz hapmap3_r2_b36_fwd.qc.poly.tar
 mv hapmap3_pop/${plink_file}.* .
 head ${plink_file}.ped | cut -f1-10
 
+# Create a map file:
+cat ${plink_file}.ped | cut -f1-6 > ${plink_file}.map
+
+# Convert to binary format:
+plink --file ${plink_file} --make-bed --out ${plink_file}
+
 # Run a basic QC:
-plink --file ${plink_file} \
+plink --bfile ${plink_file} \
       --maf 0.05 --geno 0.01 --mind 0.01 --hwe 5e-6 \
       --filter-founders --autosome \
       --make-bed --out ${plink_file}.QC
-
-plink --file ${plink_file} --make-bed --out ${plink_file}
 
 # Delete files no longer needed (~6 Gb):
 rm -rf hapmap3_pop/

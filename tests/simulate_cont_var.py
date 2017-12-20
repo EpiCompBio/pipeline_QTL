@@ -197,6 +197,7 @@ def createDF(var_size = 10000,
                   sep = '\t',
                   na_rep = 'NA',
                   header = True,
+                  index = False,
                   )
     return(var_df)
 #####

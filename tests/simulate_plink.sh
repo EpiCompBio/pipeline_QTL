@@ -1,4 +1,11 @@
-#!/bin/bash
+#!/usr/bin/env bash
+  
+# Set bash script options:
+# https://kvz.io/blog/2013/11/21/bash-best-practices/
+set -o errexit
+set -o pipefail
+set -o nounset
+
 
 # Intended to generate a dummy file with test genotypes. Easier for uploading
 # to GitHub
@@ -18,7 +25,16 @@
 #    distributed scalar phenotype to be generated instead of a binary one.
 
 
+# Variables:
+plink_file=dummy_binary # dummy_scalar
+
 # Generate only one set of unrelated cases:
-plink --dummy 1000 10000 0.02 0.03 12 --out dummy_binary_pheno
-plink --dummy 1000 10000 0.02 0.03 12 scalar-pheno --out dummy_scalar_pheno
+plink --dummy 1000 10000 0 0 12 --out ${plink_file}
+#plink --dummy 1000 10000 0.02 0.03 12 scalar-pheno --out ${plink_file}
+
+# Run a basic QC:
+plink --bfile ${plink_file} \
+      --maf 0.05 --geno 0.01 --mind 0.01 --hwe 5e-6 \
+      --filter-founders --autosome \
+      --make-bed --out ${plink_file}.QC
 
