@@ -199,7 +199,7 @@ extra_files = package_files(os.path.join(here, 'templates'))
 
 # Set up entry point for command line use:
 # TO DO:
-entry_points = {'console_scripts': ['pipeline_QTL = pipeline_QTL.pipeline_QTL.pipeline_QTL:main'] }
+entry_points = {'console_scripts': ['pipeline_QTL = pipeline_QTL.pipeline_QTL:main'] }
 #################
 
 
