@@ -343,7 +343,7 @@ def connect():
 #@posttask(touch_file("prune_SNPs.touch"))
 @transform('*.bim',
            suffix('.bim'),
-           '.pruned.touch', 'SNP_exclusion_regions.txt')
+           '.pruned', 'SNP_exclusion_regions.txt')
 def prune_SNPs(infile, outfile, exclude):
     '''
     Prune genotype data using plink.
@@ -370,10 +370,8 @@ def prune_SNPs(infile, outfile, exclude):
                 --bfile %(infile)s \
                 --extract plink.prune.in \
                 --make-bed \
-                --out %(infile)s \
+                --out %(outfile)s \
                 %(tool_options)s ;
-                checkpoint ;
-                touch %(outfile)s
                 '''
     P.run()
 
@@ -472,6 +470,12 @@ def plink_to_geno(infile, outfile):
     P.run()
 
     # TO DO: delete intermediary files
+
+# TO DO, add:
+# bash /Users/antoniob/Documents/github.dir/EpiCompBio/pipeline_QTL/scripts/utilities/plink_to_geno.sh airwave-illumina_exome-all_chrs airwave-illumina_exome-all_chrs.matrixQTL airwave-illumina_exome-all_chrs.A-transpose airwave-illumina_exome-all_chrs.A-transpose.matrixQTL.geno
+# Rscript /Users/antoniob/Documents/github.dir/EpiCompBio/pipeline_QTL/scripts/utilities/plink_double2singleID.R -I airwave-illumina_exome-all_chrs.A-transpose.matrixQTL.geno
+# mv IID_airwave-illumina_exome-all_chrs.A-transpose.matrixQTL.geno airwave-illumina_exome-all_chrs.A-transpose.matrixQTL.geno 
+# Rscript /Users/antoniob/Documents/github.dir/EpiCompBio/pipeline_QTL/scripts/utilities/order_and_match_QTL.R --file1 airwave-illumina_exome-all_chrs.A-transpose.matrixQTL.geno --file2 AIRWAVE-CPMG_BatchCorrected_log_Var_Data_Sample-plasma.transposed.tsv
 
 @transform('*.pheno',
            suffix('.pheno'),

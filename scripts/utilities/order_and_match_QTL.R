@@ -90,8 +90,7 @@ str(args)
 # biocLite
 library(data.table)
 # TO DO: sort paths out so they are read from utilities folder after installation:
-source('~/Documents/github.dir/EpiCompBio/pipeline_QTL/pipeline_QTL/utilities/moveme.R')
-# source('~/Documents/github.dir/EpiCompBio/pipeline_QTL/pipeline_QTL/utilities/functions_for_MatrixeQTL.R')
+source('moveme.R')
 ######################
 
 ######################
@@ -100,7 +99,7 @@ source('~/Documents/github.dir/EpiCompBio/pipeline_QTL/pipeline_QTL/utilities/mo
 if (is.null(args[['--file1']]) == FALSE) {
   input_name_1 <- as.character(args[['--file1']])
   # For tests:
-  # setwd('~/Documents/quickstart_projects/chronic_inflammation_Airwave.p_q/results/QTL_core_illumina/')
+  # setwd('~/Documents/quickstart_projects/chronic_inflammation_Airwave.p_q/results/QTL_all_files_04Feb2018/')
   # input_name_1 <- 'all.clean-base.A-transpose.matrixQTL.geno'
   input_data_1 <- fread(input_name_1, sep = '\t', header = TRUE, stringsAsFactors = FALSE)
 } else {
@@ -108,7 +107,7 @@ if (is.null(args[['--file1']]) == FALSE) {
   print('You need to provide an input file. This has to be tab separated with headers.')
   stopifnot(!is.null(args[['--file1']]) == TRUE)
 }
-print('First file being used (expecting genotypes here): ')
+print('First file being used: ')
 print(input_name_1)
 ##########
 
@@ -165,40 +164,6 @@ input_data_1[1:5, 1:5]
 ##########
 
 ##########
-# TO DO: this is specific to set of files:
-# Names don't match between genotypes and metabolomics data (geno data has plink double IDs):
-input_data_1[1:5, 1:5]
-sample_IDs <- colnames(input_data_1)[-1]
-head(sample_IDs)
-# # TO DO: check QC:
-# # Some have IDs which get split as "11421" "rep"   "11421" "rep":
-# grep_rep <- grep('rep', sample_IDs)
-# grep_rep
-# sample_IDs[c(grep_rep[1])] <- "11421_11421"
-# sample_IDs[c(grep_rep[2])] <- "46750_46750"
-# Split plink double IDs:
-sample_IDs_split <- strsplit(sample_IDs, split = '[_]')
-# Create data frame:
-sample_IDs_split_df <- data.frame(matrix(unlist(sample_IDs_split), 
-                                         nrow = length(sample_IDs_split), 
-                                         byrow = T),
-                                  stringsAsFactors = FALSE)
-# Add 'FID' back in:
-sample_IDs_split_df <- rbind(c('FID', 'FID'), sample_IDs_split_df)
-# head(sample_IDs_split_df)
-dim(sample_IDs_split_df)
-# str(sample_IDs_split_df)
-
-# Insert single IDs into file1 data:
-head(colnames(input_data_1))
-head(sample_IDs_split_df$X1)
-# input_data_1_temp <- input_data_1
-colnames(input_data_1) <- sample_IDs_split_df$X1
-head(colnames(input_data_1))
-input_data_1[1:5, 1:5]
-##########
-
-##########
 # Check file2 and order
 input_data_2[1:5, 1:5, with = F]
 input_data_2 <- as.data.frame(input_data_2[, order(colnames(input_data_2)), with = F])
@@ -214,78 +179,29 @@ input_data_2[1:5, 1:5]
 ######################
 # Match each
 # file1 and file2:
+print('Number of column names present in both file 1 and file 2:')
 length(which((colnames(input_data_2) %in% colnames(input_data_1))))
+print('Shape of file 1:')
+dim(input_data_1)
+print('Shape of file 2:')
+dim(input_data_2)
 # input_data_2_temp <- input_data_2
 input_data_2 <- input_data_2[, which(colnames(input_data_2) %in% colnames(input_data_1))]
 input_data_1 <- input_data_1[, which(colnames(input_data_1) %in% colnames(input_data_2))]
-# # Delete 'rep' samples:
-# to_del <- grep('46750.1', colnames(input_data_1))
-# input_data_1 <- input_data_1[, -to_del]
-stopifnot(identical(as.character(colnames(input_data_2)),
-          as.character(colnames(input_data_1))))
+
+
+# Check and stop if not the same:
+sanity_check <- identical(as.character(colnames(input_data_2)),
+                          as.character(colnames(input_data_1)))
+if (sanity_check == TRUE) {
+  print('Column names in both files match, continuing.')
+  } else {
+    stop('Exiting. The order of the column names in file 1 and file 2 do not match after 
+        ordering and keeping only those which match in both. Are column names the same in
+         both files? They must be identical in both files.')
+    }
 input_data_2[1:5, 1:5]
 input_data_1[1:5, 1:5]
-##########
-
-##########
-# TO DO: separate or move this file to project specific
-# Covar PCs to file2:
-covar_PCs_1_name <- 'pcs.all.clean-base.pruned.flashpca.transposed.tsv'
-covar_PCs_1 <- fread(covar_PCs_1, sep = '\t', header = TRUE, stringsAsFactors = FALSE)
-# This file after using transposing script has double IDs in rows:
-covar_PCs_1 <- covar_PCs_1[-1, ]
-# Change 'V1' to 'FID':
-setnames(x = covar_PCs_1, old = 'V1', new = 'FID')
-covar_PCs_1 <- as.data.frame(covar_PCs_1[, order(colnames(covar_PCs_1)), with = F])
-covar_PCs_1 <- covar_PCs_1[, moveme(names(covar_PCs_1), 'FID first')]
-covar_PCs_1[1:5, 1:5]
-
-
-covar_PCs_2_name <- 'AIRWAVE_1DNMR_BatchCorrected_log_Data_Var_Sample.pca.transposed.tsv'
-covar_PCs_2 <- fread(covar_PCs_2, sep = '\t', header = TRUE, stringsAsFactors = FALSE)
-# Change 'V1' to 'FID':
-setnames(x = covar_PCs_2, old = 'V1', new = 'FID')
-covar_PCs_2 <- as.data.frame(covar_PCs_2[, order(colnames(covar_PCs_2)), with = F])
-covar_PCs_2 <- covar_PCs_2[, moveme(names(covar_PCs_2), 'FID first')]
-covar_PCs_2[1:5, 1:5]
-dim(covar_PCs_2)
-
-# Match PCs: 
-# length(which(as.character(unlist(covar_PCs_1[, 'FID'])) %in% as.character(colnames(input_data_1))))
-length(which(colnames(covar_PCs_1) %in% colnames(input_data_1)))
-covar_PCs_1 <- covar_PCs_1[, which(colnames(covar_PCs_1) %in% colnames(input_data_1))]
-covar_PCs_1[1:5, 1:5]
-dim(covar_PCs_1)
-
-length(which(colnames(covar_PCs_2) %in% colnames(input_data_2)))
-covar_PCs_2 <- covar_PCs_2[, which(colnames(covar_PCs_2) %in% colnames(input_data_2))]
-covar_PCs_2[1:5, 1:5]
-dim(covar_PCs_2)
-
-# Stop if not 'TRUE':
-stopifnot(identical(colnames(covar_PCs_1), colnames(covar_PCs_2)))
-stopifnot(identical(colnames(covar_PCs_1), colnames(input_data_2)))
-stopifnot(identical(colnames(covar_PCs_2), colnames(input_data_1)))
-
-# TO DO: this is analysis specific, clean up:
-covar_PCs_1[1:5, 1:5]
-covar_PCs_2[30:35, 1:5]
-# Add a string to have unique names:
-covar_PCs_2$string <- '_pheno'
-covar_PCs_2$ID <- with(covar_PCs_2, paste0(FID, string))
-covar_PCs_2 <- covar_PCs_2[, moveme(names(covar_PCs_2), 'ID first')]
-covar_PCs_2[, 'FID'] <- NULL
-covar_PCs_2[, 'string'] <- NULL
-colnames(covar_PCs_2)[1] <- 'FID'
-covar_PCs_2[1:5, 1:5]
-
-# Merge into one file, choice of PCs is arbitrary:
-all_covar_PCs <- rbind(covar_PCs_1, covar_PCs_2[1:35, ])
-fwrite(all_covar_PCs,
-       sprintf('%s_all_covar_PCs.tsv', output_file_name),
-       sep = '\t', na = 'NA',
-       col.names = TRUE, row.names = FALSE,
-       quote = FALSE)
 ##########
 ######################
 
@@ -306,27 +222,6 @@ fwrite(input_data_2,
        sep = '\t', na = 'NA',
        col.names = TRUE, row.names = FALSE,
        quote = FALSE)
-
-fwrite(covar_PCs_1,
-       sprintf('%s_%s', output_file_name, covar_PCs_1_name),
-       sep = '\t', na = 'NA',
-       col.names = TRUE, row.names = FALSE,
-       quote = FALSE)
-
-fwrite(covar_PCs_2,
-       sprintf('%s_%s', output_file_name, covar_PCs_2_name),
-       sep = '\t', na = 'NA',
-       col.names = TRUE, row.names = FALSE,
-       quote = FALSE)
-######################
-
-
-######################
-## Save some text:
-# Methods
-# Legend
-# Interpretation
-# cat(file <- output_file, some_var, '\t', another_var, '\n', append = TRUE)
 ######################
 
 

@@ -17,7 +17,7 @@
 #   
 #   genotype file: airwave-illumina_exome-all_chrs.geno
 # 
-# phenotype file: airwave-NMR-blood.txt
+#   phenotype file: airwave-NMR-blood.pheno
 # 
 # and depending on the input and arguments you might get:
 #   

@@ -64,7 +64,7 @@ plink --bfile $plink_bfile --recode A-transpose --out $traw_file
 cat $traw_file.traw | cut -f2,7- > $out_geno_file
 
 # Remove intermediate files:
-rm -f *ped *hh *nosex *traw *map
+rm -f *ped *hh *nosex *traw *map *sample *gen
 
 echo 'Done converting plink binary to MatrixEQTL format'
 ##########
