@@ -63,12 +63,22 @@ recursive-include pipeline_QTL *.py
 recursive-include pipeline_QTL *.rst
 recursive-include pipeline_QTL *.sh
 recursive-include pipeline_QTL Makefile
+recursive-include pipeline_QTL *.bib
+
+recursive-include installation *.txt
+recursive-include installation *.yml
+recursive-include scripts *.R
+recursive-include scripts *.sh
+recursive-include scripts *.txt
+recursive-include scripts *.py
+
+include installation/Dockerfile
 
 # Files to exclude:
 exclude .gitignore
-exclude .dir_bash_history
-exclude tests/.dir_bash_history
-exclude data_examples/.dir_bash_history
+recursive-exclude * .dir_bash_history
+recursive-exclude * *.DS_Store
+recursive-exclude * *.bak
 
 # Extensions to include:
 #include *.pyxbld
