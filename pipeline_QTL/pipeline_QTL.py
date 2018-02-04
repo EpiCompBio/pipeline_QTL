@@ -430,7 +430,7 @@ def plot_PC_geno(infile, outfile):
 
     # Plot flashpca results:
     tool_options = P.substituteParameters(**locals())["flashpca_plot_options"]
-    project_scripts_dir = str(getINIpaths() + '/utilities/')
+    project_scripts_dir = str(getINIpaths() + '/scripts/utilities/')
 
     pcs = infile[0]
     pve = infile[1]
@@ -456,7 +456,7 @@ def plink_to_geno(infile, outfile):
     # Add any options passed to the ini file for :
     #tool_options = P.substituteParameters(**locals())["_options"]
 
-    project_scripts_dir = str(getINIpaths() + '/utilities/')
+    project_scripts_dir = str(getINIpaths() + '/scripts/utilities/')
 
     # Split at the last suffix separated by '.':
     infile = infile.rsplit('.', 1)[0]
@@ -483,7 +483,7 @@ def PC_pheno(infile, outfile):
     # Add any options passed to the ini file for :
     #tool_options = P.substituteParameters(**locals())["_options"]
 
-    project_scripts_dir = str(getINIpaths() + '/utilities/')
+    project_scripts_dir = str(getINIpaths() + '/scripts/utilities/')
     tool_options = P.substituteParameters(**locals())["run_PCA_options"]
     statement = '''
                 Rscript %(project_scripts_dir)s/run_PCA.R \
@@ -562,7 +562,7 @@ def run_MxEQTL(infiles, outfile):
         cov_file = None
 
     tool_options = P.substituteParameters(**locals())["matrixeqtl_options"]
-    project_scripts_dir = str(getINIpaths() + '/matrixQTL/')
+    project_scripts_dir = str(getINIpaths() + '/scripts/matrixQTL/')
 
     statement = '''
                 Rscript %(project_scripts_dir)s/run_matrixEQTL.R \

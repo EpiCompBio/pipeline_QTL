@@ -111,9 +111,9 @@ library(data.table)
 library(ggplot2)
 library(cowplot)
 # TO DO: sort paths out so they are read from utilities folder after installation:
-source('~/Documents/github.dir/EpiCompBio/pipeline_QTL/pipeline_QTL/utilities/moveme.R')
-source('~/Documents/github.dir/EpiCompBio/pipeline_QTL/pipeline_QTL/utilities/ggtheme.R')
-source('~/Documents/github.dir/EpiCompBio/pipeline_QTL/pipeline_QTL/utilities/ggtheme_bestd.R')
+source('moveme.R')
+source('ggtheme.R')
+source('ggtheme_bestd.R')
 ######################
 
 ######################
