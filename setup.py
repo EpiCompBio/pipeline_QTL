@@ -206,7 +206,7 @@ pipeline_packages.append(pipeline_scripts)
 
 pipeline_package_dirs = {name: name,
                          pipeline_scripts: 'scripts',
-                         name: 'CGATPipelines'}
+                         }
 
 # Set up entry point for command line use:
 entry_points = {'console_scripts': ['pipeline_QTL = pipeline_QTL.pipeline_QTL:main'] }
