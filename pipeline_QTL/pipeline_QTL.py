@@ -288,7 +288,6 @@ def getINIpaths():
 
     return(project_scripts_dir)
 
-print(project_scripts_dir)
 # TO DO:
 # pipeline_scriptsdir gets the actual location needed, e.g.:
 #pipeline_scriptsdir = '/Users/antoniob/anaconda/envs/r_test/lib/python3.5/site-packages/scripts/'
@@ -439,8 +438,9 @@ def plot_PC_geno(infile, outfile):
     pcs = infile[0]
     pve = infile[1]
 
+# Rscript %(pipeline_scriptsdir)s/utilities/plot_flashpca.R \
     statement = '''
-                Rscript %(pipeline_scriptsdir)s/utilities/plot_flashpca.R \
+                Rscript %(project_scripts_dir)s/utilities/plot_flashpca.R \
                 --pcs %(pcs)s \
                 --pve %(pve)s \
                 %(tool_options)s ;
