@@ -290,7 +290,7 @@ def getINIpaths():
 
 # TO DO:
 # pipeline_scriptsdir gets the actual location needed, e.g.:
-# pipeline_scriptsdir = /Users/antoniob/anaconda/envs/r_test/lib/python3.5/site-packages/scripts
+#pipeline_scriptsdir = '/Users/antoniob/anaconda/envs/r_test/lib/python3.5/site-packages/scripts/'
 ################
 
 
