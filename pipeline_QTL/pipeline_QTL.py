@@ -96,7 +96,7 @@ Outfile: cohort-platform_infile1-descriptor1-platform_infile2-descriptor2.new_su
 
 For example:
 
-genotype file: airwave-illumina_exome-all_chrs.geno
+genotype file: airwave-illumina_exome-all_chrs.bed/bim/fam
 
 phenotype file: airwave-NMR-blood.pheno
 
@@ -335,16 +335,16 @@ def connect():
 # Outfile: cohort-platform1-descriptor1-platform2-descriptor2.new_suffix
 
 # TO DO: some R scripts and bash scripts have the paths hardcoded, correct
-# these.
+##########
 
-# Process phenotype and genotype files
-# Run PCA on each type of file
+##########
+# Run PCA on genotype file with plink binary files as input
 
 #@posttask(touch_file("prune_SNPs.touch"))
 @transform('*.bim',
            suffix('.bim'),
-           '.pruned', 'SNP_exclusion_regions.txt')
-def prune_SNPs(infile, outfile, exclude):
+           '.pruned', 'SNP_exclusion_regions.txt', '.pruned')
+def prune_SNPs(infile, outfile, exclude, label):
     '''
     Prune genotype data using plink.
     Requires a bim plink file as input and a bed file with regions to exclude
@@ -370,8 +370,9 @@ def prune_SNPs(infile, outfile, exclude):
                 --bfile %(infile)s \
                 --extract plink.prune.in \
                 --make-bed \
-                --out %(outfile)s \
+                --out %(label)s \
                 %(tool_options)s ;
+                touch %(outfile)s
                 '''
     P.run()
 
@@ -438,11 +439,41 @@ def plot_PC_geno(infile, outfile):
                 --pcs %(pcs)s \
                 --pve %(pve)s \
                 %(tool_options)s ;
+                checkpoint ;
+                touch %(outfile)s
+                '''
+    P.run()
+##########
+
+
+##########
+# Get PCs for molecular pheno data:
+@transform('*.pheno',
+           suffix('.pheno'),
+           '.pheno.pca.tsv')
+def PC_pheno(infile, outfile):
+    '''
+    Run PCA on molecular phenotype data.
+    '''
+    # Add any options passed to the ini file for :
+    #tool_options = P.substituteParameters(**locals())["_options"]
+
+    project_scripts_dir = str(getINIpaths() + '/scripts/utilities/')
+    tool_options = P.substituteParameters(**locals())["run_PCA_options"]
+    statement = '''
+                Rscript %(project_scripts_dir)s/run_PCA.R \
+                -I %(infile)s \
+                -O %(outfile)s \
+                %(tool_options)s ;
                 checkpoint
                 '''
     P.run()
+##########
 
 
+##########
+# Prepare files for MxEQTL
+# Transform plink to MxEQTL format:
 @follows(plot_PC_geno)
 @transform('*.bim',
            suffix('.bim'),
@@ -467,34 +498,104 @@ def plink_to_geno(infile, outfile):
                         %(outfile)s ;
                 checkpoint
                 '''
+    # e.g.
+    # bash /Users/antoniob/Documents/github.dir/EpiCompBio/pipeline_QTL/scripts/utilities/plink_to_geno.sh airwave-illumina_exome-all_chrs airwave-illumina_exome-all_chrs.matrixQTL airwave-illumina_exome-all_chrs.A-transpose airwave-illumina_exome-all_chrs.A-transpose.matrixQTL.geno
+    P.run()
+
+    statement = '''
+                Rscript %(project_scripts_dir)s/plink_double2singleID.R -I %(outfile)s ;
+                checkpoint ;
+                mv IID_%(outfile)s %(outfile)s ;
+                checkpoint
+                '''
+    # e.g.
+    # Rscript /Users/antoniob/Documents/github.dir/EpiCompBio/pipeline_QTL/scripts/utilities/plink_double2singleID.R -I airwave-illumina_exome-all_chrs.A-transpose.matrixQTL.geno
+    # mv IID_airwave-illumina_exome-all_chrs.A-transpose.matrixQTL.geno airwave-illumina_exome-all_chrs.A-transpose.matrixQTL.geno
     P.run()
 
     # TO DO: delete intermediary files
+##########
 
-# TO DO, add:
-# bash /Users/antoniob/Documents/github.dir/EpiCompBio/pipeline_QTL/scripts/utilities/plink_to_geno.sh airwave-illumina_exome-all_chrs airwave-illumina_exome-all_chrs.matrixQTL airwave-illumina_exome-all_chrs.A-transpose airwave-illumina_exome-all_chrs.A-transpose.matrixQTL.geno
-# Rscript /Users/antoniob/Documents/github.dir/EpiCompBio/pipeline_QTL/scripts/utilities/plink_double2singleID.R -I airwave-illumina_exome-all_chrs.A-transpose.matrixQTL.geno
-# mv IID_airwave-illumina_exome-all_chrs.A-transpose.matrixQTL.geno airwave-illumina_exome-all_chrs.A-transpose.matrixQTL.geno 
-# Rscript /Users/antoniob/Documents/github.dir/EpiCompBio/pipeline_QTL/scripts/utilities/order_and_match_QTL.R --file1 airwave-illumina_exome-all_chrs.A-transpose.matrixQTL.geno --file2 AIRWAVE-CPMG_BatchCorrected_log_Var_Data_Sample-plasma.transposed.tsv
-
-@transform('*.pheno',
-           suffix('.pheno'),
-           '.pheno.pca.touch')
-def PC_pheno(infile, outfile):
+##########
+# Order and match samples between geno, pheno and covariates of each:
+@follows(plink_to_geno)
+@transform('*.geno',
+           suffix('.geno'),
+           add_inputs('*.pheno'),
+           '.matched_geno_pheno')
+def orderAndMatch1(infile, outfile):
     '''
-    Run PCA on molecular phenotype data.
+    Order and match genotype, phenotype and covariates files.
     '''
     # Add any options passed to the ini file for :
     #tool_options = P.substituteParameters(**locals())["_options"]
 
     project_scripts_dir = str(getINIpaths() + '/scripts/utilities/')
-    tool_options = P.substituteParameters(**locals())["run_PCA_options"]
+    geno = infile[0]
+    pheno = infile[1]
+
     statement = '''
-                Rscript %(project_scripts_dir)s/run_PCA.R \
-                -I %(infile)s \
-                -O %(outfile)s \
-                %(tool_options)s ;
-                checkpoint
+                Rscript %(project_scripts_dir)s/order_and_match_QTL.R \
+                        --file1 %(geno)s \
+                        --file2 %(pheno)s ;
+                checkpoint ;
+                touch %(outfile)s
+                '''
+    # e.g.
+    # Rscript /Users/antoniob/Documents/github.dir/EpiCompBio/pipeline_QTL/scripts/utilities/order_and_match_QTL.R --file1 airwave-illumina_exome-all_chrs.A-transpose.matrixQTL.geno --file2 AIRWAVE-CPMG_BatchCorrected_log_Var_Data_Sample-plasma.transposed.tsv
+    P.run()
+
+@follows(orderAndMatch1)
+@transform('*.pcs.tsv',
+           suffix('.pcs.tsv'),
+           add_inputs('*.pheno.pca.tsv'),
+           '.matched_covs')
+def orderAndMatch2(infile, outfile):
+    '''
+    Order and match genotype, phenotype and covariates files.
+    '''
+    # Add any options passed to the ini file for :
+    #tool_options = P.substituteParameters(**locals())["_options"]
+
+    project_scripts_dir = str(getINIpaths() + '/scripts/utilities/')
+    cov_geno = infile[0]
+    cov_pheno = infile[1]
+
+    statement = '''
+                Rscript %(project_scripts_dir)s/order_and_match_QTL.R \
+                        --file1 %(cov_geno)s \
+                        --file2 %(cov_pheno)s ;
+                checkpoint ;
+                touch %(outfile)s
+                '''
+    P.run()
+
+
+@follows(orderAndMatch2)
+@transform('matched*.pcs.tsv',
+           formatter('(?P<path>.+)/matched_(?P<cohort>.+)-(?P<platform>.+)-(?P<descriptor>.+).pcs.tsv'),
+           add_inputs('matched*.pheno.pca.tsv'),
+           '{cohort[0]}-{platform[0]}.merged_covs')
+def mergeCovs(infile, outfile, PCs_keep_geno, PCs_keep_pheno):
+    '''
+    Merge covariate files from geno and pheno principal component data
+    '''
+    # Add any options passed to the ini file for :
+    #tool_options = P.substituteParameters(**locals())["_options"]
+
+    project_scripts_dir = str(getINIpaths() + '/scripts/utilities/')
+    cov_geno = infile[0]
+    cov_pheno = infile[1]
+    # TO DO: replace with loop
+    PCs_keep_geno = 10
+    PCs_keep_pheno = 35
+    statement = '''
+                Rscript %(project_scripts_dir)s/merge_dataframes.R \
+                        --file1 %(cov_geno)s \
+                        --file2 %(cov_pheno)s \
+                        --file1-PCs %(PCs_keep_geno)s \
+                        --file1-PCs %(PCs_keep_pheno)s \
+                        -O %(outfile)s
                 '''
     P.run()
 ##########

@@ -3,8 +3,8 @@
 ######################
 # R script to run with docopt for command line options:
 '
-order_and_match_QTL.R
-======================
+merge_dataframes.R
+====================
 
 Author: |author_names| 
 Release: |version|
@@ -16,9 +16,8 @@ Purpose
 
 |description|
 
-Order and match columns between two files, usually a genotype and a phenotype file.
-The output is meant to be passed to MatrixeQTL.
-
+Merge two data frames. This is specifically for principal component files derived from
+genotype and phenotype data. File 2 will get a label added to make headers unique.
 
 Usage and options
 =================
@@ -26,12 +25,14 @@ Usage and options
 To run, type:
 Rscript order_and_match_QTL.R --file1 <FILE> --file2 <FILE> [options]
 
-Usage: order_and_match_QTL.R (--file1 <FILE>) (--file2 <FILE>)
-       order_and_match_QTL.R [options]
+Usage: merge_dataframes.R (--file1 <FILE>) (--file2 <FILE>) [options]
+       merge_dataframes.R [options]
 
 Options:
 --file1 <FILE>                Usually a genotype input file name, columns are samples, rows are features
 --file2 <FILE>                usually a phenotype input file name, columns are samples, rows are features
+--file1-PCs                   Number of PCs from file 1 to keep. [default: 10]
+--file2-PCs                   Number of PCs from file 1 to keep. [default: 30]
 -O <OUTPUT_FILE>              Output file name
 --session <R_SESSION_NAME>    R session name if to be saved
 -h --help                     Show this screen
@@ -44,30 +45,31 @@ The first row and first column must be the ID labels.
 
 Output:
 
-Checks that the labels and order match perfectly. If not, it orders them and outputs files to disk.
+Merges two dataframes and writes output to disk.
 
 Requirements:
 
 library(docopt)
 library(data.table)
 
-
 Documentation
 =============
 
-For more information see:
+    For more information see:
 
-|url|
+    |url|
 ' -> doc
+
 # Load docopt:
 library(docopt, quietly = TRUE)
 # Retrieve the command-line arguments:
 args <- docopt(doc)
 
 # Save arguments needed:
-# num_PCs <- as.integer(args[['--num_PCs']])
+file1_PCs <- as.integer(args[['--file1-PCs']])
+file2_PCs <- as.integer(args[['--file2-PCs']])
 
-# Print all arguments to screen:
+# Print to screen:
 str(args)
 ######################
 
@@ -129,11 +131,11 @@ print(input_name_2)
 
 ##########
 # Set output file name prefix:
-# TO DO: sort out as two input_name s
+# TO DO: sort out as two input_names:
 if (is.null(args[['-O']])) {
   stopifnot(!is.null(args[['--file1']]), !is.null(args[['--file2']]))
   print('Output file name prefix not given. Using:')
-  output_file_name <- 'matched_'
+  output_file_name <- sprintf('merged_%s_%s.tsv', input_name_1, input_name_2)
   print('Output file names will contain: ')
   print(output_file_name)
 } else {
@@ -146,83 +148,32 @@ if (is.null(args[['-O']])) {
 ######################
 
 ######################
-##########
-# Check file1 and order
-# setkey(input_data_1, )
-input_data_1[1:5, 1:5, with = F]
-# TO DO for data.table ordering if large files:
-# col_order <- order(colnames(input_data_1))
-# col_order
-# setcolorder(input_data_1, c("SNP", master_IDs_read))
-input_data_1 <- as.data.frame(input_data_1[, order(colnames(input_data_1)), with = F])
-class(input_data_1)
-colnames(input_data_1)[ncol(input_data_1)] <- 'FID'
-# names(input_data_1)
-input_data_1 <- input_data_1[, moveme(names(input_data_1), 'FID first')]
-dim(input_data_1)
-input_data_1[1:5, 1:5]
-##########
-
-##########
-# Check file2 and order
-input_data_2[1:5, 1:5, with = F]
-input_data_2 <- as.data.frame(input_data_2[, order(colnames(input_data_2)), with = F])
-class(input_data_2)
-colnames(input_data_2)[ncol(input_data_2)] <- 'FID'
-# names(input_data_2)
-input_data_2 <- input_data_2[, moveme(names(input_data_2), 'FID first')]
-dim(input_data_2)
-input_data_2[1:5, 1:5]
-##########
-######################
-
-######################
-# Match each
-# file1 and file2:
+# Check file dimensions and merge
 print('Number of column names present in both file 1 and file 2:')
 length(which((colnames(input_data_2) %in% colnames(input_data_1))))
 print('Shape of file 1:')
 dim(input_data_1)
 print('Shape of file 2:')
 dim(input_data_2)
-# input_data_2_temp <- input_data_2
-input_data_1 <- input_data_1[, which(colnames(input_data_1) %in% colnames(input_data_2))]
-input_data_2 <- input_data_2[, which(colnames(input_data_2) %in% colnames(input_data_1))]
 
+# Add a string to have unique names:
+# input_data_2$string <- '_pheno'
+# input_data_2$ID <- with(input_data_2, paste0(FID, string))
+# input_data_2 <- input_data_2[, moveme(names(input_data_2), 'ID first')]
+# input_data_2[, 'FID'] <- NULL
+# input_data_2[, 'string'] <- NULL
+# colnames(input_data_2)[1] <- 'FID'
+# input_data_2[1:5, 1:5]
 
-
-# Check and stop if not the same:
-sanity_check <- identical(as.character(colnames(input_data_2)),
-                          as.character(colnames(input_data_1)))
-if (sanity_check == TRUE) {
-  print('Column names in both files match, continuing.')
-} else {
-  stop('Exiting. The order of the column names in file 1 and file 2 do not match after 
-       ordering and keeping only those which match in both. Are column names the same in
-       both files? They must be identical in both files.')
-}
-input_data_2[1:5, 1:5]
-input_data_1[1:5, 1:5]
-##########
-######################
-
-
-######################
-# Write to file each, this saves with an empty first header and row names as first column, cut when read next:
-# col.names = NA makes headers match but can't be used with row.names = F
-# Save file:
-fwrite(input_data_1,
-       sprintf('%s%s', output_file_name, input_name_1),
-       sep = '\t', na = 'NA',
-       col.names = TRUE, row.names = FALSE,
-       quote = FALSE)
-
-fwrite(input_data_2,
-       sprintf('%s%s', output_file_name, input_name_2),
+# Merge into one file, choice of PCs is arbitrary:
+all_covar_PCs <- rbind(input_data_1[1:file1_PCs, ], input_data_2[1:file2_PCs, ])
+fwrite(all_covar_PCs,
+       sprintf('%s', output_file_name),
        sep = '\t', na = 'NA',
        col.names = TRUE, row.names = FALSE,
        quote = FALSE)
 ######################
+
 
 
 ######################

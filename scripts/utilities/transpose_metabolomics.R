@@ -120,7 +120,7 @@ if (is.null(args[['-O']])) {
 } else {
   output_file_name <- as.character(args[['-O']])
   # output_file_name <- 'testing'
-  output_file_name <- sprintf('%s.transposed.tsv', output_file_name)
+  #output_file_name <- sprintf('%s.transposed.tsv', output_file_name)
   print(sprintf('Output file names will contain %s', output_file_name))
 }
 ##########
