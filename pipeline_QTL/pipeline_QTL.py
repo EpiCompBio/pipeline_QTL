@@ -288,6 +288,7 @@ def getINIpaths():
 
     return(project_scripts_dir)
 
+print(project_scripts_dir)
 # TO DO:
 # pipeline_scriptsdir gets the actual location needed, e.g.:
 #pipeline_scriptsdir = '/Users/antoniob/anaconda/envs/r_test/lib/python3.5/site-packages/scripts/'
@@ -421,7 +422,7 @@ def PC_geno(infile, outfile):
     #P.run()
 # TO DO: touch and posttask don't work on PC_geno and prune_SNPs....
 
-@follows(PC_geno)
+#@follows(PC_geno)
 @transform('*.pcs.tsv',
            regex('(.+).(.+).(.+).tsv'),
            add_inputs('*.pve.tsv'),
@@ -478,7 +479,7 @@ def PC_pheno(infile, outfile):
 ##########
 # Prepare files for MxEQTL
 # Transform plink to MxEQTL format:
-@follows(plot_PC_geno)
+#@follows(plot_PC_geno)
 @transform('*.bim',
            suffix('.bim'),
            '.A-transpose.matrixQTL.geno')

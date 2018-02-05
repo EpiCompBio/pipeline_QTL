@@ -199,14 +199,14 @@ extra_files = package_files(os.path.join(here, 'templates'))
 
 # rename scripts to project_name_scripts so that they can be located:
 name = CONFIG['metadata']['project_name']
-pipeline_scripts = str(name + '_scripts')
-pipeline_packages = find_packages(exclude=["scripts*"])
-
-pipeline_packages.append(pipeline_scripts)
-
-pipeline_package_dirs = {name: name,
-                         pipeline_scripts: 'scripts',
-                         }
+#scripts = str(name + '_scripts')
+#packages = find_packages(exclude=["scripts*"])
+#packages.append(pipeline_scripts)
+#package_dirs = {name: name,
+#                scripts: 'scripts',
+#                }
+packages = find_packages()
+package_dirs = {'pipeline_QTL': 'pipeline_QTL'}
 
 # Set up entry point for command line use:
 entry_points = {'console_scripts': ['pipeline_QTL = pipeline_QTL.pipeline_QTL:main'] }
@@ -230,8 +230,8 @@ setup(  # Package information:
         long_description = CONFIG['metadata']['long_description'],
         classifiers = list(filter(None, classifiers.split("\n"))),
         # Package contents:
-        packages = pipeline_packages,
-        package_dir = pipeline_package_dirs,
+        packages = packages,
+        package_dir = package_dirs,
         include_package_data = True,
         #data_files = [('templates', [glob.glob('templates/*'))], ('templates',
         #    [glob.glob('templates/*/*')])],
