@@ -439,7 +439,7 @@ def plot_PC_geno(infile, outfile):
     pve = infile[1]
 
     statement = '''
-                Rscript %(pipeline_scriptsdir)s/plot_flashpca.R \
+                Rscript %(pipeline_scriptsdir)s/utilities/plot_flashpca.R \
                 --pcs %(pcs)s \
                 --pve %(pve)s \
                 %(tool_options)s ;
@@ -465,7 +465,7 @@ def PC_pheno(infile, outfile):
     project_scripts_dir = str(getINIpaths() + '/scripts/utilities/')
     tool_options = P.substituteParameters(**locals())["run_PCA_options"]
     statement = '''
-                Rscript %(pipeline_scriptsdir)s/run_PCA.R \
+                Rscript %(pipeline_scriptsdir)s/utilities/run_PCA.R \
                 -I %(infile)s \
                 -O %(outfile)s \
                 %(tool_options)s ;
@@ -495,7 +495,7 @@ def plink_to_geno(infile, outfile):
     infile = infile.rsplit('.', 1)[0]
 
     statement = '''
-                bash %(pipeline_scriptsdir)s/plink_to_geno.sh \
+                bash %(pipeline_scriptsdir)s/utilities/plink_to_geno.sh \
                         %(infile)s \
                         %(infile)s.matrixQTL \
                         %(infile)s.A-transpose \
@@ -507,7 +507,7 @@ def plink_to_geno(infile, outfile):
     P.run()
 
     statement = '''
-                Rscript %(pipeline_scriptsdir)s/plink_double2singleID.R -I %(outfile)s ;
+                Rscript %(pipeline_scriptsdir)s/utilities/plink_double2singleID.R -I %(outfile)s ;
                 checkpoint ;
                 mv IID_%(outfile)s %(outfile)s ;
                 checkpoint
@@ -539,7 +539,7 @@ def orderAndMatch1(infile, outfile):
     pheno = infile[1]
 
     statement = '''
-                Rscript %(pipeline_scriptsdir)s/order_and_match_QTL.R \
+                Rscript %(pipeline_scriptsdir)s/utilities/order_and_match_QTL.R \
                         --file1 %(geno)s \
                         --file2 %(pheno)s ;
                 checkpoint ;
@@ -566,7 +566,7 @@ def orderAndMatch2(infile, outfile):
     cov_pheno = infile[1]
 
     statement = '''
-                Rscript %(pipeline_scriptsdir)s/order_and_match_QTL.R \
+                Rscript %(pipeline_scriptsdir)s/utilities/order_and_match_QTL.R \
                         --file1 %(cov_geno)s \
                         --file2 %(cov_pheno)s ;
                 checkpoint ;
@@ -594,7 +594,7 @@ def mergeCovs(infile, outfile, PCs_keep_geno, PCs_keep_pheno):
     PCs_keep_geno = 10
     PCs_keep_pheno = 35
     statement = '''
-                Rscript %(pipeline_scriptsdir)s/merge_dataframes.R \
+                Rscript %(pipeline_scriptsdir)s/utilities/merge_dataframes.R \
                         --file1 %(cov_geno)s \
                         --file2 %(cov_pheno)s \
                         --file1-PCs %(PCs_keep_geno)s \
@@ -674,7 +674,7 @@ def run_MxEQTL(infiles, outfile):
     project_scripts_dir = str(getINIpaths() + '/scripts/matrixQTL/')
 
     statement = '''
-                Rscript %(pipeline_scriptsdir)s/run_matrixEQTL.R \
+                Rscript %(pipeline_scriptsdir)s/utilities/run_matrixEQTL.R \
                 --gex %(pheno_file)s \
                 --geno %(geno_file)s \
                 --cov %(cov_file)s \
