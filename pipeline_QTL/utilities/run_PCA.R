@@ -228,7 +228,7 @@ class(pc)
 pc[1:5, 1:5]
 # Save file:
 fwrite(pc,
-       sprintf('%s.tsv', output_file_name),
+       sprintf('%s', output_file_name),
        sep = '\t', na = 'NA',
        col.names = TRUE, row.names = FALSE,
        quote = FALSE)

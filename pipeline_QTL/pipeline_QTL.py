@@ -421,7 +421,7 @@ def PC_geno(infile, outfile):
     #P.run()
 # TO DO: touch and posttask don't work on PC_geno and prune_SNPs....
 
-#@follows(PC_geno)
+@follows(PC_geno)
 @transform('*.pcs.tsv',
            regex('(.+).(.+).(.+).tsv'),
            add_inputs('*.pve.tsv'),
@@ -433,14 +433,13 @@ def plot_PC_geno(infile, outfile):
 
     # Plot flashpca results:
     tool_options = P.substituteParameters(**locals())["flashpca_plot_options"]
-    project_scripts_dir = str(getINIpaths() + '/scripts/utilities/')
+    project_scripts_dir = str(getINIpaths() + '/utilities/')
 
     pcs = infile[0]
     pve = infile[1]
 
-# Rscript %(pipeline_scriptsdir)s/utilities/plot_flashpca.R \
     statement = '''
-                Rscript %(project_scripts_dir)s/utilities/plot_flashpca.R \
+                Rscript %(project_scripts_dir)s/plot_flashpca.R \
                 --pcs %(pcs)s \
                 --pve %(pve)s \
                 %(tool_options)s ;
@@ -453,6 +452,7 @@ def plot_PC_geno(infile, outfile):
 
 ##########
 # Get PCs for molecular pheno data:
+# TO DO: sort out transposing of PC data, plink is OK, metabolomics not
 @transform('*.pheno',
            suffix('.pheno'),
            '.pheno.pca.tsv')
@@ -463,10 +463,10 @@ def PC_pheno(infile, outfile):
     # Add any options passed to the ini file for :
     #tool_options = P.substituteParameters(**locals())["_options"]
 
-    project_scripts_dir = str(getINIpaths() + '/scripts/utilities/')
+    project_scripts_dir = str(getINIpaths() + '/utilities/')
     tool_options = P.substituteParameters(**locals())["run_PCA_options"]
     statement = '''
-                Rscript %(pipeline_scriptsdir)s/utilities/run_PCA.R \
+                Rscript %(project_scripts_dir)s/run_PCA.R \
                 -I %(infile)s \
                 -O %(outfile)s \
                 %(tool_options)s ;
@@ -479,7 +479,7 @@ def PC_pheno(infile, outfile):
 ##########
 # Prepare files for MxEQTL
 # Transform plink to MxEQTL format:
-#@follows(plot_PC_geno)
+@follows(plot_PC_geno)
 @transform('*.bim',
            suffix('.bim'),
            '.A-transpose.matrixQTL.geno')
@@ -490,17 +490,19 @@ def plink_to_geno(infile, outfile):
     # Add any options passed to the ini file for :
     #tool_options = P.substituteParameters(**locals())["_options"]
 
-    project_scripts_dir = str(getINIpaths() + '/scripts/utilities/')
+    project_scripts_dir = str(getINIpaths() + '/utilities/')
 
     # Split at the last suffix separated by '.':
     infile = infile.rsplit('.', 1)[0]
 
     statement = '''
-                bash %(pipeline_scriptsdir)s/utilities/plink_to_geno.sh \
+                bash %(project_scripts_dir)s/plink_to_geno.sh \
                         %(infile)s \
                         %(infile)s.matrixQTL \
                         %(infile)s.A-transpose \
                         %(outfile)s ;
+                checkpoint ;
+                rm -rf *.sample *.gen *.traw *.ped *.hh *.nosex *.map ;
                 checkpoint
                 '''
     # e.g.
@@ -508,7 +510,7 @@ def plink_to_geno(infile, outfile):
     P.run()
 
     statement = '''
-                Rscript %(pipeline_scriptsdir)s/utilities/plink_double2singleID.R -I %(outfile)s ;
+                Rscript %(project_scripts_dir)s/plink_double2singleID.R -I %(outfile)s ;
                 checkpoint ;
                 mv IID_%(outfile)s %(outfile)s ;
                 checkpoint
@@ -535,12 +537,12 @@ def orderAndMatch1(infile, outfile):
     # Add any options passed to the ini file for :
     #tool_options = P.substituteParameters(**locals())["_options"]
 
-    project_scripts_dir = str(getINIpaths() + '/scripts/utilities/')
+    project_scripts_dir = str(getINIpaths() + '/utilities/')
     geno = infile[0]
     pheno = infile[1]
 
     statement = '''
-                Rscript %(pipeline_scriptsdir)s/utilities/order_and_match_QTL.R \
+                Rscript %(project_scripts_dir)s/order_and_match_QTL.R \
                         --file1 %(geno)s \
                         --file2 %(pheno)s ;
                 checkpoint ;
@@ -550,6 +552,8 @@ def orderAndMatch1(infile, outfile):
     # Rscript /Users/antoniob/Documents/github.dir/EpiCompBio/pipeline_QTL/scripts/utilities/order_and_match_QTL.R --file1 airwave-illumina_exome-all_chrs.A-transpose.matrixQTL.geno --file2 AIRWAVE-CPMG_BatchCorrected_log_Var_Data_Sample-plasma.transposed.tsv
     P.run()
 
+# TO DO: transpose both files first, e.g.
+# Rscript /Users/antoniob/anaconda/envs/r_test/lib/python3.5/site-packages/pipeline_QTL-0.1.0-py3.5.egg/pipeline_QTL/utilities/transpose_metabolomics.R -I matched_airwave-illumina_exome-all_chrs.flashpca.pcs.tsv
 @follows(orderAndMatch1)
 @transform('*.pcs.tsv',
            suffix('.pcs.tsv'),
@@ -562,12 +566,12 @@ def orderAndMatch2(infile, outfile):
     # Add any options passed to the ini file for :
     #tool_options = P.substituteParameters(**locals())["_options"]
 
-    project_scripts_dir = str(getINIpaths() + '/scripts/utilities/')
+    project_scripts_dir = str(getINIpaths() + '/utilities/')
     cov_geno = infile[0]
     cov_pheno = infile[1]
 
     statement = '''
-                Rscript %(pipeline_scriptsdir)s/utilities/order_and_match_QTL.R \
+                Rscript %(project_scripts_dir)s/order_and_match_QTL.R \
                         --file1 %(cov_geno)s \
                         --file2 %(cov_pheno)s ;
                 checkpoint ;
@@ -576,10 +580,11 @@ def orderAndMatch2(infile, outfile):
     P.run()
 
 
+# TO DO: continue here
 @follows(orderAndMatch2)
 @transform('matched*.pcs.tsv',
            formatter('(?P<path>.+)/matched_(?P<cohort>.+)-(?P<platform>.+)-(?P<descriptor>.+).pcs.tsv'),
-           add_inputs('matched*.pheno.pca.tsv'),
+           add_inputs('matched*.geno'),
            '{cohort[0]}-{platform[0]}.merged_covs')
 def mergeCovs(infile, outfile, PCs_keep_geno, PCs_keep_pheno):
     '''
@@ -588,14 +593,14 @@ def mergeCovs(infile, outfile, PCs_keep_geno, PCs_keep_pheno):
     # Add any options passed to the ini file for :
     #tool_options = P.substituteParameters(**locals())["_options"]
 
-    project_scripts_dir = str(getINIpaths() + '/scripts/utilities/')
+    project_scripts_dir = str(getINIpaths() + '/utilities/')
     cov_geno = infile[0]
     cov_pheno = infile[1]
     # TO DO: replace with loop
     PCs_keep_geno = 10
     PCs_keep_pheno = 35
     statement = '''
-                Rscript %(pipeline_scriptsdir)s/utilities/merge_dataframes.R \
+                Rscript %(project_scripts_dir)s/merge_dataframes.R \
                         --file1 %(cov_geno)s \
                         --file2 %(cov_pheno)s \
                         --file1-PCs %(PCs_keep_geno)s \
@@ -603,6 +608,13 @@ def mergeCovs(infile, outfile, PCs_keep_geno, PCs_keep_pheno):
                         -O %(outfile)s
                 '''
     P.run()
+
+@follows(mergeCovs)
+@transform('*merged_covs',
+           formatter('(?P<path>.+)/matched_(?P<cohort>.+)-(?P<platform>.+)-(?P<descriptor>.+).pcs.tsv'),
+           add_inputs('matched*.pheno.pca.tsv'),
+           '{cohort[0]}-{platform[0]}.merged_covs')
+
 ##########
 
 
@@ -672,10 +684,10 @@ def run_MxEQTL(infiles, outfile):
         cov_file = None
 
     tool_options = P.substituteParameters(**locals())["matrixeqtl_options"]
-    project_scripts_dir = str(getINIpaths() + '/scripts/matrixQTL/')
+    project_scripts_dir = str(getINIpaths() + '/matrixQTL/')
 
     statement = '''
-                Rscript %(pipeline_scriptsdir)s/utilities/run_matrixEQTL.R \
+                Rscript %(project_scripts_dir)s/run_matrixEQTL.R \
                 --gex %(pheno_file)s \
                 --geno %(geno_file)s \
                 --cov %(cov_file)s \
