@@ -46,7 +46,7 @@ Requirements:
 
 library(docopt)
 library(data.table)
-library(gdata)
+library(readxl)
 
 Documentation
 =============
@@ -86,7 +86,7 @@ str(args)
 # source('http://bioconductor.org/biocLite.R')
 # biocLite
 library(data.table)
-library(gdata)
+library(readxl)
 ######################
 
 ######################
@@ -97,7 +97,7 @@ if (is.null(args[['-I']]) == FALSE) {
   # For tests:
   # setwd('~/Documents/quickstart_projects/chronic_inflammation_Airwave.p_q/data/processed/metabolomics_data.dir/')
   # input_name <- 'AIRWAVE_1DNMR_BatchCorrected_log_VarInfo.xlsx'
-  input_data <- read.xls(input_name, sheet = sheet, header = header)
+  input_data <- read_excel(input_name, sheet = sheet, col_names = header)
 } else {
   # Stop if arguments not given:
   print('You need to provide an input file. This has to be from Excel (xlsx suffix).')
