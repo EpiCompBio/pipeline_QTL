@@ -33,15 +33,15 @@ Upload to PyPI after this if for general use.
 # Get modules
 
 # Py3 to 2 from pasteurize:
-from __future__ import print_function
-from __future__ import unicode_literals
-from __future__ import division
-from __future__ import absolute_import
+#from __future__ import print_function
+#from __future__ import unicode_literals
+#from __future__ import division
+#from __future__ import absolute_import
 
 from builtins import open
 from builtins import str
-from future import standard_library
-standard_library.install_aliases()
+#from future import standard_library
+#standard_library.install_aliases()
 
 # To use a consistent encoding
 from codecs import open
@@ -50,6 +50,7 @@ from codecs import open
 import sys
 import os
 import glob
+import itertools
 
 # Always prefer setuptools over distutils:
 import setuptools
@@ -121,8 +122,6 @@ for key in CONFIG:
 
 #################
 # Get version:
-#sys.path.insert(0, here)
-#src_dir = str(CONFIG['metadata']['project_name'] + '/' + CONFIG['metadata']['project_name'])
 src_dir = str(CONFIG['metadata']['project_name'])
 sys.path.insert(0, src_dir)
 print(src_dir)
@@ -210,6 +209,25 @@ package_dirs = {'pipeline_QTL': 'pipeline_QTL'}
 
 # Set up entry point for command line use:
 entry_points = {'console_scripts': ['pipeline_QTL = pipeline_QTL.pipeline_QTL:main'] }
+# TO DO:
+#entry_points = {'console_scripts': ['my_cmd = my_project.my_project:main'] }
+
+# Include scripts that are run from the command line and make them available in
+# PATH:
+executables = ['*.R', '*.py', '*.sh']
+
+def get_cli_scripts():
+    files = []
+    for filename in executables:
+        scripts = [fn for fn in glob.glob(os.path.join('**/', filename),
+                                          recursive = True)
+                   if not os.path.basename(fn).startswith('__init__')
+                   ]
+        files.append(scripts)
+    flatten_list = list(itertools.chain.from_iterable(files))
+    return(flatten_list)
+
+scripts = get_cli_scripts()
 #################
 
 
@@ -238,6 +256,8 @@ setup(  # Package information:
         package_data = {'': extra_files},
         # Dependencies:
         install_requires = install_requires,
+        # scripts to run from the command line:
+        scripts = scripts,
         entry_points = entry_points,
         # Other options:
         zip_safe = False,

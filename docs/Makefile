@@ -7,7 +7,7 @@
 # You can set these variables from the command line.
 SPHINXOPTS    =
 SPHINXBUILD   = sphinx-build
-SPHINXPROJ    = super_project
+SPHINXPROJ    = pipeline_QTL
 SOURCEDIR     = .
 BUILDDIR      = _build
 ########
