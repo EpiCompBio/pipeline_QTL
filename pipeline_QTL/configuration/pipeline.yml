@@ -9,125 +9,125 @@
 # Leave these blank if not needed
 # Deleting them will cause conf.py to error.
 
-[metadata]
-project_name = pipeline_QTL
+metadata:
+    project_name: pipeline_QTL
 
-author_name =
+    author_name:
 
-all_author_names = 
+    all_author_names: 
 
-date = 
+    date: 
 
-project_url = 
+    project_url: 
 
-download_url = 
+    download_url: 
 
-author_email =
+    author_email:
 
-license = 
+    license: 
 
-license_year = 
+    license_year: 
 
-version =
+    version:
 
-keywords = 
+    keywords: 
 
-short_description = 
+    short_description: 
 
 # long_description can be read rom README.rst within setup.py but PyPI doesn't render it.
-long_description = 
+    long_description: 
 
 # The same version is used for pipelines, scripts and project:
 # This is easier to edit directly in the file version.py 
 
-classifiers =
+    classifiers:
 
-platforms = 'any'
+    platforms: 'any'
 ################################################################
 
 
 ################################################################
 # Pipeline general options:
-[general]
+general:
 # Specify the location of the scripts for this project. Needs to be set.
-pipeline_scripts_dir =  
+    pipeline_scripts_dir:  
 
 # Specify the python executable, this is if running on a Mac and using matplotlib (which needs pythonw):
-py_exec = pythonw
+    py_exec: pythonw
 #either "python" or "pythonw"
 
 #
 # scratchdir for data not to be backed up
-scratchdir = 
-#/tmp
+    scratchdir: 
+    #/tmp
 
 # a version string
-version =
+    version:
 
 # Pipeline database options:
-[database]
-name = csvdb
+database:
+    name: csvdb
 ################################################################
 
 
 ################################################################
 # Options specific to this pipeline:
-[pipeline]
+pipeline:
 # Specific external tools to run in this pipeline (e.g. when more than one 
 # association tool, mapper, etc. are available in the pipeline)
 # Options for these can be specified below
 # matrixeqtl
 # tool2
 # etc
-tools = matrixeqtl
+    tools: matrixeqtl
 
 # If running more than one input set as 'True':, else leave empty or 'False'
-#many_infiles = True
+#many_infiles: True
 ################################################################
 
 
 ################################################################
 # Programme specific options (tools called from this pipeline)
-[matrixeqtl]
+matrixeqtl:
 # See run_MxQTL.R --help for more information
 # See MatrixEQTL documenation for options
 # Files must have .geno, .pheno and .cov endings to be picked up
 # geno, pheno and cov files are picked up automatically, "sensible" defaults are given for all other options,
 # otherwise specify them here, e.g.:
-#--model modelANOVA --pvOutputThreshold 0.05 -O aNOVA_descriptor --snpspos snpsloc.txt --genepos geneloc.txt --pvOutputThreshold.cis 0.1 --session mxqtl --condition cond_test
-# Defaults for MatrixEQTL required options are:
-#--model [default: modelLINEAR].
-#--pvOutputThreshold [default: 1e-08].
-#--pvOutputThreshold.cis [default: 1e-05].
-#--cisDist [default: 1e+06].
+    #--model modelANOVA --pvOutputThreshold 0.05 -O aNOVA_descriptor --snpspos snpsloc.txt --genepos geneloc.txt --pvOutputThreshold.cis 0.1 --session mxqtl --condition cond_test
+    # Defaults for MatrixEQTL required options are:
+    #--model [default: modelLINEAR].
+    #--pvOutputThreshold [default: 1e-08].
+    #--pvOutputThreshold.cis [default: 1e-05].
+    #--cisDist [default: 1e+06].
 
-options = 
+    options: 
 # --snpspos snpsloc.txt --genepos geneloc.txt
 
-[flashpca]
+flashpca:
 # See https://github.com/gabraham/flashpca
 # --bfile, --suffix, --verbose, --outload, --outval, --outvec, --outpc, --outpve 
 # are passed by default in the pipeline script
-options = --precision 5 
+    options: --precision 5 
 
-[flashpca_plot]
+flashpca_plot:
 # Custom script see 
-options = 
+    options: 
 
-[plink]
+plink:
 # --bfile, --exclude range are already passed
-exclude_options = --indep-pairwise 1000 50 0.05
+    exclude_options: --indep-pairwise 1000 50 0.05
 
 # --bfile, --extract, --make-bed, --out are already passed
-prune_options = 
+    prune_options: 
 
 
-[run_PCA]
+run_PCA:
 # Custom R script which runs prcomp on pheno data, see run_PCA.R --help
-options =
+    options:
 
-[my_other_cmd_tool]
+my_other_cmd_tool:
 # Write some helpful notes here and add parameters to be called
 # These need to be picked up by the pipeline itself
-some_option = 
+    some_option: 
 ################################################################
