@@ -60,6 +60,9 @@ See requirements files and Dockerfile for full information. At the least you'll 
 * r-docopt
 * r-data.table
 * r-ggplot2
+* stats_utils_
+
+.. _stats_utils: https://github.com/EpiCompBio/stats_utils/tree/master/stats_utils
 
 
 Installation
