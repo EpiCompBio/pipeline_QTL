@@ -2,6 +2,8 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
+.. include:: report_substitution_vars.rst
+
 Welcome to pipeline_QTL's documentation
 ================================================================================
 
@@ -15,6 +17,7 @@ This document was generated on |date_real| at |time|
    :maxdepth: 2
    :caption: Contents:
 
+   include_links
    report_pipeline_QTL.rst
 
 .. raw latex can be used and may facilitate conversion to pdf

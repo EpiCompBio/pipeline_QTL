@@ -2,12 +2,38 @@
 pipeline_QTL
 ###########################
 
+Authored by:
+
+|all_author_names|
+
+Date: |date|
+
+Keywords: |keywords|
+
+version = |version|
+
+Licensed as |license|
+
+Check the project at:
+
+|project_url|
+
+Correspondence to: |author_email|
+
+
+.. See rst-basics_ for webpages and tutorials.
+
+.. .. _rst-basics: https://github.com/EpiCompBio/welcome/blob/master/rst_basics.rst
+
+
 
 Introduction
 ############
 
 
 QTL pipeline report
+
+|short_description|
 
 This file was created using Sphinx_. To modify it you'll need to change the
 following files:
@@ -16,6 +42,7 @@ following files:
 - conf.py
 - index.rst
 - report_pipeline_pq_example.rst
+- report_substitution_vars.rst
 
 See the `Sphinx tutorial`_ to get a better idea of what's happening.
 
