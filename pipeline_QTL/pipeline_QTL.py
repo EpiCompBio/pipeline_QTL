@@ -258,7 +258,7 @@ def getINIpaths():
     e.g. my_cmd = "%(scripts_dir)s/bam2bam.py" % P.Parameters.get_params()
     '''
     try:
-        project_scripts_dir = '{}/'.format(PARAMS['project']['scripts_dir'])
+        project_scripts_dir = PARAMS['project']['scripts_dir']
         if project_scripts_dir == str('/'):
             # dir not set in ini file so use installation directory:
             project_scripts_dir = QTL.getDir()
@@ -292,7 +292,7 @@ def getINIpaths():
 
 ################
 # Get command line tools to run:
-tools = P.asList(PARAMS["pipeline']['tools"])
+tools = PARAMS["pipeline']['tools"]
 
 # Get the location of the pipeline specific scripts:
 project_scripts_dir = str(getINIpaths())
@@ -302,7 +302,7 @@ project_name = PARAMS['metadata']['project_name']
 # 'pipeline_QTL'
 
 # Set if running many input files:
-many_infiles = P.asList(PARAMS["pipeline"]["many_infiles"])
+many_infiles = PARAMS["pipeline"]["many_infiles"]
 ################
 
 
