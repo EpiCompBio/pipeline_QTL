@@ -36,11 +36,11 @@ pipeline_QTL
 
 Python based pipeline for quantitative trait loci analysis.
 
-For the general framework and workflow see project_quickstart_ docs and CGAT_.
+For the general framework and workflow see project_quickstart_ docs and cgat-core_.
 
 .. _project_quickstart: https://github.com/AntonioJBT/project_quickstart
 
-.. _CGAT: https://github.com/CGATOxford/CGATCore
+.. _cgat-core: https://github.com/cgat-developers/cgat-core
 
 Features
 --------
@@ -53,7 +53,7 @@ Requirements
 
 See requirements files and Dockerfile for full information. At the least you'll need:
 
-* CGATCore
+* cgat-core_
 * R >= 3.2
 * Python >= 3.5
 * r-matrixeqtl
@@ -62,7 +62,7 @@ See requirements files and Dockerfile for full information. At the least you'll 
 * r-ggplot2
 * stats_utils_
 
-.. _stats_utils: https://github.com/EpiCompBio/stats_utils/tree/master/stats_utils
+.. _stats_utils: https://github.com/EpiCompBio/stats_utils
 
 
 Installation
@@ -85,7 +85,6 @@ To use
     # https://github.com/EpiCompBio/pipeline_QTL/tree/master/tests
     # You can also download test files from e.g.:
     # wget -nH -np -r --cut-dirs=4 -A .txt http://www.bios.unc.edu/research/genomic_software/Matrix_eQTL/Sample_Data/
-    # wget https://ftp.ncbi.nlm.nih.gov/hapmap/genotypes/2009-01_phaseIII/plink_format/hapmap3_r2_b36_fwd.consensus.qc.poly.map.bz2
     # https://github.com/gabraham/flashpca/tree/master/HapMap3 :
     # wget https://ftp.ncbi.nlm.nih.gov/hapmap/genotypes/2009-01_phaseIII/plink_format/hapmap3_r2_b36_fwd.consensus.qc.poly.ped.bz2
     

@@ -89,14 +89,14 @@ RUN pip install --upgrade pip numpy ; \
     pip install sphinxcontrib-bibtex
 
 # Install CGAT tools:
-RUN wget --no-check-certificate https://raw.githubusercontent.com/CGATOxford/cgat/master/requires.txt ; \
-    cat requires.txt | grep -v "#" | xargs -n 1 pip install ; \
-    conda install -y alignlib-lite ; \
-    conda install -y bedtools ; \
-    conda install -y pybedtools ; \
-    conda install -y ucsc-wigtobigwig ; \
-    pip install git+git://github.com/AntonioJBT/CGATPipeline_core.git ; \
-    pip install cgat
+#RUN wget --no-check-certificate https://raw.githubusercontent.com/CGATOxford/cgat/master/requires.txt ; \
+#    cat requires.txt | grep -v "#" | xargs -n 1 pip install ; \
+#    conda install -y alignlib-lite ; \
+#    conda install -y bedtools ; \
+#    conda install -y pybedtools ; \
+#    conda install -y ucsc-wigtobigwig ; \
+#    pip install git+git://github.com/AntonioJBT/CGATPipeline_core.git ; \
+#    pip install cgat
  
 # Install project specific packages:
 RUN conda install -y r-docopt=0.4.5 r-data.table=1.10.4 r-ggplot2=2.2.1 ; \
@@ -104,11 +104,11 @@ RUN conda install -y r-docopt=0.4.5 r-data.table=1.10.4 r-ggplot2=2.2.1 ; \
     conda install -y plink ; \
     R --vanilla -e 'source("https://bioconductor.org/biocLite.R") ; install.packages("cowplot", repos = "http://cran.us.r-project.org") ; library("cowplot")' ; \
     R --vanilla -e 'source("https://bioconductor.org/biocLite.R") ; install.packages("ggthemes", repos = "http://cran.us.r-project.org") ; library("ggthemes")' ; \
-    R --vanilla -e 'source("https://bioconductor.org/biocLite.R") ; install.packages("gdata", repos = "http://cran.us.r-project.org") ; library("gdata")' ; \
+    R --vanilla -e 'source("https://bioconductor.org/biocLite.R") ; install.packages("readxl", repos = "http://cran.us.r-project.org") ; library("readxl")' ; \
 #R --vanilla -e 'source("https://bioconductor.org/biocLite.R") ; install.packages("bigpca", repos = "http://cran.us.r-project.org") ; library("bigpca")' ; \
 
 # Install rpy2 with conda as pip version causes conflicts:
-RUN conda install -y rpy2
+#RUN conda install -y rpy2
 ##########
 
 ##########
