@@ -218,11 +218,16 @@ def getParamsFiles(paths = ini_paths):
     return(p_params_files)
 
 
-PARAMS = P.Parameters.get_parameters(getParamsFiles())
+#PARAMS = P.Parameters.get_parameters(getParamsFiles())
 #PARAMS = P.Parameters.get_params()
 
-# Set global parameters here, obtained from the ini file
+# load options from the config file
+PARAMS = P.get_parameters(
+    ["%s/pipeline.yml" % os.path.splitext(__file__)[0],
+     "../pipeline.yml",
+     "pipeline.yml"])
 
+# Set global parameters here, obtained from the ini file
 def get_py_exec():
     '''
     Look for the python executable. This is only in case of running on a Mac
@@ -250,7 +255,6 @@ def get_py_exec():
 #get_py_exec()
 
 
-
 def getINIpaths():
     '''
     Get the path to scripts for this project, e.g.
@@ -258,29 +262,30 @@ def getINIpaths():
     e.g. my_cmd = "%(scripts_dir)s/bam2bam.py" % P.Parameters.get_params()
     '''
     try:
-        project_scripts_dir = PARAMS['project']['scripts_dir']
-        if project_scripts_dir == str('/'):
+        project_scripts_dir = '{}/'.format(PARAMS['general']['project_scripts_dir'])
+        #if (project_scripts_dir == str('/') or
+        #        project_scripts_dir is None):
             # dir not set in ini file so use installation directory:
-            project_scripts_dir = QTL.getDir()
-            E.info('''
-                   Location set for the projects scripts is:
-                   {}
-                   '''.format(project_scripts_dir)
-                   )
-        else:
-            # Use the ini location if variable is set manually:
-            project_scripts_dir = '{}/'.format(PARAMS['project']['scripts_dir'])
-            E.info('''
+        #    project_scripts_dir = QTL.getDir()
+        E.info('''
                    Location set for the projects scripts is:
                    {}
                    '''.format(project_scripts_dir)
                    )
     except KeyError:
-        E.warn('''
-               Could not set project scripts location, this needs to be
-               specified in the project ini file.
-               ''')
-        raise
+            # Use the ini location if variable is set manually:
+        project_scripts_dir = QTL.getDir()
+        E.info('''
+                   Location set for the projects scripts is:
+                   {}
+                   '''.format(project_scripts_dir)
+                   )
+    #except KeyError:
+    #    E.warn('''
+    #           Could not set project scripts location, this needs to be
+    #           specified in the project ini file.
+    #           ''')
+    #    raise
 
     return(project_scripts_dir)
 
