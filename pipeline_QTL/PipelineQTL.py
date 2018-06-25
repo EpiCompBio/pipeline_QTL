@@ -1,7 +1,8 @@
-'''PipelineQTL.py - Utility functions for QTL analysis
-==============================================================
+'''
+PipelineQTL.py - Utility functions for QTL analysis
 
-QTL intro
+:Author: Antonio J Berlanga-Taylor
+:Date:
 
 This module provides utility functions for pipeline_QTL.py
 
@@ -20,14 +21,6 @@ Reference
 ---------
 
 '''
-'''
-Utilities for project_quickstart.py
-:Author: Antonio J Berlanga-Taylor
-:Date:
-Boilerplate tools for quickstarting a data analysis project:
-https://github.com/AntonioJBT/project_quickstart
-'''
-
 from __future__ import print_function
 from __future__ import unicode_literals
 from __future__ import division
@@ -38,14 +31,6 @@ standard_library.install_aliases()
 import os
 import sys
 
-# Set up calling parameters from INI file:
-# Modules with Py2 to 3 conflicts
-try:
-    import configparser
-except ImportError:  # Py2 to Py3
-    import ConfigParser as configparser
-# Global variable for configuration file ('.ini'):
-CONFIG = configparser.ConfigParser(allow_no_value = True)
 #################
 
 
@@ -55,14 +40,14 @@ def getINIdir(path = cwd):
     ''' Search for an INI file, default is where the current working directory '''
     f_count = 0
     for f in os.listdir(path):
-        if (f.endswith('.ini') and not f.startswith('tox')):
+        if (f.endswith('.yml') and not f.startswith('tox')):
             f_count += 1
             INI_file = f
     if f_count == 1:
         INI_file = os.path.abspath(os.path.join(path, INI_file))
     elif (f_count > 1 or f_count == 0):
         INI_file = os.path.abspath(path)
-        print('You have no project configuration (".ini") file or more than one',
+        print('You have no project configuration (".yml") file or more than one',
               'in the directory:', '\n', path)
 
     return(INI_file)
