@@ -28,7 +28,6 @@ include *.ini
 include LICENSE
 include INSTALL
 include README.rst
-include KNOWN_BUGS.rst
 include THANKS.rst
 include TODO.rst
 include COPYING
@@ -71,6 +70,7 @@ recursive-include scripts *.R
 recursive-include scripts *.sh
 recursive-include scripts *.txt
 recursive-include scripts *.py
+recursive-include pipeline_QTL *.yml
 
 include installation/Dockerfile
 

@@ -1,5 +1,5 @@
 '''
-setup for |project_name|
+setup for pipeline_QTL
 
 Python packaging can become a nightmare, check the following for reference:
 For example on setting a Python package, see:
@@ -33,15 +33,15 @@ Upload to PyPI after this if for general use.
 # Get modules
 
 # Py3 to 2 from pasteurize:
-#from __future__ import print_function
-#from __future__ import unicode_literals
-#from __future__ import division
-#from __future__ import absolute_import
+from __future__ import print_function
+from __future__ import unicode_literals
+from __future__ import division
+from __future__ import absolute_import
 
 from builtins import open
 from builtins import str
-#from future import standard_library
-#standard_library.install_aliases()
+from future import standard_library
+standard_library.install_aliases()
 
 # To use a consistent encoding
 from codecs import open
@@ -171,7 +171,8 @@ print(install_requires)
 # in though:
 #packages = [CONFIG['metadata']['project_name']]
 
-# If the packaging directory structure is not the conventional on it needs to be specified with package_dir. See:
+# If the packaging directory structure is not the conventional one then
+# it needs to be specified with package_dir. See:
 # https://docs.python.org/3.6/distutils/setupscript.html
 #package_dir = {'project_quickstart': 'project_quickstart'}
 
@@ -195,22 +196,10 @@ def package_files(directory):
 
 extra_files = package_files(os.path.join(here, 'templates'))
 
-
-# rename scripts to project_name_scripts so that they can be located:
-name = CONFIG['metadata']['project_name']
-#scripts = str(name + '_scripts')
-#packages = find_packages(exclude=["scripts*"])
-#packages.append(pipeline_scripts)
-#package_dirs = {name: name,
-#                scripts: 'scripts',
-#                }
-packages = find_packages()
 package_dirs = {'pipeline_QTL': 'pipeline_QTL'}
 
 # Set up entry point for command line use:
 entry_points = {'console_scripts': ['pipeline_QTL = pipeline_QTL.pipeline_QTL:main'] }
-# TO DO:
-#entry_points = {'console_scripts': ['my_cmd = my_project.my_project:main'] }
 
 # Include scripts that are run from the command line and make them available in
 # PATH:
@@ -248,8 +237,8 @@ setup(  # Package information:
         long_description = CONFIG['metadata']['long_description'],
         classifiers = list(filter(None, classifiers.split("\n"))),
         # Package contents:
-        packages = packages,
-        package_dir = package_dirs,
+        packages = find_packages(),
+        #package_dir = package_dirs,
         include_package_data = True,
         #data_files = [('templates', [glob.glob('templates/*'))], ('templates',
         #    [glob.glob('templates/*/*')])],
