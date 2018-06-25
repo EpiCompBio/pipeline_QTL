@@ -98,7 +98,7 @@ covariates file: airwave-NMR-blood.cov
 and depending on the input and arguments you might get:
 
 airwave-illumina_exome-all_chrs-NMR-blood.MxEQTL
-airwave-illumina_exome-all_chrs-NMR-blood.MxEQTL.cis.tst
+airwave-illumina_exome-all_chrs-NMR-blood.MxEQTL.cis.tsv
 airwave-illumina_exome-all_chrs-NMR-blood.MxEQTL.trans
 airwave-illumina_exome-all_chrs-NMR-blood.MxEQTL.qqplot.svg
 airwave-illumina_exome-all_chrs-NMR-blood.MxEQTL.degrees_condition.txt

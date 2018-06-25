@@ -137,7 +137,7 @@ dim(input_data) # nrow(), ncol()
 # key(input_data)
 # tables()
 # colnames(input_data)
-input_data[1:5, 1:5]
+input_data
 
 # Save original IDs from first column:
 rows <- as.character(unlist(input_data[, 1]))
@@ -156,7 +156,7 @@ input_data_t[1:5, 1:5]
 dim(input_data_t)
 
 # Sanity:
-input_data[1:5, 1:5]
+input_data
 input_data_t[1:5, 1:5]
 # Second column should be the first row:
 stopifnot(identical(as.character(unlist(input_data[, 2])),
