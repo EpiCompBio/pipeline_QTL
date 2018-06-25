@@ -1,14 +1,16 @@
 '''
-|project_name|
+pipeline_QTL
 ===================
 
-:Author: |author_name|
+:Author: Antonio Berlanga-Taylor
 :Release: |version|
 :Date: |today|
 
 
 Overview
 ========
+
+This is a pipeline that wraps tools such as matrixEQTL.
 
 |long_description|
 
@@ -38,7 +40,7 @@ This pipeline is built using a Ruffus/CGAT approach. You need to have Python,
 Ruffus, CGAT core tools and any other specific dependencies needed for this
 script.
 
-A configuration file was created at the same time as this script.
+A configuration file needs to be created running the config option.
 
 Use this to extract any arbitrary parameters that could be changed in future
 re-runs of the pipeline.
@@ -82,6 +84,14 @@ must be tab separated.
 See:
 
 http://www.bios.unc.edu/research/genomic_software/Matrix_eQTL/
+
+A bash script to create test files can be found in:
+
+    https://github.com/EpiCompBio/pipeline_QTL/tests
+
+Run as eg:
+
+    bash /path_to_script/tests/create_QTL_infiles.sh /path_to_scripts_and_files/pipeline_QTL/tests
 
 
 Naming convention for input files
@@ -349,7 +359,7 @@ def connect():
 #@posttask(touch_file("prune_SNPs.touch"))
 @transform('*.bim',
            suffix('.bim'),
-           '.pruned', 'SNP_exclusion_regions.txt', '.pruned')
+           'pruned.touch', 'SNP_exclusion_regions.txt', 'pruned')
 def prune_SNPs(infile, outfile, exclude, label):
     '''
     Prune genotype data using plink.
@@ -439,7 +449,7 @@ def PC_geno(infile, outfile):
            regex('(.+).(.+).(.+).tsv'),
            add_inputs('*.pve.tsv'),
            r'\1.svg.touch')
-def plot_PC_geno(infile, outfile):
+def plot_PC_geno(infiles, outfile):
     '''
     Plot the results from flashpca2 on genotype data.
     '''
@@ -451,8 +461,8 @@ def plot_PC_geno(infile, outfile):
     else:
         pass
 
-    pcs = infile[0]
-    pve = infile[1]
+    pcs = infiles[0]
+    pve = infiles[1]
 
     statement = '''
                 plot_flashpca.R \
@@ -499,8 +509,6 @@ def plink_to_geno(infile, outfile):
     Process the plink genotype files to use as input for MatrixEQTL.
     '''
 
-    project_scripts_dir = str(getINIpaths() + '/utilities/')
-
     # Split at the last suffix separated by '.':
     infile = infile.rsplit('.', 1)[0]
 
@@ -535,18 +543,21 @@ def plink_to_geno(infile, outfile):
 ##########
 # Order and match samples between geno, pheno and covariates of each:
 @follows(plink_to_geno)
+#@transform('*.pcs.tsv',
+#           regex('(.+).(.+).(.+).tsv'),
+#           add_inputs('*.pve.tsv'),
+#           r'\1.svg.touch')
 @transform('*.geno',
            suffix('.geno'),
            add_inputs('*.pheno'),
            '.matched_geno_pheno')
-def orderAndMatch1(infile, outfile):
+def orderAndMatch1(infiles, outfile):
     '''
     Order and match genotype, phenotype and covariates files.
     '''
-
-    project_scripts_dir = str(getINIpaths() + '/utilities/')
-    geno = infile[0]
-    pheno = infile[1]
+    print(infiles)
+    geno = infiles[0]
+    pheno = infiles[1][0]
 
     statement = '''
                 order_and_match_QTL.R \
@@ -565,14 +576,13 @@ def orderAndMatch1(infile, outfile):
            suffix('.pcs.tsv'),
            add_inputs('*.pheno.pca.tsv'),
            '.matched_covs')
-def orderAndMatch2(infile, outfile):
+def orderAndMatch2(infiles, outfile):
     '''
     Order and match genotype, phenotype and covariates files.
     '''
 
-    project_scripts_dir = str(getINIpaths() + '/utilities/')
-    cov_geno = infile[0]
-    cov_pheno = infile[1]
+    cov_geno = infiles[0]
+    cov_pheno = infiles[1]
 
     statement = '''
                 order_and_match_QTL.R \
@@ -589,13 +599,13 @@ def orderAndMatch2(infile, outfile):
            formatter('(?P<path>.+)/matched_(?P<cohort>.+)-(?P<platform>.+)-(?P<descriptor>.+).pcs.tsv'),
            add_inputs('matched*.geno'),
            '{cohort[0]}-{platform[0]}.merged_covs')
-def mergeCovs(infile, outfile, PCs_keep_geno, PCs_keep_pheno):
+def mergeCovs(infiles, outfile, PCs_keep_geno, PCs_keep_pheno):
     '''
     Merge covariate files from geno and pheno principal component data
     '''
 
-    cov_geno = infile[0]
-    cov_pheno = infile[1]
+    cov_geno = infiles[0]
+    cov_pheno = infiles[1]
     # TO DO: replace with loop
     PCs_keep_geno = 10
     PCs_keep_pheno = 35

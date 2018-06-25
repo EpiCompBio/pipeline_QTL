@@ -9,7 +9,7 @@ set -o nounset
 
 # Create softlinks and rename files to use as input tests for pipeline
 # Run as:
-#bash ln_infiles.sh ~/Documents/github.dir/EpiCompBio/pipeline_QTL/tests/ 
+#bash create_QTL_infiles.sh ~/Documents/github.dir/EpiCompBio/pipeline_QTL/tests/ 
 
 dirname=$1
 sim_dir=simulated_data
