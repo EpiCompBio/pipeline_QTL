@@ -299,7 +299,7 @@ def getINIpaths():
 
 ################
 # Get command line tools to run:
-tools = PARAMS["pipeline']['tools"]
+tools = PARAMS['pipeline']['tools']
 
 # Get the location of the pipeline specific scripts:
 project_scripts_dir = str(getINIpaths())
@@ -309,7 +309,7 @@ project_name = PARAMS['metadata']['project_name']
 # 'pipeline_QTL'
 
 # Set if running many input files:
-many_infiles = PARAMS["pipeline"]["many_infiles"]
+many_infiles = PARAMS['pipeline']['many_infiles']
 ################
 
 
