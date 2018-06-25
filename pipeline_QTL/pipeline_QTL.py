@@ -91,8 +91,7 @@ A bash script to create test files can be found in:
 
 Run as eg:
 
-    bash /path_to_script/tests/create_QTL_infiles.sh /path_to_scripts_and_files/pipeline_QTL/tests
-
+    bash /path_to/create_QTL_infiles.sh /path_to_further_scripts/pipeline_QTL/tests
 
 Naming convention for input files
 =================================

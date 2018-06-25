@@ -83,6 +83,8 @@ To use
     mkdir tests ; cd tests
     # Copy or generate test files if needed. See scripts in this repository:
     # https://github.com/EpiCompBio/pipeline_QTL/tree/master/tests
+    # Run as:
+    bash /path_to/create_QTL_infiles.sh /path_to_further_scripts/pipeline_QTL/tests
     # You can also download test files from e.g.:
     # wget -nH -np -r --cut-dirs=4 -A .txt http://www.bios.unc.edu/research/genomic_software/Matrix_eQTL/Sample_Data/
     # https://github.com/gabraham/flashpca/tree/master/HapMap3 :
