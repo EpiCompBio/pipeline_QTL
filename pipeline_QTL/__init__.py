@@ -1,15 +1,19 @@
-from __future__ import unicode_literals
-from __future__ import print_function
-from __future__ import division
-from __future__ import absolute_import
-# Python 2 to 3 changed the use of __init__.py
-# To avoid namespace problems use this for 2 and 3 compatibility
-# https://packaging.python.org/namespace_packages/?highlight=__init__
+# Python 3.3 changed the use of __init__.py
+# To avoid namespace problems use this for 2 and 3 compatibility with pkgutil
 # Otherwise omit __init__.py entirely unless you have sub-packages
 
-from future import standard_library
-standard_library.install_aliases()
+# See:
+# https://pymotw.com/2/pkgutil/
+# https://packaging.python.org/guides/packaging-namespace-packages/
+
+# and examples in:
+# https://github.com/pypa/sample-namespace-packages/tree/master/pkgutil
+
 __path__ = __import__('pkgutil').extend_path(__path__, __name__)
 
-#from .project_quickstart import project_quickstart
-#from .project_quickstart import projectQuickstart
+# If you have modules in the same directory (as opposed to sub-directories),
+# add:
+name = 'pipeline_QTL'
+
+# For each sub-directory, add an __init__.py that only contains:
+# name = 'sub-directory'

@@ -181,14 +181,12 @@ except ImportError:
 # from builtins import dict
 
 # Import this project's module, uncomment if building something more elaborate:
-try:
-    #import pipeline_QTL.PipelineQTL as QTL
-    #from pipeline_QTL import PipelineQTL as QTL
+#import pipeline_QTL.PipelineQTL as QTL
+import PipelineQTL as QTL
 
-
-except ImportError:
-    print("Could not import this project's module, exiting")
-    raise
+# Get package source directory in (param path) '
+#src_dir = QTL.getDir('..')
+#print(src_dir)
 
 # Import additional packages:
 # Set path if necessary:
@@ -301,17 +299,17 @@ def getINIpaths():
 ################
 # Get command line tools to run:
 #tools = PARAMS['pipeline']['tools']
-tools = PARAMS['pipeline']['tools']
+tools = PARAMS['pipeline_tools']
 
 # Get the location of the pipeline specific scripts:
 project_scripts_dir = str(getINIpaths())
 
 # Set the name of this pipeline (for report softlinks):
-project_name = PARAMS['metadata']['project_name']
+project_name = PARAMS['metadata_project_name']
 # 'pipeline_QTL'
 
 # Set if running many input files:
-many_infiles = PARAMS['pipeline']['many_infiles']
+many_infiles = PARAMS['pipeline_many_infiles']
 ################
 
 
