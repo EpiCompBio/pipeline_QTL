@@ -173,7 +173,7 @@ import CGATCore.IOTools as IOTools
 
 # Import this project's module, uncomment if building something more elaborate:
 #import pipeline_QTL.PipelineQTL as QTL
-import PipelineQTL as QTL
+#import PipelineQTL as QTL
 
 # Import additional packages:
 # Set path if necessary:
@@ -205,15 +205,18 @@ def getParamsFiles(paths = ini_paths):
                 p_params_files.append(ini_file)
     return(p_params_files)
 
-
-#PARAMS = P.Parameters.get_parameters(getParamsFiles())
 #PARAMS = P.Parameters.get_params()
+#PARAMS = P.Parameters.get_parameters(getParamsFiles()) # works
 
 # load options from the config file
-PARAMS = P.get_parameters(
-    ["%s/pipeline.yml" % os.path.splitext(__file__)[0],
-     "../pipeline.yml",
-     "pipeline.yml"])
+
+P.get_parameters(
+        ["%s/pipeline.yml" % os.path.splitext(__file__)[0],
+            "../pipeline.yml",
+            "pipeline.yml"],
+        )
+
+PARAMS = P.PARAMS
 
 # Set global parameters here, obtained from the ini file
 def get_py_exec():
@@ -284,19 +287,28 @@ def getINIpaths():
 
 
 ################
-# Get command line tools to run:
-#tools = PARAMS['pipeline']['tools']
-tools = PARAMS['pipeline']['tools']
+def populate_params():
+    '''
+    Access the ini/yml file and populate values needed
+    '''
+    # Get command line tools to run:
+    #tools = PARAMS['pipeline']['tools']
+    tools = PARAMS['pipeline_tools']
 
-# Get the location of the pipeline specific scripts:
-project_scripts_dir = str(getINIpaths())
+    # Get the location of the pipeline specific scripts:
+    project_scripts_dir = str(getINIpaths())
 
-# Set the name of this pipeline (for report softlinks):
-project_name = PARAMS['metadata']['project_name']
-# 'pipeline_QTL'
+    # Set the name of this pipeline (for report softlinks):
+    project_name = PARAMS['metadata']['project_name']
 
-# Set if running many input files:
-many_infiles = PARAMS['pipeline']['many_infiles']
+    # Set if running many input files:
+    many_infiles = PARAMS['pipeline']['many_infiles']
+
+    return(tools,
+            project_scripts_dir,
+            project_name,
+            many_infiles)
+
 ################
 
 
@@ -647,7 +659,8 @@ def mergeCovs(infile, outfile, PCs_keep_geno, PCs_keep_pheno):
 
 ##########
 # Run matrixeqtl
-@active_if('matrixeqtl' in tools)
+@follows(populate_params)
+#@active_if('matrixeqtl' in tools)
 @follows(mergeCovs)
 @transform('*.geno',
            formatter('(?P<path>.+)/(?P<cohort>.+)-(?P<platform>.+)-(?P<descriptor>.+).geno'),

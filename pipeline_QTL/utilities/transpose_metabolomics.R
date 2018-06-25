@@ -86,7 +86,7 @@ str(args)
 # biocLite
 library(data.table)
 # TO DO: sort paths out so they are read from utilities folder after installation:
-# source('~/Documents/github.dir/EpiCompBio/pipeline_QTL/pipeline_QTL/utilities/moveme.R')
+# source('moveme.R')
 ######################
 
 ######################

@@ -49,8 +49,8 @@ library(car) # Run correlations and plots for lm
 library(gvlma) # Compare models and fit
 
 # TO DO: sort out paths
-source('~/Documents/github.dir/EpiCompBio/pipeline_QTL/pipeline_QTL/utilities/functions_for_MatrixeQTL.R')
-source('~/Documents/github.dir/EpiCompBio/pipeline_QTL/pipeline_QTL/utilities/moveme.R')
+source('functions_for_MatrixeQTL.R')
+source('moveme.R')
 ########################
 
 
