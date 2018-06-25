@@ -79,6 +79,8 @@ include installation/Dockerfile
 
 # Files to exclude:
 exclude .gitignore
+exclude .DS_Store
+exclude .dir_bash_history
 recursive-exclude * .dir_bash_history
 recursive-exclude * *.DS_Store
 recursive-exclude * *.bak
