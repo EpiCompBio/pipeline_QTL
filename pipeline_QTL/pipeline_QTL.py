@@ -173,7 +173,7 @@ import CGATCore.IOTools as IOTools
 
 # Import this project's module, uncomment if building something more elaborate:
 #import pipeline_QTL.PipelineQTL as QTL
-#import PipelineQTL as QTL
+import PipelineQTL as QTL
 
 # Import additional packages:
 # Set path if necessary:
@@ -357,7 +357,11 @@ def prune_SNPs(infile, outfile, exclude, label):
     named 'exclusion<any other characters>.txt'
     '''
     # Add any options passed to the ini file for flashpca:
-    tool_options = P.substituteParameters(**locals())["plink_exclude_options"]
+    tool_options = PARAMS['plink']['exclude_options']
+    if tool_options == None:
+        tool_options = ''
+    else:
+        pass
 
     # Split at the last suffix separated by '.':
     infile = infile.rsplit('.', 1)[0]
@@ -366,11 +370,15 @@ def prune_SNPs(infile, outfile, exclude, label):
                 --bfile %(infile)s \
                 --exclude range %(exclude)s \
                 %(tool_options)s ;
-                checkpoint
                 '''
     P.run(statement)
 
-    tool_options = P.substituteParameters(**locals())["plink_prune_options"]
+    tool_options = PARAMS['plink']['prune_options']
+    if tool_options == None:
+        tool_options = ''
+    else:
+        pass
+
     statement = '''
                 plink \
                 --bfile %(infile)s \
@@ -395,7 +403,11 @@ def PC_geno(infile, outfile):
     prune_SNPs() function in this script.
     '''
     # Add any options passed to the ini file for flashpca:
-    tool_options = P.substituteParameters(**locals())["flashpca_options"]
+    tool_options = PARAMS['flashpca']['options']
+    if tool_options == None:
+        tool_options = ''
+    else:
+        pass
 
     infile = infile.rsplit('.', 1)[0]
     prefix1 = '.flashpca'
@@ -410,7 +422,6 @@ def PC_geno(infile, outfile):
                 --outpc %(infile)s%(prefix1)s.pcs%(prefix2)s \
                 --outpve %(infile)s%(prefix1)s.pve%(prefix2)s \
                 %(tool_options)s ;
-                checkpoint ;
                 touch %(outfile)s
                 '''
     P.run(statement)
@@ -434,17 +445,20 @@ def plot_PC_geno(infile, outfile):
     '''
 
     # Plot flashpca results:
-    tool_options = P.substituteParameters(**locals())["flashpca"]["plot_options"]
+    tool_options = PARAMS['flashpca_plot']['options']
+    if tool_options == None:
+        tool_options = ''
+    else:
+        pass
 
     pcs = infile[0]
     pve = infile[1]
 
     statement = '''
-                Rscript plot_flashpca.R \
+                plot_flashpca.R \
                 --pcs %(pcs)s \
                 --pve %(pve)s \
                 %(tool_options)s ;
-                checkpoint ;
                 touch %(outfile)s
                 '''
     P.run(statement)
@@ -462,15 +476,12 @@ def PC_pheno(infile, outfile):
     Run PCA on molecular phenotype data.
     '''
     # Add any options passed to the ini file for :
-    #tool_options = P.substituteParameters(**locals())["_options"]
-
-    tool_options = P.substituteParameters(**locals())["run_PCA"]["ptions"]
+    tool_options = PARAMS['run_PCA']['options']
     statement = '''
-                Rscript run_PCA.R \
+                run_PCA.R \
                 -I %(infile)s \
                 -O %(outfile)s \
                 %(tool_options)s ;
-                checkpoint
                 '''
     P.run(statement)
 ##########
@@ -487,33 +498,31 @@ def plink_to_geno(infile, outfile):
     '''
     Process the plink genotype files to use as input for MatrixEQTL.
     '''
-    # Add any options passed to the ini file for :
-    #tool_options = P.substituteParameters(**locals())["_options"]
 
     project_scripts_dir = str(getINIpaths() + '/utilities/')
 
     # Split at the last suffix separated by '.':
     infile = infile.rsplit('.', 1)[0]
 
+    #project_scripts_dir = str(getINIpaths() + '/matrixQTL/')
+    #Rscript %(project_scripts_dir)s/run_matrixEQTL.R \
+    #%(project_scripts_dir)s/
+
     statement = '''
-                bash %(project_scripts_dir)s/plink_to_geno.sh \
+                bash plink_to_geno.sh \
                         %(infile)s \
                         %(infile)s.matrixQTL \
                         %(infile)s.A-transpose \
                         %(outfile)s ;
-                checkpoint ;
                 rm -rf *.sample *.gen *.traw *.ped *.hh *.nosex *.map ;
-                checkpoint
                 '''
     # e.g.
     # bash /Users/antoniob/Documents/github.dir/EpiCompBio/pipeline_QTL/scripts/utilities/plink_to_geno.sh airwave-illumina_exome-all_chrs airwave-illumina_exome-all_chrs.matrixQTL airwave-illumina_exome-all_chrs.A-transpose airwave-illumina_exome-all_chrs.A-transpose.matrixQTL.geno
     P.run(statement)
 
     statement = '''
-                Rscript %(project_scripts_dir)s/plink_double2singleID.R -I %(outfile)s ;
-                checkpoint ;
+                plink_double2singleID.R -I %(outfile)s ;
                 mv IID_%(outfile)s %(outfile)s ;
-                checkpoint
                 '''
     # e.g.
     # Rscript /Users/antoniob/Documents/github.dir/EpiCompBio/pipeline_QTL/scripts/utilities/plink_double2singleID.R -I airwave-illumina_exome-all_chrs.A-transpose.matrixQTL.geno
@@ -534,18 +543,15 @@ def orderAndMatch1(infile, outfile):
     '''
     Order and match genotype, phenotype and covariates files.
     '''
-    # Add any options passed to the ini file for :
-    #tool_options = P.substituteParameters(**locals())["_options"]
 
     project_scripts_dir = str(getINIpaths() + '/utilities/')
     geno = infile[0]
     pheno = infile[1]
 
     statement = '''
-                Rscript %(project_scripts_dir)s/order_and_match_QTL.R \
+                order_and_match_QTL.R \
                         --file1 %(geno)s \
                         --file2 %(pheno)s ;
-                checkpoint ;
                 touch %(outfile)s
                 '''
     # e.g.
@@ -563,18 +569,15 @@ def orderAndMatch2(infile, outfile):
     '''
     Order and match genotype, phenotype and covariates files.
     '''
-    # Add any options passed to the ini file for :
-    #tool_options = P.substituteParameters(**locals())["_options"]
 
     project_scripts_dir = str(getINIpaths() + '/utilities/')
     cov_geno = infile[0]
     cov_pheno = infile[1]
 
     statement = '''
-                Rscript %(project_scripts_dir)s/order_and_match_QTL.R \
+                order_and_match_QTL.R \
                         --file1 %(cov_geno)s \
                         --file2 %(cov_pheno)s ;
-                checkpoint ;
                 touch %(outfile)s
                 '''
     P.run(statement)
@@ -590,8 +593,6 @@ def mergeCovs(infile, outfile, PCs_keep_geno, PCs_keep_pheno):
     '''
     Merge covariate files from geno and pheno principal component data
     '''
-    # Add any options passed to the ini file for :
-    #tool_options = P.substituteParameters(**locals())["_options"]
 
     cov_geno = infile[0]
     cov_pheno = infile[1]
@@ -599,7 +600,7 @@ def mergeCovs(infile, outfile, PCs_keep_geno, PCs_keep_pheno):
     PCs_keep_geno = 10
     PCs_keep_pheno = 35
     statement = '''
-                Rscript merge_dataframes.R \
+                merge_dataframes.R \
                         --file1 %(cov_geno)s \
                         --file2 %(cov_pheno)s \
                         --file1-PCs %(PCs_keep_geno)s \
@@ -683,16 +684,17 @@ def run_MxEQTL(infiles, outfile):
     else:
         cov_file = None
 
-    tool_options = P.substituteParameters(**locals())["matrixeqtl"]["options"]
-    project_scripts_dir = str(getINIpaths() + '/matrixQTL/')
+    tool_options = PARAMS['matrixeqtl']['options']
+    #project_scripts_dir = str(getINIpaths() + '/matrixQTL/')
+    #Rscript %(project_scripts_dir)s/run_matrixEQTL.R \
+    #%(project_scripts_dir)s/
 
     statement = '''
-                Rscript %(project_scripts_dir)s/run_matrixEQTL.R \
+                run_matrixEQTL.R \
                 --gex %(pheno_file)s \
                 --geno %(geno_file)s \
                 --cov %(cov_file)s \
                 %(tool_options)s ;
-                checkpoint ;
                 touch %(outfile)s
                 '''
     P.run(statement)

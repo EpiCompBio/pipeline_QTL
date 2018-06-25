@@ -81,12 +81,49 @@ str(args)
 ######################
 
 ######################
+# This function allows other R scripts to obtain the path to a script directory
+# (ie where this script lives). Useful when using source('some_script.R')
+# without having to pre-specify the location of where that script is.
+# This is taken directly from:
+# How to source another_file.R from within your R script · molgenis/molgenis-pipelines Wiki
+# https://github.com/molgenis/molgenis-pipelines/wiki/How-to-source-another_file.R-from-within-your-R-script
+# Couldn't find a licence at the time (12 June 2018)
+LocationOfThisScript = function() # Function LocationOfThisScript returns the location of this .R script (may be needed to source other files in same dir)
+{
+    this.file = NULL
+    # This file may be 'sourced'
+    for (i in -(1:sys.nframe())) {
+        if (identical(sys.function(i), base::source)) this.file = (normalizePath(sys.frame(i)$ofile))
+    }
+
+    if (!is.null(this.file)) return(dirname(this.file))
+
+    # But it may also be called from the command line
+    cmd.args = commandArgs(trailingOnly = FALSE)
+    cmd.args.trailing = commandArgs(trailingOnly = TRUE)
+    cmd.args = cmd.args[seq.int(from=1, length.out=length(cmd.args) - length(cmd.args.trailing))]
+    res = gsub("^(?:--file=(.*)|.*)$", "\\1", cmd.args)
+
+    # If multiple --file arguments are given, R uses the last one
+    res = tail(res[res != ""], 1)
+    if (0 < length(res)) return(dirname(res))
+
+    # Both are not the case. Maybe we are in an R GUI?
+    return(NULL)
+}
+Rscripts_dir <- LocationOfThisScript()
+print('Location where this script lives:')
+Rscripts_dir
+# R scripts sourced with source() have to be in the same directory as this one
+# (or the path constructed appropriately with file.path)
+######################
+
+######################
 # Import libraries
 # source('http://bioconductor.org/biocLite.R')
 # biocLite
 library(data.table)
-# TO DO: sort paths out so they are read from utilities folder after installation:
-# source('moveme.R')
+#source(file.path(Rscripts_dir, 'moveme.R')) #, chdir = TRUE)
 ######################
 
 ######################
