@@ -242,7 +242,7 @@ setup(  # Package information:
         # Package contents:
         packages = find_packages(),
         package_dir = package_dirs,
-        include_package_data = True,
+        include_package_data = True, # include everything in source control
         #data_files = [('templates', [glob.glob('templates/*'))], ('templates',
         #    [glob.glob('templates/*/*')])],
         #package_data = {'': extra_files},

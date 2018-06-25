@@ -165,28 +165,15 @@ from ruffus.combinatorics import *
 # Database:
 import sqlite3
 
-# Try getting CGAT:
-try:
-    # import CGAT.IOTools as IOTools
-    import CGATCore.Pipeline as P
-    import CGATCore.Experiment as E
-    import CGATCore.IOTools as IOTools
+# CGAT tools:
+import CGATCore.Pipeline as P
+import CGATCore.Experiment as E
+import CGATCore.IOTools as IOTools
 
-except ImportError:
-    print('\n', '''Warning: Couldn't import CGAT modules,
-                   these are required. Exiting...''')
-    raise
-
-# required to make iteritems python2 and python3 compatible
-# from builtins import dict
 
 # Import this project's module, uncomment if building something more elaborate:
 #import pipeline_QTL.PipelineQTL as QTL
 import PipelineQTL as QTL
-
-# Get package source directory in (param path) '
-#src_dir = QTL.getDir('..')
-#print(src_dir)
 
 # Import additional packages:
 # Set path if necessary:
@@ -299,17 +286,17 @@ def getINIpaths():
 ################
 # Get command line tools to run:
 #tools = PARAMS['pipeline']['tools']
-tools = PARAMS['pipeline_tools']
+tools = PARAMS['pipeline']['tools']
 
 # Get the location of the pipeline specific scripts:
 project_scripts_dir = str(getINIpaths())
 
 # Set the name of this pipeline (for report softlinks):
-project_name = PARAMS['metadata_project_name']
+project_name = PARAMS['metadata']['project_name']
 # 'pipeline_QTL'
 
 # Set if running many input files:
-many_infiles = PARAMS['pipeline_many_infiles']
+many_infiles = PARAMS['pipeline']['many_infiles']
 ################
 
 
@@ -369,7 +356,7 @@ def prune_SNPs(infile, outfile, exclude, label):
                 %(tool_options)s ;
                 checkpoint
                 '''
-    P.run()
+    P.run(statement)
 
     tool_options = P.substituteParameters(**locals())["plink_prune_options"]
     statement = '''
@@ -381,7 +368,7 @@ def prune_SNPs(infile, outfile, exclude, label):
                 %(tool_options)s ;
                 touch %(outfile)s
                 '''
-    P.run()
+    P.run(statement)
 
 #@posttask(touch_file("PC_geno.touch"))
 @follows(prune_SNPs)
@@ -414,14 +401,14 @@ def PC_geno(infile, outfile):
                 checkpoint ;
                 touch %(outfile)s
                 '''
-    P.run()
+    P.run(statement)
 
     # Remove intermediate files:
     #statement = '''
     #            rm -f %(infile)s.pruned.* ;
     #            rm -rf plink*
     #            '''
-    #P.run()
+    #P.run(statement)
 # TO DO: touch and posttask don't work on PC_geno and prune_SNPs....
 
 @follows(PC_geno)
@@ -448,7 +435,7 @@ def plot_PC_geno(infile, outfile):
                 checkpoint ;
                 touch %(outfile)s
                 '''
-    P.run()
+    P.run(statement)
 ##########
 
 
@@ -473,7 +460,7 @@ def PC_pheno(infile, outfile):
                 %(tool_options)s ;
                 checkpoint
                 '''
-    P.run()
+    P.run(statement)
 ##########
 
 
@@ -508,7 +495,7 @@ def plink_to_geno(infile, outfile):
                 '''
     # e.g.
     # bash /Users/antoniob/Documents/github.dir/EpiCompBio/pipeline_QTL/scripts/utilities/plink_to_geno.sh airwave-illumina_exome-all_chrs airwave-illumina_exome-all_chrs.matrixQTL airwave-illumina_exome-all_chrs.A-transpose airwave-illumina_exome-all_chrs.A-transpose.matrixQTL.geno
-    P.run()
+    P.run(statement)
 
     statement = '''
                 Rscript %(project_scripts_dir)s/plink_double2singleID.R -I %(outfile)s ;
@@ -519,7 +506,7 @@ def plink_to_geno(infile, outfile):
     # e.g.
     # Rscript /Users/antoniob/Documents/github.dir/EpiCompBio/pipeline_QTL/scripts/utilities/plink_double2singleID.R -I airwave-illumina_exome-all_chrs.A-transpose.matrixQTL.geno
     # mv IID_airwave-illumina_exome-all_chrs.A-transpose.matrixQTL.geno airwave-illumina_exome-all_chrs.A-transpose.matrixQTL.geno
-    P.run()
+    P.run(statement)
 
     # TO DO: delete intermediary files
 ##########
@@ -551,7 +538,7 @@ def orderAndMatch1(infile, outfile):
                 '''
     # e.g.
     # Rscript /Users/antoniob/Documents/github.dir/EpiCompBio/pipeline_QTL/scripts/utilities/order_and_match_QTL.R --file1 airwave-illumina_exome-all_chrs.A-transpose.matrixQTL.geno --file2 AIRWAVE-CPMG_BatchCorrected_log_Var_Data_Sample-plasma.transposed.tsv
-    P.run()
+    P.run(statement)
 
 # TO DO: transpose both files first, e.g.
 # Rscript /Users/antoniob/anaconda/envs/r_test/lib/python3.5/site-packages/pipeline_QTL-0.1.0-py3.5.egg/pipeline_QTL/utilities/transpose_metabolomics.R -I matched_airwave-illumina_exome-all_chrs.flashpca.pcs.tsv
@@ -578,7 +565,7 @@ def orderAndMatch2(infile, outfile):
                 checkpoint ;
                 touch %(outfile)s
                 '''
-    P.run()
+    P.run(statement)
 
 
 # TO DO: continue here
@@ -607,13 +594,13 @@ def mergeCovs(infile, outfile, PCs_keep_geno, PCs_keep_pheno):
                         --file1-PCs %(PCs_keep_pheno)s \
                         -O %(outfile)s
                 '''
-    P.run()
+    P.run(statement)
 
-@follows(mergeCovs)
-@transform('*merged_covs',
-           formatter('(?P<path>.+)/matched_(?P<cohort>.+)-(?P<platform>.+)-(?P<descriptor>.+).pcs.tsv'),
-           add_inputs('matched*.pheno.pca.tsv'),
-           '{cohort[0]}-{platform[0]}.merged_covs')
+#@follows(mergeCovs)
+#@transform('*merged_covs',
+#           formatter('(?P<path>.+)/matched_(?P<cohort>.+)-(?P<platform>.+)-(?P<descriptor>.+).pcs.tsv'),
+#           add_inputs('matched*.pheno.pca.tsv'),
+#           '{cohort[0]}-{platform[0]}.merged_covs')
 
 ##########
 
@@ -661,7 +648,7 @@ def mergeCovs(infile, outfile, PCs_keep_geno, PCs_keep_pheno):
 ##########
 # Run matrixeqtl
 @active_if('matrixeqtl' in tools)
-@follows(PC_pheno, plink_to_geno)
+@follows(mergeCovs)
 @transform('*.geno',
            formatter('(?P<path>.+)/(?P<cohort>.+)-(?P<platform>.+)-(?P<descriptor>.+).geno'),
            add_inputs(['*.pheno',
@@ -695,7 +682,7 @@ def run_MxEQTL(infiles, outfile):
                 checkpoint ;
                 touch %(outfile)s
                 '''
-    P.run()
+    P.run(statement)
 
 
 @follows(run_MxEQTL)
@@ -729,7 +716,7 @@ def conda_info():
                    conda list --show-channel-urls ;
                    conda env export > environment.yml
                 '''
-    P.run()
+    P.run(statement)
 
 ################
 
@@ -749,7 +736,7 @@ def svgToPDF(infile, outfile):
                          --file=%(infile)s \
                          --export-pdf=%(outfile)s
                 '''
-    P.run()
+    P.run(statement)
 
 
 # Build the report:
@@ -802,8 +789,7 @@ def make_report():
 
 ################
 # Create the "full" pipeline target to run all functions specified
-#@follows(load_MxEQTL, conda_info, make_report)
-@follows(run_MxEQTL, conda_info)
+@follows(load_MxEQTL, conda_info)
 def full():
     pass
 ################
