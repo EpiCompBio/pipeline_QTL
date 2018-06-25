@@ -33,18 +33,18 @@ Upload to PyPI after this if for general use.
 # Get modules
 
 # Py3 to 2 from pasteurize:
-from __future__ import print_function
-from __future__ import unicode_literals
-from __future__ import division
-from __future__ import absolute_import
+#from __future__ import print_function
+#from __future__ import unicode_literals
+#from __future__ import division
+#from __future__ import absolute_import
 
-from builtins import open
-from builtins import str
-from future import standard_library
-standard_library.install_aliases()
+#from builtins import open
+#from builtins import str
+#from future import standard_library
+#standard_library.install_aliases()
 
 # To use a consistent encoding
-from codecs import open
+#from codecs import open
 
 # Standard modules:
 import sys
@@ -194,7 +194,7 @@ def package_files(directory):
             paths.append(os.path.join('..', path, filename))
     return paths
 
-extra_files = package_files(os.path.join(here, 'templates'))
+#extra_files = package_files(os.path.join(here, 'templates'))
 
 package_dirs = {'pipeline_QTL': 'pipeline_QTL'}
 
@@ -217,6 +217,9 @@ def get_cli_scripts():
     return(flatten_list)
 
 scripts = get_cli_scripts()
+print('''Scripts to be installed:
+         {}
+      '''.format(scripts))
 #################
 
 
@@ -238,11 +241,11 @@ setup(  # Package information:
         classifiers = list(filter(None, classifiers.split("\n"))),
         # Package contents:
         packages = find_packages(),
-        #package_dir = package_dirs,
+        package_dir = package_dirs,
         include_package_data = True,
         #data_files = [('templates', [glob.glob('templates/*'))], ('templates',
         #    [glob.glob('templates/*/*')])],
-        package_data = {'': extra_files},
+        #package_data = {'': extra_files},
         # Dependencies:
         install_requires = install_requires,
         # scripts to run from the command line:

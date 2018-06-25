@@ -1,5 +1,3 @@
-##!/usr/bin/env python3
-
 '''
 |project_name|
 ===================
@@ -184,7 +182,10 @@ except ImportError:
 
 # Import this project's module, uncomment if building something more elaborate:
 try:
-    import pipeline_QTL as QTL
+    #import pipeline_QTL.PipelineQTL as QTL
+    #from pipeline_QTL import PipelineQTL as QTL
+
+
 except ImportError:
     print("Could not import this project's module, exiting")
     raise
@@ -299,6 +300,7 @@ def getINIpaths():
 
 ################
 # Get command line tools to run:
+#tools = PARAMS['pipeline']['tools']
 tools = PARAMS['pipeline']['tools']
 
 # Get the location of the pipeline specific scripts:
