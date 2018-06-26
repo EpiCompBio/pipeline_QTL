@@ -99,21 +99,32 @@ Naming convention for input files
 Please rename your files in the following way (use soft links to rename for
 example):
 
-Infile: cohort-platform-other_descriptor.suffix
+Infile: cohort-platform-other_descriptor.QC.suffix
 
 Outfile: cohort-platform_infile1-descriptor1-platform_infile2-descriptor2.new_suffix
 
 For example:
 
-genotype file: airwave-illumina_exome-all_chrs.bed/bim/fam
+genotype file: airwave-illumina_exome-all_chrs.QC.bed/bim/fam
 
 phenotype file: airwave-NMR-blood.pheno
 
 covariates file: airwave-illumina_exome-all_chrs-NMR-blood.cov
 
+Please note principal components are run for all files and don't need to be
+provided though.
+
+Starting files must be plink formatted and must be named as above with the
+suffix '.QC.bed/bim/fam'.
+
+If your genotype file is processed and ready make sure it is named:
+
+genotype file: airwave-illumina_exome-all_chrs.geno
+
+with the corresponding pheno file as above.
 
 Output files get named based on the input files. The script assumes "cohort" is
-the same for input files (but only takes it from the genotype file).
+the same for input files and matches pairs of files accordingly.
 
 Depending on the input and arguments you might get as output:
 
@@ -126,11 +137,11 @@ airwave-illumina_exome-all_chrs-NMR-blood.MxEQTL.log
 
 File names can get long so use abbreviations or short versions.
 
-In the pipeline_XXXX.ini file you can try to override output file names and
+In the pipeline.yml file you can try to override output file names and
 pass these as options for some of the scripts called.
 
 If you do not use an outfile name and your files do not follow the naming above
-you might errors in the pipeline or something like:
+you will get errors in the pipeline or something like:
 
 "SNP.txt-NA-NA-NA-NA.MxEQTL"
 
@@ -180,6 +191,8 @@ import CGATCore.Experiment as E
 import CGATCore.IOTools as IOTools
 
 
+# TO DO: this doesn't get used at the moment and with entry point pipeline_QTL it is not
+# recognised
 # Import this project's module, uncomment if building something more elaborate:
 #import pipeline_QTL.PipelineQTL as QTL
 import PipelineQTL as QTL
@@ -192,32 +205,9 @@ import PipelineQTL as QTL
 ################
 # Load options from the config file
 # Pipeline configuration
-ini_paths = [os.path.abspath(os.path.dirname(sys.argv[0])),
-             "../",
-             os.getcwd(),
-             ]
-
-def getParamsFiles(paths = ini_paths):
-    '''
-    Search for python ini files in given paths, append files with full
-    paths for P.getParameters() to read.
-    Current paths given are:
-    where this code is executing, one up, current directory
-    '''
-    p_params_files = []
-    for path in ini_paths:
-        for f in os.listdir(os.path.abspath(path)):
-            ini_file = re.search(r'pipelin(.*).yml', f)
-            if ini_file:
-                ini_file = os.path.join(os.path.abspath(path),
-                                        ini_file.group())
-                p_params_files.append(ini_file)
-    return(p_params_files)
 
 #PARAMS = P.Parameters.get_params()
 #PARAMS = P.Parameters.get_parameters(getParamsFiles()) # works
-
-# load options from the config file
 
 P.get_parameters(
         ["%s/pipeline.yml" % os.path.splitext(__file__)[0],
@@ -227,7 +217,8 @@ P.get_parameters(
 
 PARAMS = P.PARAMS
 
-# Set global parameters here, obtained from the ini file
+# Set the python executable in case matplotlib is used in a Mac (where pythonw
+# might be needed):
 def get_py_exec():
     '''
     Look for the python executable. This is only in case of running on a Mac
@@ -236,69 +227,49 @@ def get_py_exec():
 
     try:
         if str('python') in PARAMS["general"]["py_exec"]:
-            print(PARAMS["general"]["py_exec"])
-            #py_exec = '{}'.format(PARAMS["general"]["py_exec"])
-            py_exec = '%s' % PARAMS["general"]["py_exec"]
+            py_exec = '{}'.format(PARAMS["general"]["py_exec"])
     except NameError:
         E.warn('''
                You need to specify the python executable, just "python" or
-               "pythonw" is needed. Trying to guess now...
+               "pythonw" is needed in pipeline.yml.
                ''')
-    #else:
-    #    test_cmd = subprocess.check_output(['which', 'pythonw'])
-    #    sys_return = re.search(r'(.*)pythonw', str(test_cmd))
-    #    if sys_return:
-    #        py_exec = 'pythonw'
-    #    else:
-    #        py_exec = 'python'
     return(py_exec)
-#get_py_exec()
-
 
 def getINIpaths():
     '''
     Get the path to scripts for this project, e.g.
     project_xxxx/code/project_xxxx/:
     e.g. my_cmd = "%(scripts_dir)s/bam2bam.py" % P.Parameters.get_params()
+    This is a legacy function now. Scripts can be run from the CLI if set in
+    setup.py and P.PARAMS from cgat-core will find and load paths from yml
+    files.
+    pipeline_scriptsdir from cgat-core should also contain the location
     '''
     try:
         project_scripts_dir = '{}/'.format(PARAMS['general']['project_scripts_dir'])
-        #if (project_scripts_dir == str('/') or
-        #        project_scripts_dir is None):
-            # dir not set in ini file so use installation directory:
-        #    project_scripts_dir = QTL.getDir()
         E.info('''
                    Location set for the projects scripts is:
                    {}
                    '''.format(project_scripts_dir)
                    )
     except KeyError:
-            # Use the ini location if variable is set manually:
+        # Use the ini location if variable is set manually:
         project_scripts_dir = QTL.getDir()
         E.info('''
                    Location set for the projects scripts is:
                    {}
                    '''.format(project_scripts_dir)
                    )
-    #except KeyError:
-    #    E.warn('''
-    #           Could not set project scripts location, this needs to be
-    #           specified in the project ini file.
-    #           ''')
-    #    raise
-
     return(project_scripts_dir)
-
-# TO DO:
-# pipeline_scriptsdir gets the actual location needed, e.g.:
-#pipeline_scriptsdir = '/Users/antoniob/anaconda/envs/r_test/lib/python3.5/site-packages/scripts/'
 ################
 
 
 ################
+# TO DO: this is a workaround for now as pipeline_QTL CLI doesn't work and
+# setting eg tools = PARAMS XXXX directly errors.
 def populate_params():
     '''
-    Access the ini/yml file and populate values needed
+    Access the ini/yml file and populate values needed.
     '''
     # Get command line tools to run:
     #tools = PARAMS['pipeline']['tools']
@@ -314,9 +285,9 @@ def populate_params():
     many_infiles = PARAMS['pipeline']['many_infiles']
 
     return(tools,
-            project_scripts_dir,
-            project_name,
-            many_infiles)
+           project_scripts_dir,
+           project_name,
+           many_infiles)
 
 ################
 
@@ -345,71 +316,98 @@ def connect():
 
 ################
 ##########
-# Naming:
-# Infile: cohort-platform-other_descriptor.suffix
-# Outfile: cohort-platform1-descriptor1-platform2-descriptor2.new_suffix
-
-# TO DO: some R scripts and bash scripts have the paths hardcoded, correct
-##########
-
-##########
 # Run PCA on genotype file with plink binary files as input
-
-#@posttask(touch_file("prune_SNPs.touch"))
-@transform('*.bim',
-           suffix('.bim'),
-           'pruned.touch', 'SNP_exclusion_regions.txt', 'pruned')
-def prune_SNPs(infile, outfile, exclude, label):
+@jobs_limit(1) # plink outputs plink.prune.in and plink.prune.out which may
+               # cause overwriting
+@transform('*.QC.bim',
+           regex('(.+).bim'),
+           [r'\1.plink.prune.in',
+            r'\1.plink.prune.out'],
+           'SNP_exclusion_regions.txt')
+def prune_SNPs(infile, outfiles, exclude):
     '''
-    Prune genotype data using plink.
+    Prune/thin genotype data by LD using plink.
     Requires a bim plink file as input and a bed file with regions to exclude
-    named 'exclusion<any other characters>.txt'
+    specifically named 'SNP_exclusion_regions.txt'
     '''
     # Add any options passed to the ini file for flashpca:
-    tool_options = PARAMS['plink']['exclude_options']
-    if tool_options == None:
-        tool_options = ''
-    else:
-        pass
-
-    # Split at the last suffix separated by '.':
-    infile = infile.rsplit('.', 1)[0]
-    statement = '''
-                plink \
-                --bfile %(infile)s \
-                --exclude range %(exclude)s \
-                %(tool_options)s ;
-                '''
-    P.run(statement)
-
     tool_options = PARAMS['plink']['prune_options']
     if tool_options == None:
         tool_options = ''
     else:
         pass
 
+    # Split at the last suffix separated by '.' to keep only prefix that plink
+    # needs:
+    infile = infile.rsplit('.', 1)[0]
+    outfile1 = outfiles[0]
+    outfile2 = outfiles[1]
+
     statement = '''
                 plink \
                 --bfile %(infile)s \
-                --extract plink.prune.in \
-                --make-bed \
-                --out %(label)s \
+                --exclude range %(exclude)s \
                 %(tool_options)s ;
-                touch %(outfile)s
+                mv plink.prune.in %(outfile1)s ;
+                mv plink.prune.out %(outfile2)s ;
+                mv plink.log %(infile)s.plink.prune_SNPs.log
                 '''
     P.run(statement)
 
-#@posttask(touch_file("PC_geno.touch"))
 @follows(prune_SNPs)
-@transform('*.bim',
-           suffix('.bim'),
-           '.PC.touch')
-def PC_geno(infile, outfile):
+@transform('*.plink.prune.in',
+           regex('(.+).plink.prune.in'),
+           r'\1.plink.extracted.touch',
+           r'\1',
+           r'\1.plink.extracted')
+def extract_SNPs(infile, outfile, plink_infile_prefix, plink_outfile_prefix):
+    '''
+    Extract SNPs after pruning using plink. Output can then be passed to
+    Flashpca2.
+    '''
+    tool_options = PARAMS['plink']['extract_options']
+    if tool_options == None:
+        tool_options = ''
+    else:
+        pass
+
+    statement = '''
+                plink \
+                --bfile %(plink_infile_prefix)s \
+                --extract %(infile)s \
+                --make-bed \
+                --out %(plink_outfile_prefix)s \
+                %(tool_options)s ;
+                touch %(outfile)s
+                '''
+                # plink option with --out generate a log with that prefix, no
+                # need to rename it
+    P.run(statement)
+
+    # TO DO: Needs a post-task touch otherwise tasks are re-run
+    # Remove intermediate files:
+    #E.info('''
+    #       Deleting intermediate files:
+    #       *.plink.prune.out
+    #       *.plink.prune.in
+    #       ''')
+    #statement = '''
+    #            rm -f *.plink.prune.out ;
+    #            rm -f *.plink.prune.in
+    #            '''
+    #P.run(statement)
+
+
+@follows(extract_SNPs)
+@transform('*.QC.plink.extracted.bim',
+           regex('(.+).bim'),
+           r'\1.flashpca.touch',
+           r'\1')
+def PC_geno(infile, outfile, plink_infile_prefix):
     '''
     Run Flashpca2 on genotype data.
     Infile must be a plink bim file after QC and pruning.
-    The file must have the suffix '.pruned.bim' as generated by
-    prune_SNPs() function in this script.
+    It must have the suffix '.QC.plink.pruned.bim'
     '''
     # Add any options passed to the ini file for flashpca:
     tool_options = PARAMS['flashpca']['options']
@@ -418,35 +416,38 @@ def PC_geno(infile, outfile):
     else:
         pass
 
-    infile = infile.rsplit('.', 1)[0]
     prefix1 = '.flashpca'
     prefix2 = '.tsv'
+
     statement = '''
                 flashpca \
-                --bfile %(infile)s \
+                --bfile %(plink_infile_prefix)s \
                 --verbose \
-                --outload %(infile)s%(prefix1)s.loadings%(prefix2)s \
-                --outval %(infile)s%(prefix1)s.eigenvalues%(prefix2)s \
-                --outvec %(infile)s%(prefix1)s.eigenvectors%(prefix2)s \
-                --outpc %(infile)s%(prefix1)s.pcs%(prefix2)s \
-                --outpve %(infile)s%(prefix1)s.pve%(prefix2)s \
+                --outload %(plink_infile_prefix)s%(prefix1)s.loadings%(prefix2)s \
+                --outval %(plink_infile_prefix)s%(prefix1)s.eigenvalues%(prefix2)s \
+                --outvec %(plink_infile_prefix)s%(prefix1)s.eigenvectors%(prefix2)s \
+                --outpc %(plink_infile_prefix)s%(prefix1)s.pcs%(prefix2)s \
+                --outpve %(plink_infile_prefix)s%(prefix1)s.pve%(prefix2)s \
                 %(tool_options)s ;
                 touch %(outfile)s
                 '''
     P.run(statement)
 
+    # TO DO: Needs a post-task touch otherwise tasks are re-run
     # Remove intermediate files:
+    #E.info('''
+    #       Deleting intermediate files:
+    #       *{}.bim/bed/fam
+    #       '''.format(%(plink_infile_prefix)s))
     #statement = '''
-    #            rm -f %(infile)s.pruned.* ;
-    #            rm -rf plink*
+    #            rm -f *%(plink_infile_prefix)s.bim *%(plink_infile_prefix)s.bed *%(plink_infile_prefix)s.fam
     #            '''
     #P.run(statement)
-# TO DO: touch and posttask don't work on PC_geno and prune_SNPs....
 
 @follows(PC_geno)
-@transform('*.pcs.tsv',
-           regex('(.+).(.+).(.+).tsv'),
-           add_inputs('*.pve.tsv'),
+@transform('*.QC.plink.extracted.flashpca.pcs.tsv',
+           regex('(.+).pcs.tsv'),
+           add_inputs(r'\1.pve.tsv'),
            r'\1.svg.touch')
 def plot_PC_geno(infiles, outfile):
     '''
@@ -476,16 +477,25 @@ def plot_PC_geno(infiles, outfile):
 
 ##########
 # Get PCs for molecular pheno data:
-# TO DO: sort out transposing of PC data, plink is OK, metabolomics not
+@follows(plot_PC_geno)
 @transform('*.pheno',
            suffix('.pheno'),
            '.pheno.pca.tsv')
-def PC_pheno(infile, outfile):
+def PC_and_plot_pheno(infile, outfile):
     '''
-    Run PCA on molecular phenotype data.
+    Run PCA on molecular phenotype data using run_PCA.R from stats_utils.
+    Inputs must be tab separated, rows must be features (phenotypes, variables)
+    and columns must be samples (individuals).
+    Outputs a tsv file and plot.
+    See stats_utils and run_PCA.R -h for more info.
     '''
     # Add any options passed to the ini file for :
     tool_options = PARAMS['run_PCA']['options']
+    if tool_options == None:
+        tool_options = ''
+    else:
+        pass
+
     statement = '''
                 run_PCA.R \
                 -I %(infile)s \
@@ -499,18 +509,24 @@ def PC_pheno(infile, outfile):
 ##########
 # Prepare files for MxEQTL
 # Transform plink to MxEQTL format:
-@follows(plot_PC_geno)
-@transform('*.bim',
-           suffix('.bim'),
-           '.A-transpose.matrixQTL.geno')
+# TO DO: add:
+#@active_if('matrixeqtl' in tools)
+# which seems to cause errors with PARAMS can't accessing on --help for example
+@follows(PC_and_plot_pheno)
+@transform('*.QC.bim',
+           suffix('.QC.bim'),
+           '.geno')
+# Files to process are the QC'd plink files.
 def plink_to_geno(infile, outfile):
     '''
-    Process the plink genotype files to use as input for MatrixEQTL.
+    Process the plink genotype files to use as input for MatrixEQTL using the
+    plink_to_geno.sh script and convert plink double IDs to single with
+    plink_double2singleID.R
     '''
 
     # Split at the last suffix separated by '.':
     infile = infile.rsplit('.', 1)[0]
-
+    # If setup.py scripts option doesn't work use eg:
     #project_scripts_dir = str(getINIpaths() + '/matrixQTL/')
     #Rscript %(project_scripts_dir)s/run_matrixEQTL.R \
     #%(project_scripts_dir)s/
@@ -523,40 +539,30 @@ def plink_to_geno(infile, outfile):
                         %(outfile)s ;
                 rm -rf *.sample *.gen *.traw *.ped *.hh *.nosex *.map ;
                 '''
-    # e.g.
-    # bash /Users/antoniob/Documents/github.dir/EpiCompBio/pipeline_QTL/scripts/utilities/plink_to_geno.sh airwave-illumina_exome-all_chrs airwave-illumina_exome-all_chrs.matrixQTL airwave-illumina_exome-all_chrs.A-transpose airwave-illumina_exome-all_chrs.A-transpose.matrixQTL.geno
     P.run(statement)
 
     statement = '''
                 plink_double2singleID.R -I %(outfile)s ;
                 mv IID_%(outfile)s %(outfile)s ;
                 '''
-    # e.g.
-    # Rscript /Users/antoniob/Documents/github.dir/EpiCompBio/pipeline_QTL/scripts/utilities/plink_double2singleID.R -I airwave-illumina_exome-all_chrs.A-transpose.matrixQTL.geno
-    # mv IID_airwave-illumina_exome-all_chrs.A-transpose.matrixQTL.geno airwave-illumina_exome-all_chrs.A-transpose.matrixQTL.geno
     P.run(statement)
-
-    # TO DO: delete intermediary files
 ##########
 
 ##########
 # Order and match samples between geno, pheno and covariates of each:
 @follows(plink_to_geno)
-#@transform('*.pcs.tsv',
-#           regex('(.+).(.+).(.+).tsv'),
-#           add_inputs('*.pve.tsv'),
-#           r'\1.svg.touch')
-@transform('*.geno',
-           suffix('.geno'),
-           add_inputs('*.pheno'),
-           '.matched_geno_pheno')
+@transform('*geno',
+           formatter('(?P<path>.+)/(?P<cohort>.+)-(?P<platform>.+)-(?P<descriptor>.+).geno'),
+           add_inputs('{cohort[0]}*.pheno'),
+           '{cohort[0]}.matched_geno_pheno.touch')
 def orderAndMatch1(infiles, outfile):
     '''
-    Order and match genotype, phenotype and covariates files.
+    Order and match genotype and phenotype files using the script
+    order_and_match_QTL.R
     '''
-    print(infiles)
     geno = infiles[0]
-    pheno = infiles[1][0]
+    pheno = infiles[1]
+    print(geno, pheno)
 
     statement = '''
                 order_and_match_QTL.R \
@@ -564,8 +570,6 @@ def orderAndMatch1(infiles, outfile):
                         --file2 %(pheno)s ;
                 touch %(outfile)s
                 '''
-    # e.g.
-    # Rscript /Users/antoniob/Documents/github.dir/EpiCompBio/pipeline_QTL/scripts/utilities/order_and_match_QTL.R --file1 airwave-illumina_exome-all_chrs.A-transpose.matrixQTL.geno --file2 AIRWAVE-CPMG_BatchCorrected_log_Var_Data_Sample-plasma.transposed.tsv
     P.run(statement)
 
 # TO DO: transpose both files first, e.g.
@@ -574,10 +578,11 @@ def orderAndMatch1(infiles, outfile):
 @transform('*.pcs.tsv',
            suffix('.pcs.tsv'),
            add_inputs('*.pheno.pca.tsv'),
-           '.matched_covs')
+           '.matched_covs.touch')
 def orderAndMatch2(infiles, outfile):
     '''
-    Order and match genotype, phenotype and covariates files.
+    Order and match the covariates files to each other using the script
+    order_and_match_QTL.R
     '''
 
     cov_geno = infiles[0]
@@ -601,6 +606,7 @@ def orderAndMatch2(infiles, outfile):
 def mergeCovs(infiles, outfile, PCs_keep_geno, PCs_keep_pheno):
     '''
     Merge covariate files from geno and pheno principal component data
+    using the script merge_dataframes.R 
     '''
 
     cov_geno = infiles[0]

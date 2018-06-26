@@ -32,7 +32,7 @@ Usage: order_and_match_QTL.R (--file1 <FILE>) (--file2 <FILE>)
 Options:
 --file1 <FILE>                Usually a genotype input file name, columns are samples, rows are features
 --file2 <FILE>                usually a phenotype input file name, columns are samples, rows are features
--O <OUTPUT_FILE>              Output file name
+-O <OUTPUT_SUFFIX>            Output files suffix
 --session <R_SESSION_NAME>    R session name if to be saved
 -h --help                     Show this screen
 
@@ -170,8 +170,8 @@ print(input_name_2)
 if (is.null(args[['-O']])) {
   stopifnot(!is.null(args[['--file1']]), !is.null(args[['--file2']]))
   print('Output file name prefix not given. Using:')
-  output_file_name <- 'matched_'
-  print('Output file names will contain: ')
+  output_file_name <- '_matched'
+  print('Output file names will end in: ')
   print(output_file_name)
 } else {
   output_file_name <- as.character(args[['-O']])
@@ -249,13 +249,13 @@ input_data_1[1:5, 1:5]
 # col.names = NA makes headers match but can't be used with row.names = F
 # Save file:
 fwrite(input_data_1,
-       sprintf('%s%s', output_file_name, input_name_1),
+       sprintf('%s%s', input_name_1, output_file_name),
        sep = '\t', na = 'NA',
        col.names = TRUE, row.names = FALSE,
        quote = FALSE)
 
 fwrite(input_data_2,
-       sprintf('%s%s', output_file_name, input_name_2),
+       sprintf('%s%s', input_name_2, output_file_name),
        sep = '\t', na = 'NA',
        col.names = TRUE, row.names = FALSE,
        quote = FALSE)

@@ -116,10 +116,10 @@ flashpca_plot:
 
 plink:
 # --bfile, --exclude range are already passed
-    exclude_options: --indep-pairwise 1000 50 0.05
+    prune_options: --indep-pairwise 1000 50 0.05
 
 # --bfile, --extract, --make-bed, --out are already passed
-    prune_options: 
+    extract_options: 
 
 
 run_PCA:

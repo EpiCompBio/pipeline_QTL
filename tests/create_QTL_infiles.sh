@@ -43,10 +43,17 @@ echo 'Creating softlinks and changing names for pipeline input...'
 cd ..
 
 # Change filenames:
-ln -fs ${sim_dir}/continuous_var_simulation.tsv simulated-NMR-blood.pheno
-ln -fs ${sim_dir}/dummy_binary.QC.bed simulated-dummy_binary-QC.bed
-ln -fs ${sim_dir}/dummy_binary.QC.bim simulated-dummy_binary-QC.bim
-ln -fs ${sim_dir}/dummy_binary.QC.fam simulated-dummy_binary-QC.fam
+ln -fs ${sim_dir}/continuous_var_simulation.tsv simulated1-NMR-blood.pheno
+ln -fs ${sim_dir}/dummy_binary.QC.bed simulated1-dummy_binary-all_chrs.QC.bed
+ln -fs ${sim_dir}/dummy_binary.QC.bim simulated1-dummy_binary-all_chrs.QC.bim
+ln -fs ${sim_dir}/dummy_binary.QC.fam simulated1-dummy_binary-all_chrs.QC.fam
+
+# Create an artificial second set just with different symlink names:
+ln -fs ${sim_dir}/continuous_var_simulation.tsv simulated2-NMR-blood.pheno
+ln -fs ${sim_dir}/dummy_binary.QC.bed simulated2-dummy_binary-all_chrs.QC.bed
+ln -fs ${sim_dir}/dummy_binary.QC.bim simulated2-dummy_binary-all_chrs.QC.bim
+ln -fs ${sim_dir}/dummy_binary.QC.fam simulated2-dummy_binary-all_chrs.QC.fam
+
 ln -fs ${dirname}/SNP_exclusion_regions.txt .
 
 # Files from MatrixQTL which don't need plink processing and ared ready for
