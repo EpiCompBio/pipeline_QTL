@@ -45,7 +45,7 @@ R_session_saved_image
 # (ie where this script lives). Useful when using source('some_script.R')
 # without having to pre-specify the location of where that script is.
 # This is taken directly from:
-# How to source another_file.R from within your R script · molgenis/molgenis-pipelines Wiki
+# How to source another_file.R from within your R script molgenis/molgenis-pipelines Wiki
 # https://github.com/molgenis/molgenis-pipelines/wiki/How-to-source-another_file.R-from-within-your-R-script
 # Couldn't find a licence at the time (12 June 2018)
 LocationOfThisScript = function() # Function LocationOfThisScript returns the location of this .R script (may be needed to source other files in same dir)
@@ -85,7 +85,6 @@ library(data.table)
 library(car) # Run correlations and plots for lm
 library(gvlma) # Compare models and fit
 
-# TO DO: sort out paths
 
 source(file.path(Rscripts_dir, 'functions_for_MatrixeQTL.R'))
 source(file.path(Rscripts_dir, 'moveme.R')) #, chdir = TRUE)

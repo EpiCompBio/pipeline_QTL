@@ -312,7 +312,7 @@ latex_elements = { # The paper size ('letterpaper' or 'a4paper').
                    'pointsize': '11pt',
                    # Latex figure (float) alignment
                    # Default is 'figure_align': 'htbp',
-                   # ‘H’ disables floating and position figures strictly 
+                   # 'H' disables floating and position figures strictly 
                    # in the order they appear in the source.
                    #'figure_align': 'H',
                    # Additional commands for the LaTeX preamble:

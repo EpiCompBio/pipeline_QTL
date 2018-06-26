@@ -59,7 +59,7 @@ To do manually:
 
 	python setup.py check
 
-Distutils can build different types of releases. Build a “source distribution” as a minimum that includes your source code, setup.py script, README and any additional files (which you need to manually specify in the MANIFEST.in template). Then, build a source distribution with:
+Distutils can build different types of releases. Build a "source distribution" as a minimum that includes your source code, setup.py script, README and any additional files (which you need to manually specify in the MANIFEST.in template). Then, build a source distribution with:
 		
 .. code-block:: python
 
