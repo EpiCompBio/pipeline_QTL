@@ -40,7 +40,7 @@ Input:
 
 Two tab separated files. These are read with data.table and stringsAsFactors = FALSE
 Rows must be features (phenotypes, variables, etc.) and columns must be samples (individuals)
-The first row and first column must be the ID labels.
+The first row and first column must be the ID labels. The first column header is renamed to "FID".
 
 Output:
 
@@ -127,7 +127,7 @@ Rscripts_dir
 # source('http://bioconductor.org/biocLite.R')
 # biocLite
 library(data.table)
-source(file.path(Rscripts_dir, 'moveme.R')) #, chdir = TRUE)
+source(file.path(Rscripts_dir, 'moveme.R'))
 ######################
 
 ######################
@@ -191,9 +191,9 @@ input_data_1[1:5, 1:5, with = F]
 # col_order <- order(colnames(input_data_1))
 # col_order
 # setcolorder(input_data_1, c("SNP", master_IDs_read))
+colnames(input_data_1)[1] <- 'FID'
 input_data_1 <- as.data.frame(input_data_1[, order(colnames(input_data_1)), with = F])
 class(input_data_1)
-colnames(input_data_1)[ncol(input_data_1)] <- 'FID'
 # names(input_data_1)
 input_data_1 <- input_data_1[, moveme(names(input_data_1), 'FID first')]
 dim(input_data_1)
@@ -203,9 +203,9 @@ input_data_1[1:5, 1:5]
 ##########
 # Check file2 and order
 input_data_2[1:5, 1:5, with = F]
+colnames(input_data_2)[1] <- 'FID'
 input_data_2 <- as.data.frame(input_data_2[, order(colnames(input_data_2)), with = F])
 class(input_data_2)
-colnames(input_data_2)[ncol(input_data_2)] <- 'FID'
 # names(input_data_2)
 input_data_2 <- input_data_2[, moveme(names(input_data_2), 'FID first')]
 dim(input_data_2)

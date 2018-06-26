@@ -559,6 +559,7 @@ def orderAndMatch1(infiles, outfile):
     '''
     Order and match genotype and phenotype files using the script
     order_and_match_QTL.R
+    See order_and_match_QTL.R -h
     '''
     geno = infiles[0]
     pheno = infiles[1]
