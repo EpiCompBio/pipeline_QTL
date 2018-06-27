@@ -126,8 +126,8 @@ run_PCA:
 # Custom R script which runs prcomp on pheno data, see run_PCA.R --help
     options:
 
-my_other_cmd_tool:
-# Write some helpful notes here and add parameters to be called
-# These need to be picked up by the pipeline itself
-    some_option: 
+
+merge_dataframes:
+    # This is for merge_dataframes.R where file1 is geno and file2 is pheno
+    options: --file1-PCs 10 --file2-PCs 35
 ################################################################

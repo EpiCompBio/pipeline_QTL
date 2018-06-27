@@ -479,15 +479,51 @@ def plot_PC_plink(infiles, outfile):
 @follows(plot_PC_plink)
 @transform('*.geno',
            suffix('.geno'),
-           '.geno.pcs.tsv')
+           '.geno.transposed.tsv')
+def transpose_geno(infile, outfile):
+    '''
+    geno file inputs should have been tab separated,
+    rows as features (phenotypes, variables)
+    and columns as samples (individuals).
+    These need to be transposed first for prcomp in R in run_PCA.
+    See stats_utils tranpose.R -h for more info.
+    '''
+    # Check there is at least one geno file present:
+    geno_present = 0
+    for root, dirs, files in os.walk(".", topdown = False):
+        for name in files:
+            if name.endswith('.geno'):
+                geno_present += 1
+
+    if geno_present > 0:
+        E.info('''
+               Found files ending in ".geno", expected to have rows as
+               variables and columns as individuals.
+               Transposing them for PCA.
+               ''')
+        statement = '''
+                    transpose.R -I %(infile)s -O %(outfile)s
+                    '''
+        P.run(statement)
+
+    else:
+        E.info('''
+                No files ending in ".geno", moving on to pheno files PCA. Plink
+                files should already have PCA with Flashpca.
+               '''
+               )
+        pass
+
+
+@follows(transpose_geno)
+@transform('*.geno.transposed.tsv',
+           suffix('.geno.transposed.tsv'),
+           '.geno.transposed.pcs.tsv')
 def PC_and_plot_geno(infile, outfile):
     '''
-    Run PCA on genotype data that is already in MatrixEQTL format
-    using run_PCA.R from stats_utils.
-    Inputs must be tab separated, rows must be features (phenotypes, variables)
-    and columns must be samples (individuals).
-    Outputs a tsv file and plot.
-    See stats_utils and run_PCA.R -h for more info.
+    Run PCA on genotype data that was already in MatrixEQTL format
+    Files will have been transposed in the previous step.
+    See stats_utils transpose.R -h and run_PCA.R -h for more info.
     '''
     # Add any options passed to the ini file for :
     tool_options = PARAMS['run_PCA']['options']
@@ -505,6 +541,7 @@ def PC_and_plot_geno(infile, outfile):
 
     if geno_present > 0:
         E.info('Found files ending in ".geno", running PCA on these.')
+
         statement = '''
                     run_PCA.R \
                     -I %(infile)s \
@@ -520,22 +557,51 @@ def PC_and_plot_geno(infile, outfile):
                '''
                )
         pass
+
+    # TO DO: Needs a post-task touch otherwise tasks are re-run
+    # Remove intermediate files:
+    # *.geno.transposed.tsv
+    #E.info('''
+    #       Deleting intermediate files:
+    #       *{}
+    #       '''.format(%(infile)s))
+    #statement = '''
+    #            rm -f *%(infile)s
+    #            '''
+    #P.run(statement)
+
 ##########
 
 
 ##########
-# Get PCs for molecular pheno data:
+# Get PCs for molecular pheno data. Files need tranposing for PCA first:
 @follows(PC_and_plot_geno)
 @transform('*.pheno',
            suffix('.pheno'),
-           '.pheno.pcs.tsv')
+           '.pheno.transposed.tsv')
+def transpose_pheno(infile, outfile):
+    '''
+    pheno file inputs should have been tab separated,
+    rows as features (phenotypes, variables)
+    and columns as samples (individuals).
+    These need to be transposed first for prcomp in R in run_PCA.
+    See stats_utils tranpose.R -h for more info.
+    '''
+    statement = '''
+                transpose.R -I %(infile)s -O %(outfile)s
+                '''
+    P.run(statement)
+
+
+@follows(transpose_pheno)
+@transform('*.pheno.transposed.tsv',
+           suffix('.pheno.transposed.tsv'),
+           '.pheno.transposed.pcs.tsv')
 def PC_and_plot_pheno(infile, outfile):
     '''
-    Run PCA on molecular phenotype data using run_PCA.R from stats_utils.
-    Inputs must be tab separated, rows must be features (phenotypes, variables)
-    and columns must be samples (individuals).
-    Outputs a tsv file and plot.
-    See stats_utils and run_PCA.R -h for more info.
+    Run PCA on molecular phenotype data that was already in MatrixEQTL format
+    Files will have been transposed in the previous step.
+    See stats_utils transpose.R -h and run_PCA.R -h for more info.
     '''
     # Add any options passed to the ini file for :
     tool_options = PARAMS['run_PCA']['options']
@@ -551,6 +617,18 @@ def PC_and_plot_pheno(infile, outfile):
                 %(tool_options)s ;
                 '''
     P.run(statement)
+
+    # TO DO: Needs a post-task touch otherwise tasks are re-run
+    # Remove intermediate files:
+    # *.pheno.transposed.tsv
+    #E.info('''
+    #       Deleting intermediate files:
+    #       *{}
+    #       '''.format(%(infile)s))
+    #statement = '''
+    #            rm -f *%(infile)s
+    #            '''
+    #P.run(statement)
 ##########
 
 
@@ -599,10 +677,7 @@ def plink_to_geno(infile, outfile):
 ##########
 # Order and match samples between geno, pheno and covariates:
 @follows(plink_to_geno)
-@transform('*geno', # TO DO:
-                    # hacky here, missing '.' to avoid renaming upstream as
-                    # geno PCA picks up '.geno' and plink to geno creates
-                    # .plink_geno
+@transform('*.plink_geno',
            formatter('(?P<path>.+)/(?P<cohort>.+)-(?P<platform>.+)-(?P<descriptor>.+).(.+)geno'),
            add_inputs('{cohort[0]}*.pheno'),
            '{cohort[0]}.matched_geno_pheno.touch')
@@ -625,23 +700,36 @@ def order_and_match_pheno_geno(infiles, outfile):
                 '''
     P.run(statement)
 
+    # TO DO: Needs a post-task touch otherwise tasks are re-run
+    # Remove intermediate files:
+    # *.plink_geno
+    #E.info('''
+    #       Deleting intermediate files:
+    #       *{}
+    #       '''.format(%(infile)s))
+    #statement = '''
+    #            rm -f *%(infile)s
+    #            '''
+    #P.run(statement)
+
 
 @follows(order_and_match_pheno_geno)
-@transform('*.flashpca.pcs.tsv',
-           suffix('.flashpca.pcs.tsv'),
-           '.flashpca.transposed.geno.pcs.tsv')
+@transform('*.QC.plink.extracted.flashpca.pcs.tsv',
+           suffix('.QC.plink.extracted.flashpca.pcs.tsv'),
+           '.geno.mx_qtl.pcs.tsv')
 def transpose_flashpca(infile, outfile):
     '''
     Flashpca output files *flashpca.pcs.tsv have rows as individuals and
     columns as variables.
     Also flashpca outputs plink FID and IID.
     Keep only FID and transpose file.
-    See transpose_metabolomics.R -h
+    See transpose.R -h
     '''
     # Cut second column (IID) and pass file:
+    E.info('Shortening file names. "*mx_qtl*" files are ready for matching for QTL analysis')
     statement = '''
                 cat %(infile)s | cut -f1,3- > %(infile)s.cut ;
-                transpose_metabolomics.R \
+                transpose.R \
                         -I %(infile)s.cut \
                         -O %(outfile)s ;
                 rm -f %(infile)s.cut
@@ -649,10 +737,55 @@ def transpose_flashpca(infile, outfile):
     P.run(statement)
 
 
+    # TO DO: Needs a post-task touch otherwise tasks are re-run
+    # Remove intermediate files:
+    # *.QC.plink.extracted.flashpca.pcs.tsv
+    #E.info('''
+    #       Deleting intermediate files:
+    #       *{}
+    #       '''.format(%(infile)s))
+    #statement = '''
+    #            rm -f *%(infile)s
+    #            '''
+    #P.run(statement)
+
+
 @follows(transpose_flashpca)
-@transform('*.pheno.pcs.tsv',
-           formatter('(?P<path>.+)/(?P<cohort>.+)-(?P<platform>.+)-(?P<descriptor>.+).pheno.pcs.tsv'),
-           add_inputs('{cohort[0]}*.geno.pcs.tsv'),
+@transform('*.transposed.pcs.tsv',
+           suffix('.transposed.pcs.tsv'),
+           '.mx_qtl.pcs.tsv')
+def back_transpose_geno_pheno_PCs(infile, outfile):
+    '''
+    PCA output for geno and pheno files needs to be back-transposed
+    to have rows as features/variables and columns as individuals/samples.
+    These files wil be ready for qtl analysis by eg matrixEQTL.
+    See transpose.R -h for info
+    '''
+    # Cut second column (IID) and pass file:
+    E.info('Shortening file names. "*mx_qtl*" files are ready for matching for QTL analysis')
+    statement = '''
+                transpose.R \
+                        -I %(infile)s \
+                        -O %(outfile)s ;
+                '''
+    P.run(statement)
+
+    # TO DO: Needs a post-task touch otherwise tasks are re-run
+    # Remove intermediate files:
+    # *.transposed.pcs.tsv
+    #E.info('''
+    #       Deleting intermediate files:
+    #       *{}
+    #       '''.format(%(infile)s))
+    #statement = '''
+    #            rm -f *%(infile)s
+    #            '''
+    #P.run(statement)
+
+@follows(back_transpose_geno_pheno_PCs)
+@transform('*.pheno.mx_qtl.pcs.tsv',
+           formatter('(?P<path>.+)/(?P<cohort>.+)-(?P<platform>.+)-(?P<descriptor>.+).pheno.mx_qtl.pcs.tsv'),
+           add_inputs('{cohort[0]}*.geno.mx_qtl.pcs.tsv'),
            '{cohort[0]}.matched_cov_to_cov.touch')
 def order_and_match_covs(infiles, outfile):
     '''
@@ -673,30 +806,48 @@ def order_and_match_covs(infiles, outfile):
                 '''
     P.run(statement)
 
+    # TO DO: Needs a post-task touch otherwise tasks are re-run
+    # Remove intermediate files:
+    # *.pheno.mx_qtl.pcs.tsv
+    # *.geno.mx_qtl.pcs.tsv
+    #E.info('''
+    #       Deleting intermediate files:
+    #       *.pheno.mx_qtl.pcs.tsv
+    #       *.geno.mx_qtl.pcs.tsv
+    #       ''')
+    #statement = '''
+    #            rm -f *.pheno.mx_qtl.pcs.tsv *.geno.mx_qtl.pcs.tsv
+    #            '''
+    #P.run(statement)
 
-# TO DO: continue here
+
 @follows(order_and_match_covs)
-@transform('matched*.pcs.tsv',
-           formatter('(?P<path>.+)/matched_(?P<cohort>.+)-(?P<platform>.+)-(?P<descriptor>.+).pcs.tsv'),
-           add_inputs('matched*.geno'),
+@transform('*geno.mx_qtl.pcs.tsv_matched',
+           formatter('(?P<path>.+)/(?P<cohort>.+)-(?P<platform>.+)-(?P<descriptor>.+).geno.mx_qtl.pcs.tsv_matched'),
+           add_inputs('{cohort[0]}-*.pheno.mx_qtl.pcs.tsv_matched'),
            '{cohort[0]}-{platform[0]}.merged_covs')
-def mergeCovs(infiles, outfile, PCs_keep_geno, PCs_keep_pheno):
+def mergeCovs(infiles, outfile):
     '''
     Merge covariate files from geno and pheno principal component data
-    using the script merge_dataframes.R 
+    using merge_dataframes.R
+    You need to specify the number of PCs to keep for each file in pipeline.yml
     '''
+
+    # Add any options passed to the ini file for :
+    tool_options = PARAMS['merge_dataframes']['options']
+    if tool_options == None:
+        tool_options = ''
+    else:
+        pass
 
     cov_geno = infiles[0]
     cov_pheno = infiles[1]
-    # TO DO: replace with loop
-    PCs_keep_geno = 10
-    PCs_keep_pheno = 35
+
     statement = '''
                 merge_dataframes.R \
                         --file1 %(cov_geno)s \
                         --file2 %(cov_pheno)s \
-                        --file1-PCs %(PCs_keep_geno)s \
-                        --file1-PCs %(PCs_keep_pheno)s \
+                        %(tool_options) \
                         -O %(outfile)s
                 '''
     P.run(statement)
