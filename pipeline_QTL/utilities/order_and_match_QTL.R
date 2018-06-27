@@ -186,7 +186,7 @@ if (is.null(args[['-O']])) {
 ##########
 # Check file1 and order
 # setkey(input_data_1, )
-input_data_1[1:5, 1:5, with = F]
+#input_data_1
 # TO DO for data.table ordering if large files:
 # col_order <- order(colnames(input_data_1))
 # col_order
@@ -197,19 +197,19 @@ class(input_data_1)
 # names(input_data_1)
 input_data_1 <- input_data_1[, moveme(names(input_data_1), 'FID first')]
 dim(input_data_1)
-input_data_1[1:5, 1:5]
+#input_data_1
 ##########
 
 ##########
 # Check file2 and order
-input_data_2[1:5, 1:5, with = F]
+#input_data_2
 colnames(input_data_2)[1] <- 'FID'
 input_data_2 <- as.data.frame(input_data_2[, order(colnames(input_data_2)), with = F])
 class(input_data_2)
 # names(input_data_2)
 input_data_2 <- input_data_2[, moveme(names(input_data_2), 'FID first')]
 dim(input_data_2)
-input_data_2[1:5, 1:5]
+#input_data_2
 ##########
 ######################
 
@@ -238,8 +238,8 @@ if (sanity_check == TRUE) {
        ordering and keeping only those which match in both. Are column names the same in
        both files? They must be identical in both files.')
 }
-input_data_2[1:5, 1:5]
-input_data_1[1:5, 1:5]
+#input_data_2
+#input_data_1
 ##########
 ######################
 

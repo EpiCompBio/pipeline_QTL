@@ -354,6 +354,7 @@ def prune_SNPs(infile, outfiles, exclude):
                 '''
     P.run(statement)
 
+
 @follows(prune_SNPs)
 @transform('*.plink.prune.in',
            regex('(.+).plink.prune.in'),
@@ -403,7 +404,7 @@ def extract_SNPs(infile, outfile, plink_infile_prefix, plink_outfile_prefix):
            regex('(.+).bim'),
            r'\1.flashpca.touch',
            r'\1')
-def PC_geno(infile, outfile, plink_infile_prefix):
+def PC_plink(infile, outfile, plink_infile_prefix):
     '''
     Run Flashpca2 on genotype data.
     Infile must be a plink bim file after QC and pruning.
@@ -444,12 +445,13 @@ def PC_geno(infile, outfile, plink_infile_prefix):
     #            '''
     #P.run(statement)
 
-@follows(PC_geno)
+
+@follows(PC_plink)
 @transform('*.QC.plink.extracted.flashpca.pcs.tsv',
            regex('(.+).pcs.tsv'),
            add_inputs(r'\1.pve.tsv'),
            r'\1.svg.touch')
-def plot_PC_geno(infiles, outfile):
+def plot_PC_plink(infiles, outfile):
     '''
     Plot the results from flashpca2 on genotype data.
     '''
@@ -472,15 +474,61 @@ def plot_PC_geno(infiles, outfile):
                 touch %(outfile)s
                 '''
     P.run(statement)
+
+
+@follows(plot_PC_plink)
+@transform('*.geno',
+           suffix('.geno'),
+           '.geno.pcs.tsv')
+def PC_and_plot_geno(infile, outfile):
+    '''
+    Run PCA on genotype data that is already in MatrixEQTL format
+    using run_PCA.R from stats_utils.
+    Inputs must be tab separated, rows must be features (phenotypes, variables)
+    and columns must be samples (individuals).
+    Outputs a tsv file and plot.
+    See stats_utils and run_PCA.R -h for more info.
+    '''
+    # Add any options passed to the ini file for :
+    tool_options = PARAMS['run_PCA']['options']
+    if tool_options == None:
+        tool_options = ''
+    else:
+        pass
+
+    # Check there is at least one geno file present:
+    geno_present = 0
+    for root, dirs, files in os.walk(".", topdown = False):
+        for name in files:
+            if name.endswith('.geno'):
+                geno_present += 1
+
+    if geno_present > 0:
+        E.info('Found files ending in ".geno", running PCA on these.')
+        statement = '''
+                    run_PCA.R \
+                    -I %(infile)s \
+                    -O %(outfile)s \
+                    %(tool_options)s ;
+                    '''
+        P.run(statement)
+
+    else:
+        E.info('''
+                No files ending in ".geno", moving on to pheno files PCA. Plink
+                files should already have PCA with Flashpca.
+               '''
+               )
+        pass
 ##########
 
 
 ##########
 # Get PCs for molecular pheno data:
-@follows(plot_PC_geno)
+@follows(PC_and_plot_geno)
 @transform('*.pheno',
            suffix('.pheno'),
-           '.pheno.pca.tsv')
+           '.pheno.pcs.tsv')
 def PC_and_plot_pheno(infile, outfile):
     '''
     Run PCA on molecular phenotype data using run_PCA.R from stats_utils.
@@ -515,7 +563,7 @@ def PC_and_plot_pheno(infile, outfile):
 @follows(PC_and_plot_pheno)
 @transform('*.QC.bim',
            suffix('.QC.bim'),
-           '.geno')
+           '.plink_geno')
 # Files to process are the QC'd plink files.
 def plink_to_geno(infile, outfile):
     '''
@@ -549,21 +597,25 @@ def plink_to_geno(infile, outfile):
 ##########
 
 ##########
-# Order and match samples between geno, pheno and covariates of each:
+# Order and match samples between geno, pheno and covariates:
 @follows(plink_to_geno)
-@transform('*geno',
-           formatter('(?P<path>.+)/(?P<cohort>.+)-(?P<platform>.+)-(?P<descriptor>.+).geno'),
+@transform('*geno', # TO DO:
+                    # hacky here, missing '.' to avoid renaming upstream as
+                    # geno PCA picks up '.geno' and plink to geno creates
+                    # .plink_geno
+           formatter('(?P<path>.+)/(?P<cohort>.+)-(?P<platform>.+)-(?P<descriptor>.+).(.+)geno'),
            add_inputs('{cohort[0]}*.pheno'),
            '{cohort[0]}.matched_geno_pheno.touch')
-def orderAndMatch1(infiles, outfile):
+def order_and_match_pheno_geno(infiles, outfile):
     '''
     Order and match genotype and phenotype files using the script
     order_and_match_QTL.R
+    Rows must be features (phenotypes, variables, etc.)
+    and columns must be samples (individuals)
     See order_and_match_QTL.R -h
     '''
     geno = infiles[0]
     pheno = infiles[1]
-    print(geno, pheno)
 
     statement = '''
                 order_and_match_QTL.R \
@@ -573,17 +625,41 @@ def orderAndMatch1(infiles, outfile):
                 '''
     P.run(statement)
 
-# TO DO: transpose both files first, e.g.
-# Rscript /Users/antoniob/anaconda/envs/r_test/lib/python3.5/site-packages/pipeline_QTL-0.1.0-py3.5.egg/pipeline_QTL/utilities/transpose_metabolomics.R -I matched_airwave-illumina_exome-all_chrs.flashpca.pcs.tsv
-@follows(orderAndMatch1)
-@transform('*.pcs.tsv',
-           suffix('.pcs.tsv'),
-           add_inputs('*.pheno.pca.tsv'),
-           '.matched_covs.touch')
-def orderAndMatch2(infiles, outfile):
+
+@follows(order_and_match_pheno_geno)
+@transform('*.flashpca.pcs.tsv',
+           suffix('.flashpca.pcs.tsv'),
+           '.flashpca.transposed.geno.pcs.tsv')
+def transpose_flashpca(infile, outfile):
     '''
-    Order and match the covariates files to each other using the script
-    order_and_match_QTL.R
+    Flashpca output files *flashpca.pcs.tsv have rows as individuals and
+    columns as variables.
+    Also flashpca outputs plink FID and IID.
+    Keep only FID and transpose file.
+    See transpose_metabolomics.R -h
+    '''
+    # Cut second column (IID) and pass file:
+    statement = '''
+                cat %(infile)s | cut -f1,3- > %(infile)s.cut ;
+                transpose_metabolomics.R \
+                        -I %(infile)s.cut \
+                        -O %(outfile)s ;
+                rm -f %(infile)s.cut
+                '''
+    P.run(statement)
+
+
+@follows(transpose_flashpca)
+@transform('*.pheno.pcs.tsv',
+           formatter('(?P<path>.+)/(?P<cohort>.+)-(?P<platform>.+)-(?P<descriptor>.+).pheno.pcs.tsv'),
+           add_inputs('{cohort[0]}*.geno.pcs.tsv'),
+           '{cohort[0]}.matched_cov_to_cov.touch')
+def order_and_match_covs(infiles, outfile):
+    '''
+    Order and match the covariates files to each other
+    Rows must be features (phenotypes, variables, etc.)
+    and columns must be samples (individuals)
+    See order_and_match_QTL.R -h
     '''
 
     cov_geno = infiles[0]
@@ -599,7 +675,7 @@ def orderAndMatch2(infiles, outfile):
 
 
 # TO DO: continue here
-@follows(orderAndMatch2)
+@follows(order_and_match_covs)
 @transform('matched*.pcs.tsv',
            formatter('(?P<path>.+)/matched_(?P<cohort>.+)-(?P<platform>.+)-(?P<descriptor>.+).pcs.tsv'),
            add_inputs('matched*.geno'),
