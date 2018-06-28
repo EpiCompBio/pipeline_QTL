@@ -88,22 +88,6 @@ pipeline:
 
 ################################################################
 # Programme specific options (tools called from this pipeline)
-matrixeqtl:
-# See run_MxQTL.R --help for more information
-# See MatrixEQTL documenation for options
-# Files must have .geno, .pheno and .cov endings to be picked up
-# geno, pheno and cov files are picked up automatically, "sensible" defaults are given for all other options,
-# otherwise specify them here, e.g.:
-    #--model modelANOVA --pvOutputThreshold 0.05 -O aNOVA_descriptor --snpspos snpsloc.txt --genepos geneloc.txt --pvOutputThreshold.cis 0.1 --session mxqtl --condition cond_test
-    # Defaults for MatrixEQTL required options are:
-    #--model [default: modelLINEAR].
-    #--pvOutputThreshold [default: 1e-08].
-    #--pvOutputThreshold.cis [default: 1e-05].
-    #--cisDist [default: 1e+06].
-
-    options: 
-# --snpspos snpsloc.txt --genepos geneloc.txt
-
 flashpca:
 # See https://github.com/gabraham/flashpca
 # --bfile, --suffix, --verbose, --outload, --outval, --outvec, --outpc, --outpve 
@@ -130,4 +114,25 @@ run_PCA:
 bind_dataframes:
     # This is for merge_dataframes.R where file1 is geno and file2 is pheno
     options: --file1-PCs 10 --file2-PCs 35
+
+matrixeqtl:
+# See run_MxQTL.R --help for more information (MatrixEQTL wrapper)
+# See the actual MatrixEQTL documentation for options and understanding
+# Files must have geno, pheno and .merged_covs endings to be picked up
+# "sensible" defaults are given by run_matrixEQTL.R and matrixEQTL itself in R
+# otherwise specify them here, e.g.:
+    #--model modelANOVA --pvOutputThreshold 0.05 -O aNOVA_descriptor --snpspos snpsloc.txt --genepos geneloc.txt --pvOutputThreshold.cis 0.1 --session mxqtl --condition cond_test
+# --session can save the R session (provide a name) but for large files this
+# will take a long time and occupy a lot of memory (or crash) 
+# Defaults for MatrixEQTL in run_matrixEQTL.R script options are:
+    #--model [default: modelLINEAR].
+    #--pvOutputThreshold [default: 1e-08].
+    #--pvOutputThreshold.cis [default: 1e-05].
+    #--cisDist [default: 1e+06].
+
+    options: --pvOutputThreshold 0.1 
+# --snpspos snpsloc.txt --genepos geneloc.txt for gene expression QTLs in order
+# to get cis, leaving them blank will output global QTLs (for metabolomics for
+# instance)
+# if running global, only modify --pvOutputThreshold for p-value cut-off
 ################################################################

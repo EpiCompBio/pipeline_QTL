@@ -267,6 +267,7 @@ def getINIpaths():
 ################
 # TO DO: this is a workaround for now as pipeline_QTL CLI doesn't work and
 # setting eg tools = PARAMS XXXX directly errors.
+# Not needed now though so can delete function
 def populate_params():
     '''
     Access the ini/yml file and populate values needed.
@@ -826,7 +827,7 @@ def order_and_match_covs(infiles, outfile):
            formatter('(?P<path>.+)/(?P<cohort>.+)-(?P<platform>.+)-(?P<descriptor>.+).geno.mx_qtl.pcs.tsv_matched'),
            add_inputs('{cohort[0]}-*.pheno.mx_qtl.pcs.tsv_matched'),
            '{cohort[0]}-{platform[0]}.merged_covs')
-def merge_covs(infiles, outfile):
+def merge_matched_covs(infiles, outfile):
     '''
     Merge covariate files from geno and pheno principal component data
     using rbind_dataframes.R
@@ -843,28 +844,34 @@ def merge_covs(infiles, outfile):
     cov_geno = infiles[0]
     cov_pheno = infiles[1]
 
+    print(tool_options, cov_geno, cov_pheno, outfile)
     statement = '''
                 rbind_dataframes.R \
                         --file1 %(cov_geno)s \
                         --file2 %(cov_pheno)s \
                         -O %(outfile)s \
-                        %(tool_options)
+                        %(tool_options)s
                 '''
     P.run(statement)
 
-#@follows(mergeCovs)
-#@transform('*merged_covs',
-#           formatter('(?P<path>.+)/matched_(?P<cohort>.+)-(?P<platform>.+)-(?P<descriptor>.+).pcs.tsv'),
-#           add_inputs('matched*.pheno.pca.tsv'),
-#           '{cohort[0]}-{platform[0]}.merged_covs')
-
+    # TO DO: Needs a post-task touch otherwise tasks are re-run
+    # Remove intermediate files:
+    # *.mx_qtl.pcs.tsv_matched
+    #E.info('''
+    #       Deleting intermediate files:
+    #       *.mx_qtl.pcs.tsv_matched
+    #       ''')
+    #statement = '''
+    #            rm -f *.mx_qtl.pcs.tsv_matched 
+    #            '''
+    #P.run(statement)
 ##########
 
 
 ##########
 #####
-# TO DO: continue here
-# Confounder loop with components
+# TO DO:
+# Confounder components loop if not SVA (use 10 fixed for SVA?)
 # Make optional, so that cov is passed directly or runs with loop.
 
 # first geno, then geno plus pheno cov
@@ -903,13 +910,16 @@ def merge_covs(infiles, outfile):
 
 ##########
 # Run matrixeqtl
-@follows(populate_params)
+# TO DO: errors so leaving out for now
 #@active_if('matrixeqtl' in tools)
-@follows(merge_covs)
-@transform('*.geno',
-           formatter('(?P<path>.+)/(?P<cohort>.+)-(?P<platform>.+)-(?P<descriptor>.+).geno'),
-           add_inputs(['*.pheno',
-                       '*.cov',
+# TO DO: touch files here don't work
+@follows(merge_matched_covs)
+@transform('*geno', # Missing the '.' as a bit hacky with *.plink_geno vs
+                    # directly provided .geno files.
+           formatter('(?P<path>.+)/(?P<cohort>.+)-(?P<platform>.+)-(?P<descriptor>.+).*geno'),
+                                            # same for formatter here, .*geno will pick both .plink_geno and .geno
+           add_inputs(['{cohort[0]}-*.pheno',
+                       '{cohort[0]}-*.merged_covs',
                        ]),
            '{cohort[0]}-{platform[0]}.MxEQTL.touch')
 def run_MxEQTL(infiles, outfile):
@@ -928,9 +938,6 @@ def run_MxEQTL(infiles, outfile):
         cov_file = None
 
     tool_options = PARAMS['matrixeqtl']['options']
-    #project_scripts_dir = str(getINIpaths() + '/matrixQTL/')
-    #Rscript %(project_scripts_dir)s/run_matrixEQTL.R \
-    #%(project_scripts_dir)s/
 
     statement = '''
                 run_matrixEQTL.R \
@@ -943,13 +950,14 @@ def run_MxEQTL(infiles, outfile):
     P.run(statement)
 
 
-@follows(run_MxEQTL)
-@transform('*.tsv', suffix('.tsv'), '.tsv.load')
-def load_MxEQTL(infile, outfile):
-    '''
-    Load the results of run_MxEQTL() into an SQL database.
-    '''
-    P.load(infile, outfile)
+# TO DO:
+#@follows(run_MxEQTL)
+#@transform('*.tsv', suffix('.tsv'), '.tsv.load')
+#def load_MxEQTL(infile, outfile):
+#    '''
+#    Load the results of run_MxEQTL() into an SQL database.
+#    '''
+#    P.load(infile, outfile)
 ##########
 
 
@@ -963,7 +971,6 @@ def load_MxEQTL(infile, outfile):
 
 ################
 # Copy to log enviroment from conda:
-# TO DO: add to pipeline.py?
 def conda_info():
     '''
     Print to screen conda information and packages installed.
@@ -975,12 +982,11 @@ def conda_info():
                    conda env export > environment.yml
                 '''
     P.run(statement)
-
 ################
 
-################
-# Specify function to create reports pre-configured with sphinx-quickstart:
 
+################
+# Build report with pre-configured files using sphinx-quickstart
 # Convert any svg files to PDF if needed:
 @transform('*.svg', suffix('.svg'), '.pdf')
 def svgToPDF(infile, outfile):
@@ -1047,7 +1053,8 @@ def make_report():
 
 ################
 # Create the "full" pipeline target to run all functions specified
-@follows(load_MxEQTL, conda_info)
+#@follows(load_MxEQTL, conda_info)
+@follows(run_MxEQTL, conda_info)
 def full():
     pass
 ################
