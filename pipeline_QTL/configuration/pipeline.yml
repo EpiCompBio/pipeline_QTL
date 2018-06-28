@@ -127,7 +127,7 @@ run_PCA:
     options:
 
 
-merge_dataframes:
+bind_dataframes:
     # This is for merge_dataframes.R where file1 is geno and file2 is pheno
     options: --file1-PCs 10 --file2-PCs 35
 ################################################################

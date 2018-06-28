@@ -826,15 +826,15 @@ def order_and_match_covs(infiles, outfile):
            formatter('(?P<path>.+)/(?P<cohort>.+)-(?P<platform>.+)-(?P<descriptor>.+).geno.mx_qtl.pcs.tsv_matched'),
            add_inputs('{cohort[0]}-*.pheno.mx_qtl.pcs.tsv_matched'),
            '{cohort[0]}-{platform[0]}.merged_covs')
-def mergeCovs(infiles, outfile):
+def merge_covs(infiles, outfile):
     '''
     Merge covariate files from geno and pheno principal component data
-    using merge_dataframes.R
+    using rbind_dataframes.R
     You need to specify the number of PCs to keep for each file in pipeline.yml
     '''
 
     # Add any options passed to the ini file for :
-    tool_options = PARAMS['merge_dataframes']['options']
+    tool_options = PARAMS['bind_dataframes']['options']
     if tool_options == None:
         tool_options = ''
     else:
@@ -844,11 +844,11 @@ def mergeCovs(infiles, outfile):
     cov_pheno = infiles[1]
 
     statement = '''
-                merge_dataframes.R \
+                rbind_dataframes.R \
                         --file1 %(cov_geno)s \
                         --file2 %(cov_pheno)s \
-                        %(tool_options) \
-                        -O %(outfile)s
+                        -O %(outfile)s \
+                        %(tool_options)
                 '''
     P.run(statement)
 
@@ -905,7 +905,7 @@ def mergeCovs(infiles, outfile):
 # Run matrixeqtl
 @follows(populate_params)
 #@active_if('matrixeqtl' in tools)
-@follows(mergeCovs)
+@follows(merge_covs)
 @transform('*.geno',
            formatter('(?P<path>.+)/(?P<cohort>.+)-(?P<platform>.+)-(?P<descriptor>.+).geno'),
            add_inputs(['*.pheno',
