@@ -32,20 +32,6 @@ Upload to PyPI after this if for general use.
 #################
 # Get modules
 
-# Py3 to 2 from pasteurize:
-#from __future__ import print_function
-#from __future__ import unicode_literals
-#from __future__ import division
-#from __future__ import absolute_import
-
-#from builtins import open
-#from builtins import str
-#from future import standard_library
-#standard_library.install_aliases()
-
-# To use a consistent encoding
-#from codecs import open
-
 # Standard modules:
 import sys
 import os
@@ -145,7 +131,7 @@ if (major == 2 and minor1 < 7) or major < 2:
 # Get Ptyhon modules required:
 install_requires = []
 
-with open(os.path.join(here, 'requirements.rst'), encoding='utf-8') as required:
+with open(os.path.join(here, 'requirements.txt'), encoding='utf-8') as required:
     for line in (required):
         if not line.startswith('#') and not line.startswith('\n'):
             line = line.strip()

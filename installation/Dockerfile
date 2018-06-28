@@ -84,7 +84,7 @@ RUN pip install --upgrade pip numpy ; \
     pip install cython ; \
     pip install pysam ; \
     pip install pandas ; \
-    pip install future ruffus ; \
+    pip install ruffus ; \
     conda install -y sphinx ; \
     pip install sphinxcontrib-bibtex
 

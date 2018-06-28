@@ -37,7 +37,7 @@ include *txt
 
 # Include dependency specifications and Docker:
 include external_dependencies.rst
-include requirements.rst
+include requirements.txt
 include Dockerfile
 
 # Include project documentation:
