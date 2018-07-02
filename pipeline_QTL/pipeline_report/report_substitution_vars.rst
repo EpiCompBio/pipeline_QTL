@@ -9,28 +9,28 @@
 .. Fill in the variables:
 
 
-.. |project_name| replace:: pq_example
+.. |project_name| replace:: pipeline_QTL
 
-.. |author_name| replace:: calvin
+.. |author_name| replace::
 
-.. |all_author_names| replace:: susie, calvin, hobbes
+.. |all_author_names| replace::
 
-.. |date| replace:: October 2, 2017
+.. |date| replace::
 
-.. |project_url| replace:: https://github.com/AntonioJBT/project_quickstart
+.. |project_url| replace:: https://github.com/EpiCompBio/pipeline_QTL
 
-.. |download_url| replace:: https://github.com/AntonioJBT/project_quickstart.git
+.. |download_url| replace:: https://github.com/EpiCompBio/pipeline_QTL.git
 
-.. |author_email| replace:: calvin@hilarious.com
+.. |author_email| replace:: 
 
-.. |license| replace:: GPL
+.. |license| replace:: GPL-3
 
-.. |license_year| replace:: 2017
+.. |license_year| replace:: 2018
 
 .. |version| replace:: 0.1.1
 
 .. |keywords| replace:: reproducibility, Python, Ruffus, pipelines
 
-.. |short_description| replace:: These are example scripts and pipelines to demonstrate the use of project_quickstart, Python, Ruffus and CGAT tools.
+.. |short_description| replace:: Quantitative trait locus analysis pipeline
 
 

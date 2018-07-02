@@ -239,7 +239,6 @@ autodoc_member_order = "bysource"
 # autoclass configuration - use both class and __init__ method to
 # document methods.
 autoclass_content = "both"
-
 #################
 
 
@@ -285,20 +284,6 @@ htmlhelp_basename = str(project_name + '.doc')
 # See this to avoid duplicating calls to packages, conflicting commands from
 # "latex_elements" setting below, etc.
 
-# Grouping the document tree into LaTeX files. List of tuples
-# (source start file, target name, title,
-#  author, documentclass [howto, manual, or own class]).
-latex_documents = [(master_doc,
-                    str(project_name + '.tex'),
-                    str(project_name + ' documentation'),
-                    author,
-                    'howto', #'article', #'manual' 'howto'
-                    ),
-                    ]
-
-# For SVG figures see \usepackage{svg}
-# https://tex.stackexchange.com/questions/122871/include-svg-images-with-the-svg-package
-
 latex_elements = { # The paper size ('letterpaper' or 'a4paper').
                    'papersize': 'a4paper',
                    # The font size ('10pt', '11pt' or '12pt').
@@ -308,6 +293,7 @@ latex_elements = { # The paper size ('letterpaper' or 'a4paper').
                    # ‘H’ disables floating and position figures strictly 
                    # in the order they appear in the source.
                    #'figure_align': 'H',
+                   # https://tex.stackexchange.com/questions/39017/how-to-influence-the-position-of-float-environments-like-figure-and-table-in-lat/39020#39020
                    # Additional commands for the LaTeX preamble:
                    # Try to make sure that underscore in text
                    # are not interpreted as math symbols in latex
@@ -326,7 +312,7 @@ latex_elements = { # The paper size ('letterpaper' or 'a4paper').
                        %https://tex.stackexchange.com/questions/101165/sphinx-overriding-the-document-class
                        %\renewcommand{\tableofcontents}{}
                        % See eg:
-                       % https://github.com/lmweber/latex-templates/blob/master/template_PhD_committee_report.texi
+                       % https://github.com/lmweber/latex-templates/blob/master/template_PhD_committee_report.tex
                        %\usepackage{svg}
                        ''',
                    #'printindex': r'\footnotesize\raggedright\printindex',
@@ -336,6 +322,21 @@ latex_elements = { # The paper size ('letterpaper' or 'a4paper').
                    #%'maketitle': '',
                    #%'printindex': '',
                    }
+
+# Grouping the document tree into LaTeX files. List of tuples
+# (source start file, target name, title,
+#  author, documentclass [howto, manual, or own class]).
+latex_documents = [(master_doc,
+                    str(project_name + '.tex'),
+                    str(project_name + ' documentation'),
+                    author,
+                    'howto', #'article', #'manual' 'howto'
+                    ),
+                    ]
+
+# For SVG figures see \usepackage{svg}
+# https://tex.stackexchange.com/questions/122871/include-svg-images-with-the-svg-package
+
 
 # If true, add page references after internal references. This is very useful
 # or printed copies of the manual. Default is False.

@@ -1,5 +1,5 @@
 ###########################
-pipeline_QTL
+pipeline_QTL report
 ###########################
 
 Authored by:
@@ -24,7 +24,6 @@ Correspondence to: |author_email|
 .. See rst-basics_ for webpages and tutorials.
 
 .. .. _rst-basics: https://github.com/EpiCompBio/welcome/blob/master/rst_basics.rst
-
 
 
 Introduction
@@ -56,12 +55,25 @@ Results
 Figures
 ============
 
+.. figure:: ../top_10_PCs_simulated2-NMR-blood.pheno.transposed.pcs.tsv.*
+   :scale: 100 %
+   :alt: pheno_pca.svg
 
-.. figure:: ../airwave-NMR-blood-NMR-blood.MxEQTL.qqplot.*
+   **Principal component analysis of molecular phenotypes.** Principal components (PC) for molecular phenotype data. Top-left: Proportion of variance explained for the top 100 PCs. Other panels show scatterplots of the top PCs.
+
+
+.. figure:: ../top_10_PCs_simulated2-dummy_binary-all_chrs.QC.plink.extracted.flashpca.*
+   :scale: 100 %
+   :alt: geno_pca.svg
+
+   **Principal component analysis of genotypes.** Principal components (PC) for molecular phenotype data. Top-left: Proportion of variance explained for the top 100 PCs. Other panels show scatterplots of the top PCs.
+
+
+.. figure:: ../simulated2-dummy_binary-all_chrs-NMR-blood.MxEQTL.qqplot.*
    :scale: 100 %
    :alt: qqplot.svg
 
-   **Quantile-quantile plot of fold change eQTLs.** Expected versus observed p-values of cis (red, local) and trans (blue, distant) QTLs.
+   **Quantile-quantile plot of fold change QTLs.** Expected versus observed p-values of cis (red, local) and trans (blue, distant) QTLs. If cis was not specified only trans will appear.
 
 
 Tables
@@ -69,7 +81,7 @@ Tables
 
 
 .. csv-table::
-   :file: ../airwave-NMR-blood-NMR-blood.MxEQTL.counts.tsv
+   :file: ../simulated2-dummy_binary-all_chrs-NMR-blood.MxEQTL.counts.tsv
    :delim: tab
 
 
@@ -79,7 +91,7 @@ Tables
 
 
 .. csv-table:: 
-   :file: ../airwave-NMR-blood-NMR-blood.MxEQTL.cis.tsv
+   :file: ../XXXXXX.MxEQTL.cis.tsv
    :delim: tab
 
 
@@ -89,7 +101,7 @@ Tables
 
 
 .. csv-table:: 
-   :file: ../airwave-NMR-blood-NMR-blood.MxEQTL.trans.tsv
+   :file: ../XXXX.MxEQTL.trans.tsv
    :delim: tab
 
 
@@ -99,7 +111,7 @@ Tables
 
 
 .. csv-table::
-   :file: ../airwave-NMR-blood-NMR-blood.MxEQTL.tsv
+   :file: ../simulated2-dummy_binary-all_chrs-NMR-blood.MxEQTL.tsv
    :delim: tab
 
 

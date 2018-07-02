@@ -54,21 +54,23 @@ ln -fs ${sim_dir}/dummy_binary.QC.bed simulated2-dummy_binary-all_chrs.QC.bed
 ln -fs ${sim_dir}/dummy_binary.QC.bim simulated2-dummy_binary-all_chrs.QC.bim
 ln -fs ${sim_dir}/dummy_binary.QC.fam simulated2-dummy_binary-all_chrs.QC.fam
 
-ln -fs ${dirname}/SNP_exclusion_regions.txt .
+cp -f ${dirname}/SNP_exclusion_regions.txt .
 
 # Files from MatrixQTL which don't need plink processing and ared ready for
 # PCA:
-ln -fs ${dirname}/Covariates_ext.txt mxqtl_ext-illumina_exome-all_chrs-NMR-blood.cov
-ln -fs ${dirname}/SNP_ext.txt mxqtl_ext-illumina_exome-all_chrs.geno
-ln -fs ${dirname}/GE_ext.txt mxqtl_ext-NMR-blood.pheno
+# Rename the covariates so PCA isn't run and this file gets picked up instead:
+# TO DO: Fix this so an additional non molecular pheno non-geno can be passed (age, gender, etc):
+# Also: Ruffus updates tasks if input files are newer than output files and re-writes even if symlinked?
+#ln - sf ${dirname}/Covariates.txt airwave-illumina_exome-all_chrs.geno.mx_qtl.pcs.tsv
+#cp -f ${dirname}/Covariates.txt airwave-illumina_exome-all_chrs.geno.mx_qtl.pcs.tsv
+#cp -f ${dirname}/SNP.txt airwave-illumina_exome-all_chrs.geno
+#cp -f ${dirname}/GE.txt airwave-NMR-blood.pheno
 
-ln -fs ${dirname}/Covariates.txt airwave-illumina_exome-all_chrs-NMR-blood.cov
-ln -fs ${dirname}/SNP.txt airwave-illumina_exome-all_chrs.geno
-ln -fs ${dirname}/GE.txt airwave-NMR-blood.pheno
 
-ln -fs ${dirname}/Covariates_ext.txt other-illumina_exome-all_chrs-NMR-urine.cov
-ln -fs ${dirname}/SNP_ext.txt other-illumina_exome-all_chrs.geno
-ln -fs ${dirname}/GE_ext.txt other-NMR-urine.pheno
+# Create a second set of files to test multiple sets in pipeline:
+#cp -f ${dirname}/Covariates.txt other-illumina_exome-all_chrs.geno.mx_qtl.pcs.tsv
+#cp -f ${dirname}/SNP.txt other-illumina_exome-all_chrs.geno
+#cp -f ${dirname}/GE.txt other-NMR-urine.pheno
 echo 'Done'
 #####
 

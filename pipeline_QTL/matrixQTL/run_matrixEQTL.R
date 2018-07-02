@@ -309,7 +309,8 @@ if (is.null(args[['--snpspos']]) | is.null(args[['--genepos']])) {
 # Provide a name for the condition being run if none given:
 # If neither --condition or the naming convention appear:
 time_run <- as.character(gsub(' ', '_', as.character(Sys.time())))
-if (is.null(args[['--condition']]) & is.na(descriptor_2)) {
+#if (is.null(args[['--condition']]) & is.na(descriptor_2)) {
+if (is.null(args[['--condition']]) & !exists('descriptor_2')) {
     print(sprintf("You did not provide a name for the condition (i.e. tissue) and your input files
                    don't follow this script's convention, using a timestamp instead: %s.", time_run))
     condition <- time_run

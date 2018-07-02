@@ -199,7 +199,7 @@ import PipelineQTL as QTL
 
 # Import additional packages:
 # Set path if necessary:
-# os.system('''export PATH="~/xxxx/xxxx:$PATH"''')
+#os.system('''export PATH="~/xxxx/xxxx:$PATH"''')
 ################
 
 ################
@@ -248,17 +248,17 @@ def getINIpaths():
     try:
         project_scripts_dir = '{}/'.format(PARAMS['general']['project_scripts_dir'])
         E.info('''
-                   Location set for the projects scripts is:
-                   {}
-                   '''.format(project_scripts_dir)
-                   )
+               Location set for the projects scripts is:
+               {}
+               '''.format(project_scripts_dir)
+               )
     except KeyError:
         # Use the ini location if variable is set manually:
         project_scripts_dir = QTL.getDir()
         E.info('''
-                   Location set for the projects scripts is:
-                   {}
-                   '''.format(project_scripts_dir)
+               Location set for the projects scripts is:
+               {}
+               '''.format(project_scripts_dir)
                    )
     return(project_scripts_dir)
 ################
@@ -912,7 +912,6 @@ def merge_matched_covs(infiles, outfile):
 # Run matrixeqtl
 # TO DO: errors so leaving out for now
 #@active_if('matrixeqtl' in tools)
-# TO DO: touch files here don't work
 @follows(merge_matched_covs)
 @transform('*geno', # Missing the '.' as a bit hacky with *.plink_geno vs
                     # directly provided .geno files.
@@ -950,14 +949,15 @@ def run_MxEQTL(infiles, outfile):
     P.run(statement)
 
 
-# TO DO:
-#@follows(run_MxEQTL)
-#@transform('*.tsv', suffix('.tsv'), '.tsv.load')
-#def load_MxEQTL(infile, outfile):
-#    '''
-#    Load the results of run_MxEQTL() into an SQL database.
-#    '''
-#    P.load(infile, outfile)
+@follows(run_MxEQTL)
+@transform('*.MxEQTL.tsv',
+           suffix('MxEQTL.tsv'),
+           'MxEQTL.tsv.load')
+def load_MxEQTL(infile, outfile):
+    '''
+    Load the results of run_MxEQTL() into an SQL database.
+    '''
+    P.load(infile, outfile)
 ##########
 
 
@@ -968,9 +968,9 @@ def run_MxEQTL(infiles, outfile):
 ##########
 ################
 
-
 ################
 # Copy to log enviroment from conda:
+@follows(load_MxEQTL)
 def conda_info():
     '''
     Print to screen conda information and packages installed.
@@ -984,12 +984,18 @@ def conda_info():
     P.run(statement)
 ################
 
+################
+# Create the "full" pipeline target to run all functions specified
+@follows(conda_info)
+def full():
+    pass
+################
 
 ################
 # Build report with pre-configured files using sphinx-quickstart
 # Convert any svg files to PDF if needed:
 @transform('*.svg', suffix('.svg'), '.pdf')
-def svgToPDF(infile, outfile):
+def svg_to_pdf(infile, outfile):
     '''
     Simple conversion of svg to pdf files with inkscape
     '''
@@ -1002,9 +1008,10 @@ def svgToPDF(infile, outfile):
                 '''
     P.run(statement)
 
-
 # Build the report:
-@follows(conda_info, svgToPDF)
+report_dir = 'pipeline_report'
+@follows(svg_to_pdf)
+@follows(mkdir(report_dir))
 def make_report():
     ''' Generates html and pdf versions of restructuredText files
         using sphinx-quickstart pre-configured files (conf.py and Makefile).
@@ -1026,7 +1033,8 @@ def make_report():
                        make latexpdf ;
                        ln -sf _build/latex/pq_example.pdf .
                     '''
-        E.info("Building pdf and html versions of your rst files.")
+        E.info('''Building pdf and html versions of your rst files in
+                  {}.'''.format(report_dir))
         P.run(statement)
 
     elif (os.path.exists(report_dir) and
@@ -1048,15 +1056,8 @@ def make_report():
                      You can also manually copy files and run "make html" or
                      "make latexpdf".
                  '''.format(report_path))
-    return
-################
 
-################
-# Create the "full" pipeline target to run all functions specified
-#@follows(load_MxEQTL, conda_info)
-@follows(run_MxEQTL, conda_info)
-def full():
-    pass
+    return
 ################
 
 ################
