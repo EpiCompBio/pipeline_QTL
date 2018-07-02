@@ -1027,12 +1027,13 @@ def make_report():
             os.path.isdir(report_dir) and not
             os.listdir(report_dir)):
         statement = '''cp %(report_path)s/* pipeline_report ;
-                       cd pipeline_report ;
+                       cd {} ;
+                       ln -s ../pipeline.yml . ;
                        make html ;
-                       ln -sf _build/html/report_pipeline_pq_example.html . ;
+                       ln -sf _build/html/report_pipeline_QTL.html . ;
                        make latexpdf ;
-                       ln -sf _build/latex/pq_example.pdf .
-                    '''
+                       ln -sf _build/latex/pipeline_QTL.pdf .
+                    '''.format(report_dir)
         E.info('''Building pdf and html versions of your rst files in
                   {}.'''.format(report_dir))
         P.run(statement)
@@ -1041,10 +1042,12 @@ def make_report():
             os.path.isdir(report_dir) and
             os.listdir(report_dir)):
         sys.exit(''' {} exists, not overwriting. You can manually run:
+                       cd {} ;
+                       ln -s ../pipeline.yml . ;
                        make html ;
-                       ln -sf _build/html/report_pipeline_pq_example.html . ;
+                       ln -sf _build/html/report_XXXX.html . ;
                        make latexpdf ;
-                       ln -sf _build/latex/pq_example.pdf .
+                       ln -sf _build/latex/XXXX.pdf .
                        Or delete the folder and re-run make_report
                  '''.format(report_dir))
 
