@@ -195,7 +195,7 @@ import CGATCore.IOTools as IOTools
 # recognised
 # Import this project's module, uncomment if building something more elaborate:
 #import pipeline_QTL.PipelineQTL as QTL
-import PipelineQTL as QTL
+import pipeline_QTL.PipelineQTL as QTL
 
 # Import additional packages:
 # Set path if necessary:
@@ -971,15 +971,18 @@ def load_MxEQTL(infile, outfile):
 ################
 # Copy to log enviroment from conda:
 @follows(load_MxEQTL)
-def conda_info():
+@originate(['conda_packages.txt', 'environment.yml'])
+def conda_info(outfiles):
     '''
     Print to screen conda information and packages installed.
     '''
+    packages = outfiles[0]
+    environment = outfiles[1]
 
     statement = '''conda info -a ;
-                   conda list -e > conda_packages.txt ;
+                   conda list -e > %(packages)s ;
                    conda list --show-channel-urls ;
-                   conda env export > environment.yml
+                   conda env export > %(environment)s
                 '''
     P.run(statement)
 ################
@@ -987,8 +990,10 @@ def conda_info():
 ################
 # Create the "full" pipeline target to run all functions specified
 @follows(conda_info)
-def full():
-    pass
+@originate('pipeline_complete.touch')
+def full(outfile):
+    statement = 'touch %(outfile)s'
+    P.run(statement)
 ################
 
 ################
