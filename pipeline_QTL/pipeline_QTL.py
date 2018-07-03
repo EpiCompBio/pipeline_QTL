@@ -195,7 +195,7 @@ import CGATCore.IOTools as IOTools
 # recognised
 # Import this project's module, uncomment if building something more elaborate:
 #import pipeline_QTL.PipelineQTL as QTL
-import PipelineQTL as QTL
+import pipeline_QTL.PipelineQTL as QTL
 
 # Import additional packages:
 # Set path if necessary:
