@@ -194,7 +194,7 @@ executables = ['*.R', '*.py', '*.sh']
 def get_cli_scripts():
     files = []
     for filename in executables:
-        scripts = [fn for fn in glob.glob(os.path.join('**/', filename),
+        scripts = [fn for fn in glob.glob(os.path.join('scripts/**', filename),
                                           recursive = True)
                    if not os.path.basename(fn).startswith('__init__')
                    ]
