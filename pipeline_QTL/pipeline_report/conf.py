@@ -290,7 +290,7 @@ latex_elements = { # The paper size ('letterpaper' or 'a4paper').
                    'pointsize': '11pt',
                    # Latex figure (float) alignment
                    # Default is 'figure_align': 'htbp',
-                   # ‘H’ disables floating and position figures strictly 
+                   # 'H' disables floating and position figures strictly 
                    # in the order they appear in the source.
                    #'figure_align': 'H',
                    # https://tex.stackexchange.com/questions/39017/how-to-influence-the-position-of-float-environments-like-figure-and-table-in-lat/39020#39020
