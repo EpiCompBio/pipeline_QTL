@@ -191,11 +191,8 @@ import CGATCore.Experiment as E
 import CGATCore.IOTools as IOTools
 
 
-# TO DO: this doesn't get used at the moment and with entry point pipeline_QTL it is not
-# recognised
-# Import this project's module, uncomment if building something more elaborate:
+# Import this project's module:
 #import pipeline_QTL.PipelineQTL as QTL
-import pipeline_QTL.PipelineQTL as QTL
 
 # Import additional packages:
 # Set path if necessary:
@@ -205,9 +202,6 @@ import pipeline_QTL.PipelineQTL as QTL
 ################
 # Load options from the config file
 # Pipeline configuration
-
-#PARAMS = P.Parameters.get_params()
-#PARAMS = P.Parameters.get_parameters(getParamsFiles()) # works
 
 P.get_parameters(
         ["%s/pipeline.yml" % os.path.splitext(__file__)[0],
@@ -263,36 +257,6 @@ def getINIpaths():
     return(project_scripts_dir)
 ################
 
-
-################
-# TO DO: this is a workaround for now as pipeline_QTL CLI doesn't work and
-# setting eg tools = PARAMS XXXX directly errors.
-# Not needed now though so can delete function
-def populate_params():
-    '''
-    Access the ini/yml file and populate values needed.
-    '''
-    # Get command line tools to run:
-    #tools = PARAMS['pipeline']['tools']
-    tools = PARAMS['pipeline_tools']
-
-    # Get the location of the pipeline specific scripts:
-    project_scripts_dir = str(getINIpaths())
-
-    # Set the name of this pipeline (for report softlinks):
-    project_name = PARAMS['metadata']['project_name']
-
-    # Set if running many input files:
-    many_infiles = PARAMS['pipeline']['many_infiles']
-
-    return(tools,
-           project_scripts_dir,
-           project_name,
-           many_infiles)
-
-################
-
-
 ################
 # Utility functions
 def connect():
@@ -313,7 +277,6 @@ def connect():
 
     return dbh
 ################
-
 
 ################
 ##########
@@ -573,10 +536,50 @@ def PC_and_plot_geno(infile, outfile):
 
 ##########
 
+##########
+# Transform plink to MxEQTL format
+# TO DO: add:
+#@active_if('matrixeqtl' in tools)
+# which seems to cause errors with PARAMS can't accessing on --help for example
+@follows(PC_and_plot_geno)
+@transform('*.QC.bim',
+           suffix('.QC.bim'),
+           '.plink_geno')
+# Files to process are the QC'd plink files.
+def plink_to_geno(infile, outfile):
+    '''
+    Process the plink genotype files to use as input for MatrixEQTL using the
+    plink_to_geno.sh script and convert plink double IDs to single with
+    plink_double2singleID.R
+    '''
+
+    # Split at the last suffix separated by '.':
+    infile = infile.rsplit('.', 1)[0]
+    # If setup.py scripts option doesn't work use eg:
+    #project_scripts_dir = str(getINIpaths() + '/matrixQTL/')
+    #Rscript %(project_scripts_dir)s/run_matrixEQTL.R \
+    #%(project_scripts_dir)s/
+
+    statement = '''
+                bash plink_to_geno.sh \
+                        %(infile)s \
+                        %(infile)s.matrixQTL \
+                        %(infile)s.A-transpose \
+                        %(outfile)s ;
+                rm -rf *.sample *.gen *.traw *.ped *.hh *.nosex *.map ;
+                '''
+    P.run(statement)
+
+    statement = '''
+                plink_double2singleID.R -I %(outfile)s ;
+                mv IID_%(outfile)s %(outfile)s ;
+                '''
+    P.run(statement)
+##########
 
 ##########
 # Get PCs for molecular pheno data. Files need tranposing for PCA first:
-@follows(PC_and_plot_geno)
+@follows(plink_to_geno)
 @transform('*.pheno',
            suffix('.pheno'),
            '.pheno.transposed.tsv')
@@ -635,49 +638,8 @@ def PC_and_plot_pheno(infile, outfile):
 
 ##########
 # Prepare files for MxEQTL
-# Transform plink to MxEQTL format:
-# TO DO: add:
-#@active_if('matrixeqtl' in tools)
-# which seems to cause errors with PARAMS can't accessing on --help for example
-@follows(PC_and_plot_pheno)
-@transform('*.QC.bim',
-           suffix('.QC.bim'),
-           '.plink_geno')
-# Files to process are the QC'd plink files.
-def plink_to_geno(infile, outfile):
-    '''
-    Process the plink genotype files to use as input for MatrixEQTL using the
-    plink_to_geno.sh script and convert plink double IDs to single with
-    plink_double2singleID.R
-    '''
-
-    # Split at the last suffix separated by '.':
-    infile = infile.rsplit('.', 1)[0]
-    # If setup.py scripts option doesn't work use eg:
-    #project_scripts_dir = str(getINIpaths() + '/matrixQTL/')
-    #Rscript %(project_scripts_dir)s/run_matrixEQTL.R \
-    #%(project_scripts_dir)s/
-
-    statement = '''
-                bash plink_to_geno.sh \
-                        %(infile)s \
-                        %(infile)s.matrixQTL \
-                        %(infile)s.A-transpose \
-                        %(outfile)s ;
-                rm -rf *.sample *.gen *.traw *.ped *.hh *.nosex *.map ;
-                '''
-    P.run(statement)
-
-    statement = '''
-                plink_double2singleID.R -I %(outfile)s ;
-                mv IID_%(outfile)s %(outfile)s ;
-                '''
-    P.run(statement)
-##########
-
-##########
 # Order and match samples between geno, pheno and covariates:
-@follows(plink_to_geno)
+@follows(PC_and_plot_pheno)
 @transform('*.plink_geno',
            formatter('(?P<path>.+)/(?P<cohort>.+)-(?P<platform>.+)-(?P<descriptor>.+).(.+)geno'),
            add_inputs('{cohort[0]}*.pheno'),
@@ -865,6 +827,47 @@ def merge_matched_covs(infiles, outfile):
     #            rm -f *.mx_qtl.pcs.tsv_matched 
     #            '''
     #P.run(statement)
+
+@follows(merge_matched_covs)
+@transform('*.merged_covs',
+           formatter('(?P<path>.+)/(?P<cohort>.+)-(?P<platform>.+).merged_covs'),
+           add_inputs('{cohort[0]}-*.pheno_matched'),
+           '{cohort[0]}-{platform[0]}.merged_covs_matched.touch')
+def match_covs_to_pheno(infiles, outfile):
+    '''
+    Order and match merged covariate files to pheno file
+    The pheno file was previously ordered and
+    matched to geno file
+    Rows must be features (phenotypes, variables, etc.)
+    and columns must be samples (individuals)
+    See order_and_match_QTL.R -h
+    '''
+    covs = infiles[0]
+    pheno = infiles[1]
+
+    statement = '''
+                order_and_match_QTL.R \
+                        --file1 %(covs)s \
+                        --file2 %(pheno)s ;
+                touch %(outfile)s
+                '''
+    P.run(statement)
+
+
+    # TO DO: Needs a post-task touch otherwise tasks are re-run
+    # Remove intermediate files:
+    # *.pheno_matched_matched
+    # *.merged_covs
+    #E.info('''
+    #       Deleting intermediate files:
+    #       *.pheno_matched_matched
+    #       *.merged_covs
+    #       ''')
+    #statement = '''
+    #            rm -f *.pheno_matched_matched *.merged_covs 
+    #            '''
+    #P.run(statement)
+
 ##########
 
 
@@ -912,13 +915,13 @@ def merge_matched_covs(infiles, outfile):
 # Run matrixeqtl
 # TO DO: errors so leaving out for now
 #@active_if('matrixeqtl' in tools)
-@follows(merge_matched_covs)
-@transform('*geno', # Missing the '.' as a bit hacky with *.plink_geno vs
+@follows(match_covs_to_pheno)
+@transform('*geno_matched', # Missing the '.' as a bit hacky with *.plink_geno vs
                     # directly provided .geno files.
-           formatter('(?P<path>.+)/(?P<cohort>.+)-(?P<platform>.+)-(?P<descriptor>.+).*geno'),
+           formatter('(?P<path>.+)/(?P<cohort>.+)-(?P<platform>.+)-(?P<descriptor>.+).*geno_matched'),
                                             # same for formatter here, .*geno will pick both .plink_geno and .geno
-           add_inputs(['{cohort[0]}-*.pheno',
-                       '{cohort[0]}-*.merged_covs',
+           add_inputs(['{cohort[0]}-*.pheno_matched',
+                       '{cohort[0]}-*.merged_covs_matched',
                        ]),
            '{cohort[0]}-{platform[0]}.MxEQTL.touch')
 def run_MxEQTL(infiles, outfile):
@@ -937,6 +940,10 @@ def run_MxEQTL(infiles, outfile):
         cov_file = None
 
     tool_options = PARAMS['matrixeqtl']['options']
+    if tool_options == None:
+        tool_options = ''
+    else:
+        pass
 
     statement = '''
                 run_matrixEQTL.R \
@@ -971,17 +978,18 @@ def load_MxEQTL(infile, outfile):
 ################
 # Copy to log enviroment from conda:
 @follows(load_MxEQTL)
-@originate(['conda_packages.txt', 'environment.yml'])
-def conda_info(outfiles):
+@originate('conda_info.txt')
+def conda_info(outfile):
     '''
-    Print to screen conda information and packages installed.
+    Save to logs conda information and packages installed.
     '''
-    packages = outfiles[0]
-    environment = outfiles[1]
+    packages = 'conda_packages.txt'
+    channels = 'conda_channels.txt'
+    environment = 'environment.yml'
 
-    statement = '''conda info -a ;
+    statement = '''conda info -a > %(outfile)s ;
                    conda list -e > %(packages)s ;
-                   conda list --show-channel-urls ;
+                   conda list --show-channel-urls > %(channels)s ;
                    conda env export > %(environment)s
                 '''
     P.run(statement)

@@ -20,8 +20,6 @@ metadata:
 
     project_url: 
 
-    download_url: 
-
     author_email:
 
     license: 
@@ -36,33 +34,19 @@ metadata:
 
 # long_description can be read rom README.rst within setup.py but PyPI doesn't render it.
     long_description: 
-
-# The same version is used for pipelines, scripts and project:
-# This is easier to edit directly in the file version.py 
-
-    classifiers:
-
-    platforms: 'any'
 ################################################################
 
 
 ################################################################
 # Pipeline general options:
 general:
-# Specify the location of the scripts for this project. Needs to be set.
-    pipeline_scripts_dir:  
-
 # Specify the python executable, this is if running on a Mac and using matplotlib (which needs pythonw):
     py_exec: python
-#either "python" or "pythonw"
+    #either "python" or "pythonw"
 
-#
-# scratchdir for data not to be backed up
+    # scratchdir for data not to be backed up
     scratchdir: 
     #/tmp
-
-# a version string
-    version:
 
 # Pipeline database options:
 database:
@@ -80,9 +64,6 @@ pipeline:
 # tool2
 # etc
     tools: matrixeqtl
-
-# If running more than one input set as 'True':, else leave empty or 'False'
-    many_infiles: False
 ################################################################
 
 
@@ -110,7 +91,6 @@ run_PCA:
 # Custom R script which runs prcomp on pheno data, see run_PCA.R --help
     options:
 
-
 bind_dataframes:
     # This is for merge_dataframes.R where file1 is geno and file2 is pheno
     options: --file1-PCs 10 --file2-PCs 35
@@ -130,7 +110,7 @@ matrixeqtl:
     #--pvOutputThreshold.cis [default: 1e-05].
     #--cisDist [default: 1e+06].
 
-    options: --pvOutputThreshold 0.1 
+    options: --pvOutputThreshold 1e-10 
 # --snpspos snpsloc.txt --genepos geneloc.txt for gene expression QTLs in order
 # to get cis, leaving them blank will output global QTLs (for metabolomics for
 # instance)
