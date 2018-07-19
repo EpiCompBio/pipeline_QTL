@@ -50,7 +50,7 @@ general:
 
 # Pipeline database options:
 database:
-    name: qtl_sqlite_csvdb
+    url: sqlite:///./qtl_csvdb
 ################################################################
 
 
