@@ -30,7 +30,6 @@ import sys
 
 try:
     import cgatcore.pipeline as P
-    import cgatcore
 except ImportError:
     print('\n', "Warning: Couldn't import CGAT modules.")
     pass
