@@ -4,6 +4,7 @@
 
 # Include any non-standard Python libraries here to install automatically
 
+cgatcore
 docopt
 ruffus
 pandas
