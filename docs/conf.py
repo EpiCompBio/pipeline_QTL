@@ -29,8 +29,8 @@ import os
 import sys
 
 try:
-    import CGATCore.Pipeline as P
-    import CGATCore
+    import cgatcore.pipeline as P
+    import cgatcore
 except ImportError:
     print('\n', "Warning: Couldn't import CGAT modules.")
     pass
