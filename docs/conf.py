@@ -24,24 +24,24 @@
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 ######################
 '''
+
 ######################
 import os
 import sys
 
-try:
-    import cgatcore.pipeline as P
-except ImportError:
-    print('\n', "Warning: Couldn't import CGAT modules.")
-    pass
-
 # Set up calling parameters from INI file:
-# Switching to yml to match cgat:
-import yaml
-# http://pyyaml.org/wiki/PyYAMLDocumentation
+# Modules with Py2 to 3 conflicts
+try:
+    import configparser
+except ImportError:  # Py2 to Py3
+    import ConfigParser as configparser
+# Global variable for configuration file ('.ini'):
+CONFIG = configparser.ConfigParser(allow_no_value = True)
 #################
 
+
 #################
-# If this conf.py is part of a standard python software project, 
+# If this conf.py is part of a standrad python software project, 
 # set this relative path in order to be able to use sphinx-apidoc
 # to find the relevant software tool modules
 # The expected directory structure would be
@@ -49,72 +49,56 @@ import yaml
 #sys.path.insert(0, os.path.abspath('../..'))
 #################
 
-#################
-# Load options from the config file:
-# Pipeline configuration 
-cwd = os.getcwd()
 
+#################
+cwd = os.getcwd()
 def getINIdir(path = cwd):
     ''' Search for an INI file given a path. The path default is the current
         working directory.
     '''
     f_count = 0
-    paths = ['..', '.']
-    for path in paths:
-        for f in os.listdir(path):
-            if (f.endswith('.yml') and not f.startswith('tox')):
-                f_count += 1
-                INI_file = os.path.abspath(os.path.join(path, f))
+    for f in os.listdir(path):
+        if (f.endswith('.ini') and not f.startswith('tox')):
+            f_count += 1
+            INI_file = f
     if f_count == 1:
-        print(INI_file)
+        INI_file = os.path.abspath(os.path.join(path, INI_file))
     elif (f_count > 1 or f_count == 0):
-        print('You have no project configuration (".yml") file or more than one',
+        INI_file = os.path.abspath(path)
+        print('You have no project configuration (".ini") file or more than one',
               'in the directory:', '\n', path)
         sys.exit(''' Exiting.
                      You will have to manually edit the Sphinx conf.py file.
                  ''')
 
     return(INI_file)
-
-modulename = 'P'
-if modulename in sys.modules:
-    ini_file = 'pipelin{}.yml'.format(r'(.*)')
-    P.getParameters(
-        ["{}/{}".format(os.path.splitext(__file__)[0], ini_file),
-         "../{}".format(ini_file),
-         "{}".format(ini_file),
-        ],
-    )
-
-    PARAMS = P.PARAMS
-
-else:
-    # Get location to this file:
-    here = os.path.abspath(os.path.dirname(__file__))
-    ini_file = getINIdir(os.path.abspath(here))
-
-    # Print keys (sections):
-    if not os.path.exists(ini_file):
-        sys.exit('''Something isn't right with the paths. The yml/ini file does
-                    not seem to exist...''')
-    else:
-        print('Values found in INI file:', '\n')
-        with open(ini_file, 'r') as ymlfile:
-            try:
-                CONFIG = yaml.load(ymlfile)
-                print(yaml.dump(CONFIG))
-
-            except yaml.YAMLError as e:
-                print(e)
 #################
+
+
+#################
+# Get location to this file:
+here = os.path.abspath(os.path.dirname(__file__))
+#print(here, '\n')
+
+ini_file = getINIdir(os.path.join(here, '..'))
+CONFIG.read(ini_file)
+
+# Print keys (sections):
+print('Values found in INI file:', '\n')
+print(ini_file, '\n')
+for key in CONFIG:
+    for value in CONFIG[key]:
+        print(key, value, CONFIG[key][value])
+#################
+
 
 #################
 # Get version, this will be in project_XXXX/code/project_XXXX/version.py:
 def getVersionDir():
-    project_name = CONFIG['metadata']['project_name']
+    project_name = str(CONFIG['metadata']['project_name'])
     #print(project_name, '\n')
-    version_dir = os.path.join(here, '../..', 'code', project_name)
-    version_dir_2 = os.path.join(here, '../..', project_name)
+    version_dir = os.path.join(here, '..', 'code', project_name)
+    version_dir_2 = os.path.join(here, '..', project_name)
     #print(version_dir, '\n', version_dir_2)
     if os.path.exists(version_dir):
         sys.path.insert(0, version_dir)
@@ -122,18 +106,12 @@ def getVersionDir():
         version = version.set_version()
     elif os.path.exists(version_dir_2):
         sys.path.insert(0, version_dir_2)
-        try:
-            import version
-            version = version.set_version()
-        except ImportError:
-            print('No module version found, setting version to 0.1.0')
-            version = '0.1.0'
+        import version
+        version = version.set_version()
     else:
         version = '0.1.0'
         print(str('version not found, the directories: ' +
                   version_dir +
-                  '\n' +
-                  'or' +
                   '\n' +
                   version_dir_2 +
                   'do not seem to exist' +
@@ -152,6 +130,8 @@ print(version)
 #################
 # Actual sphinx-quickstart configuration starts here
 
+
+#################
 # -- General configuration ------------------------------------------------
 
 # If your documentation needs a minimal Sphinx version, state it here.
@@ -170,23 +150,9 @@ extensions = ['sphinx.ext.autodoc',
               'sphinx.ext.ifconfig',
               'sphinx.ext.viewcode',
               'sphinx.ext.githubpages',
-              'sphinxcontrib.bibtex',
+              #'sphinx.ext.imgconverter', # Allows handling of SVGs
+              #'sphinx.ext.inheritance_diagram',
               ]
-
-################################################################
-# CGAT conf.py 
-#  XXXX/CGATPipelines/CGATPipelines/configuration/conf.py
-try:
-    if P.CONFIG.has_section('intersphinx'):
-        intersphinx_mapping = dict(
-            [(x, (os.path.abspath(y), None))
-                for x, y in P.CONFIG.items('intersphinx')])
-except NameError:
-    print('''P is not defined as CGAT tools were not found, continuing without
-            intersphinx''')
-
-################################################################
-
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -202,7 +168,7 @@ master_doc = 'index'
 
 # General information about the project.
 project_name = CONFIG['metadata']['project_name']
-copyright = str(str(CONFIG['metadata']['license_year']) + ', ' + CONFIG['metadata']['author_name'])
+copyright = str(CONFIG['metadata']['license_year'] + ', ' + CONFIG['metadata']['author_name'])
 author = CONFIG['metadata']['all_author_names']
 
 # The version info for the project you're documenting, acts as replacement for
@@ -233,11 +199,11 @@ pygments_style = 'sphinx'
 todo_include_todos = True
 
 # order of autodocumented functions
-autodoc_member_order = "bysource"
+autodoc_member_order = 'bysource'
 
 # autoclass configuration - use both class and __init__ method to
 # document methods.
-autoclass_content = "both"
+autoclass_content = 'both'
 
 #################
 
@@ -284,19 +250,24 @@ htmlhelp_basename = str(project_name + '.doc')
 # See this to avoid duplicating calls to packages, conflicting commands from
 # "latex_elements" setting below, etc.
 
-# Grouping the document tree into LaTeX files. List of tuples
-# (source start file, target name, title,
-#  author, documentclass [howto, manual, or own class]).
-latex_documents = [(master_doc,
-                    str(project_name + '.tex'),
-                    str(project_name + ' documentation'),
-                    author,
-                    'howto', #'article', #'manual' 'howto'
-                    ),
-                    ]
+# TO DO:
+# Convert SVG, url images, etc. from reST to Sphinx to PDF
 
+# See:
+# http://rest-sphinx-memo.readthedocs.io/en/latest/ReST.html#image-and-figure
+# https://tex.stackexchange.com/questions/5433/can-i-use-an-image-located-on-the-web-in-a-latex-document
+# https://sites.google.com/site/nickfolse/home/sphinx-latexpdf-output-with-svg-images
+# https://github.com/sphinx-doc/sphinx/issues/1907
+
+# This will also need modifying Makefile
+# See Andreas' solutions for this.
+
+# Also see for latex packages and SVGs:
 # For SVG figures see \usepackage{svg}
 # https://tex.stackexchange.com/questions/122871/include-svg-images-with-the-svg-package
+# Also test .. only:: reST directive if SVG download and conversion fails
+# (for e.g. badges from GitHub in READMEs)
+
 
 latex_elements = { # The paper size ('letterpaper' or 'a4paper').
                    'papersize': 'a4paper',
@@ -316,25 +287,25 @@ latex_elements = { # The paper size ('letterpaper' or 'a4paper').
                        \usepackage[T1]{fontenc}
                        \usepackage{textcomp}
                        \usepackage[strings]{underscore}
-                       %\usepackage{float}
-                       %Remove the 'Figure n' caption:
-                       %\usepackage[labelformat=empty]{caption}
-                       %Remove the date, blank maketitle below takes care of
-                       %removing title, author, date though:
-                       %\date{}
-                       %https://tex.stackexchange.com/questions/101165/sphinx-overriding-the-document-class
-                       %\renewcommand{\tableofcontents}{}
+                       %\usepackage{graphicx}
+                       %\usepackage{color}
                        % See eg:
-                       % https://github.com/lmweber/latex-templates/blob/master/template_PhD_committee_report.texi
-                       %\usepackage{svg}
+                       % https://github.com/lmweber/latex-templates/blob/master/template_PhD_committee_report.tex
                        ''',
                    #'printindex': r'\footnotesize\raggedright\printindex',
                    #'releasename': r'version',
-                   #%Manually remove 'how to' release, title, index:
-                   #%'releasename': "",
-                   #%'maketitle': '',
-                   #%'printindex': '',
                    }
+
+# Grouping the document tree into LaTeX files. List of tuples
+# (source start file, target name, title,
+#  author, documentclass [howto, manual, or own class]).
+latex_documents = [(master_doc,
+                    str(project_name + '.tex'),
+                    str(project_name + ' Documentation'),
+                    author,
+                    'howto', #'article', #'manual' 'howto'
+                    ),
+                    ]
 
 # If true, add page references after internal references. This is very useful
 # or printed copies of the manual. Default is False.
